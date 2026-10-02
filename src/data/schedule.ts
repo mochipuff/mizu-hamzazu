@@ -21,4 +21,14 @@ export const streamSlots: StreamSlot[] = [
     platform: 'youtube',
     membersOnly: false,
   },
+  {
+    id: 'gartic',
+    title: '🔴『GARTIC.IO』tebak gambar apa tebak perasaan? (MABAR MEMBER)',
+    description: 'Game stream',
+    weekday: 7,
+    time: '15:30',
+    durationMinutes: 180,
+    platform: 'youtube',
+    membersOnly: false,
+  },
 ];
