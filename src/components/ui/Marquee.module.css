@@ -1,0 +1,77 @@
+.marquee {
+  --bg: var(--ink);
+  --fg: var(--white);
+
+  width: 100%;
+  overflow: hidden;
+  border-block: var(--outline);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.rotate {
+  width: 106%;
+  margin-inline: -3%;
+  transform: rotate(var(--tilt, 0deg));
+}
+
+.marquee[data-tone='sun'] {
+  --bg: var(--sun);
+  --fg: var(--ink);
+}
+
+.marquee[data-tone='coral'] {
+  --bg: var(--coral);
+  --fg: var(--ink);
+}
+
+.track {
+  display: flex;
+  width: max-content;
+  animation: slide var(--duration, 32s) linear infinite;
+}
+
+.rotate[data-reverse='true'] .track {
+  animation-direction: reverse;
+}
+
+.marquee:hover .track {
+  animation-play-state: paused;
+}
+
+.rotate {
+  overflow: hidden;
+}
+
+.group {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 0.55rem 1.2rem 0.5rem 0;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  white-space: nowrap;
+}
+
+.icon {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+@keyframes slide {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation: none;
+  }
+}

@@ -1,0 +1,40 @@
+.wave {
+  position: relative;
+  height: clamp(2.5rem, 6vw, 4.5rem);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.wave[data-flip='true'] {
+  transform: scaleY(-1);
+}
+
+.back,
+.front {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 200%;
+  max-width: none;
+  height: 100%;
+  animation: drift 16s linear infinite;
+}
+
+.back {
+  bottom: 0.4rem;
+  animation-duration: 24s;
+  animation-direction: reverse;
+}
+
+@keyframes drift {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .back,
+  .front {
+    animation: none;
+  }
+}

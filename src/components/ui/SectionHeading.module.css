@@ -1,0 +1,80 @@
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  margin: 0 auto clamp(2.2rem, 5vw, 3.6rem);
+  max-width: 44rem;
+  text-align: center;
+}
+
+.head[data-align='start'] {
+  align-items: flex-start;
+  margin-inline: 0;
+  text-align: left;
+}
+
+.titleWrap {
+  position: relative;
+  display: inline-block;
+}
+
+.title {
+  font-size: clamp(2.3rem, 6.2vw, 4rem);
+  color: var(--drop);
+  paint-order: stroke fill;
+  -webkit-text-stroke: 0.2em var(--white);
+  filter: drop-shadow(0.05em 0.07em 0 var(--ink));
+  text-wrap: balance;
+}
+
+.sparkleLeft,
+.sparkleRight {
+  position: absolute;
+  width: 1.5rem;
+  height: 1.5rem;
+  animation: twinkle 2.6s ease-in-out infinite;
+}
+
+.sparkleLeft {
+  top: -0.5rem;
+  left: -1.8rem;
+}
+
+.sparkleRight {
+  right: -1.6rem;
+  bottom: -0.3rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  animation-delay: -1.3s;
+}
+
+.squiggle {
+  width: 8.5rem;
+  height: 0.8rem;
+}
+
+.lead {
+  max-width: 36rem;
+  font-size: 1.15rem;
+  text-wrap: pretty;
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    transform: scale(0.85) rotate(0deg);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.15) rotate(20deg);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sparkleLeft,
+  .sparkleRight {
+    animation: none;
+  }
+}

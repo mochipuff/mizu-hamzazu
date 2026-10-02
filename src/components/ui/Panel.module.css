@@ -1,0 +1,57 @@
+.panel {
+  --tone: var(--white);
+  --radius: 28px;
+
+  position: relative;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: var(--outline);
+  border-radius: var(--radius);
+  background: var(--tone);
+  box-shadow: var(--pop);
+  color: var(--ink);
+  transform: rotate(var(--tilt, 0deg));
+}
+
+.panel[data-tone='sun'] {
+  --tone: var(--sun-soft);
+}
+
+.panel[data-tone='lilac'] {
+  --tone: var(--lilac-soft);
+}
+
+.panel[data-tone='mint'] {
+  --tone: var(--sand);
+}
+
+.panel[data-tone='pink'] {
+  --tone: var(--coral-soft);
+}
+
+.panel[data-tone='ink'] {
+  --tone: var(--ink);
+
+  color: var(--white);
+}
+
+.panel[data-shape='leaf'] {
+  --radius: 44px 14px 44px 14px;
+}
+
+.panel[data-shape='ticket'] {
+  --radius: 16px;
+}
+
+.tape::before {
+  content: '';
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  z-index: 2;
+  width: 92px;
+  height: 28px;
+  translate: -50% 0;
+  rotate: -3deg;
+  border: 2px solid rgb(22 36 95 / 0.18);
+  background: repeating-linear-gradient(135deg, rgb(255 111 159 / 0.82) 0 8px, rgb(255 255 255 / 0.6) 8px 16px);
+}
