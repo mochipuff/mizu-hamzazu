@@ -1,0 +1,32 @@
+{
+  "name": "mizu-hamzazu",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Official landing page for the virtual streamer Mizu Hamzazu",
+  "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "oxlint",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@fontsource/mochiy-pop-one": "^5.3.0",
+    "@fontsource/zen-maru-gothic": "^5.3.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "oxlint": "^1.81.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0"
+  }
+}
