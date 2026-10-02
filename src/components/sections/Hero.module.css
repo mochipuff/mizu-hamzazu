@@ -1,0 +1,202 @@
+.hero {
+  position: relative;
+  padding-block: clamp(1.5rem, 5vw, 3.5rem) clamp(4.5rem, 9vw, 7rem);
+  overflow-x: clip;
+}
+
+.grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.copy {
+  display: grid;
+  justify-items: start;
+  gap: 1.25rem;
+}
+
+.tag {
+  padding: 0.3rem 1rem;
+  border: var(--outline);
+  border-radius: 999px;
+  background: var(--sun);
+  box-shadow: var(--pop-small);
+  font-weight: 700;
+  font-size: 0.95rem;
+  rotate: -2deg;
+}
+
+.title {
+  display: grid;
+  gap: 0.15em;
+  font-size: clamp(2.2rem, 6.2vw, 4.2rem);
+  line-height: 1.02;
+}
+
+.line {
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.name {
+  color: var(--white);
+  -webkit-text-stroke: 0.09em var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 0.06em 0.07em 0 var(--ink);
+  transform: rotate(-2deg);
+  transform-origin: left center;
+}
+
+.intro {
+  max-width: 34rem;
+  font-size: clamp(1.1rem, 2.4vw, 1.3rem);
+  font-weight: 700;
+  text-wrap: pretty;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.next {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: start;
+  padding: 0.9rem 1.3rem 1rem;
+  border: var(--outline);
+  border-radius: 22px 22px 22px 6px;
+  background: var(--white);
+  box-shadow: var(--pop);
+}
+
+.next[data-live='true'] {
+  background: var(--coral-soft);
+}
+
+.nextLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.next[data-live='true'] .nextLabel::before {
+  content: '';
+  width: 0.7rem;
+  height: 0.7rem;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--coral);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.nextTitle {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+.clock {
+  display: flex;
+  gap: 0.6rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.clock span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.15rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 12px;
+  background: var(--shallows);
+}
+
+.clock b {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+
+.stage {
+  position: relative;
+  order: -1;
+  width: min(100%, 320px);
+  margin-inline: auto;
+}
+
+.starfishA {
+  position: absolute;
+  top: 9%;
+  right: 4%;
+  z-index: 0;
+  width: clamp(3rem, 8vw, 5rem);
+  rotate: 14deg;
+  animation: spin-slow 14s linear infinite;
+}
+
+.sparkleA {
+  position: absolute;
+  top: 18%;
+  left: 3%;
+  width: clamp(1.4rem, 3vw, 2.2rem);
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+.sparkleB {
+  position: absolute;
+  bottom: 26%;
+  right: 46%;
+  width: clamp(1.1rem, 2.4vw, 1.7rem);
+  animation: twinkle 3s ease-in-out 1.3s infinite;
+}
+
+@keyframes pulse {
+  50% {
+    scale: 1.35;
+    opacity: 0.6;
+  }
+}
+
+@keyframes spin-slow {
+  to {
+    rotate: 374deg;
+  }
+}
+
+@keyframes twinkle {
+  50% {
+    scale: 0.6;
+    opacity: 0.5;
+  }
+}
+
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 2rem;
+  }
+
+  .stage {
+    order: 0;
+    width: 100%;
+    align-self: start;
+    padding: 0.5rem 0.5rem 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .starfishA,
+  .sparkleA,
+  .sparkleB,
+  .next[data-live='true'] .nextLabel::before {
+    animation: none;
+  }
+}

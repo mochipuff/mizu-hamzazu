@@ -1,0 +1,246 @@
+.section {
+  padding-block: clamp(3rem, 8vw, 5.5rem);
+}
+
+.controls {
+  display: grid;
+  gap: 1rem;
+  margin-top: 2.25rem;
+}
+
+.zoneField {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.zoneLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+}
+
+.select {
+  width: 100%;
+  min-height: 2.9rem;
+  padding: 0.55rem 2.5rem 0.55rem 1rem;
+  border: var(--outline);
+  border-radius: 14px;
+  background-color: var(--foam);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2316245f' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.2rem;
+  font-weight: 700;
+  appearance: none;
+  cursor: pointer;
+}
+
+.controlActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.week {
+  display: grid;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.day {
+  min-width: 0;
+}
+
+.dayReveal {
+  height: 100%;
+  padding: 0.85rem;
+  border: var(--outline);
+  border-radius: 22px;
+  background: rgb(255 255 255 / 0.72);
+  box-shadow: var(--pop-small);
+}
+
+.day[data-today='true'] .dayReveal {
+  background: var(--sun-soft);
+  box-shadow: var(--pop);
+}
+
+.day[data-empty='true'] .dayReveal {
+  background: rgb(255 255 255 / 0.4);
+  box-shadow: none;
+  border-style: dashed;
+}
+
+.dayHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.7rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px dashed rgb(22 36 95 / 0.3);
+}
+
+.weekday {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.date {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.rest {
+  color: var(--ink-soft);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.events {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.event {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.75rem;
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  background: var(--white);
+}
+
+.event[data-status='live'] {
+  background: var(--coral-soft);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.event[data-status='done'] {
+  opacity: 0.6;
+}
+
+.time {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 700;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.eventTitle {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.eventDesc {
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.badges:empty {
+  display: none;
+}
+
+.badge,
+.badgeLive {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.6rem;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--lilac-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.badgeLive {
+  background: var(--coral);
+}
+
+.eventActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.calendarButton {
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--sun);
+  transition: transform 0.18s var(--ease-pop);
+}
+
+.calendarButton:hover {
+  transform: rotate(-10deg) scale(1.1);
+}
+
+.calendarButton:active {
+  transform: scale(0.94);
+}
+
+.note {
+  max-width: 38rem;
+  margin: 1.75rem auto 0;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--ink);
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+@media (min-width: 640px) {
+  .controls {
+    grid-template-columns: minmax(0, 22rem) 1fr;
+    align-items: end;
+  }
+
+  .controlActions {
+    justify-content: flex-end;
+  }
+
+  .week {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .week {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .day {
+    grid-column: span 3;
+  }
+
+  .day:nth-child(n + 5) {
+    grid-column: span 4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calendarButton:hover {
+    transform: none;
+  }
+}

@@ -1,0 +1,98 @@
+.section {
+  padding-block: clamp(3rem, 8vw, 5.5rem);
+}
+
+.perks {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 2.5rem;
+}
+
+.reveal {
+  height: 100%;
+}
+
+.perk {
+  display: grid;
+  gap: 0.4rem;
+  align-content: start;
+  height: 100%;
+}
+
+.perkIcon {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 0.25rem;
+  border: var(--outline);
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: var(--pop-small);
+}
+
+.perkTitle {
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+.platformsWrap {
+  margin-top: clamp(2.5rem, 6vw, 4rem);
+}
+
+.platformsTitle {
+  margin-bottom: 1.25rem;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  text-align: center;
+}
+
+.platforms {
+  display: grid;
+  gap: 1rem;
+}
+
+.platform {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem 1.25rem;
+}
+
+.platformText {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.platformName {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  line-height: 1.15;
+}
+
+.handle {
+  font-weight: 700;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.blurb {
+  font-size: 0.95rem;
+}
+
+@media (min-width: 640px) {
+  .perks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .platforms {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1000px) {
+  .perks {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
