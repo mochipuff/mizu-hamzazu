@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { useSound } from '../../context/sound.ts';
 import { useToast } from '../../context/toast.ts';
 import { emotes, type Emote } from '../../data/emotes.ts';
@@ -21,8 +21,9 @@ export function Emotes() {
 
   const exportOne = async (emote: Emote): Promise<void> => {
     const response = await fetch(emotePng(emote.name));
+    if (!response.ok) throw new Error(`Missing artwork for ${emote.name}.`);
     const blob = await response.blob();
-    if (!response.ok || blob.type !== 'image/png') throw new Error(`Missing artwork for ${emote.name}.`);
+    if (blob.type !== 'image/png') throw new Error(`Unexpected file type for ${emote.name}.`);
     downloadBlob(blob, `${emote.name}.png`);
   };
 
@@ -82,7 +83,7 @@ export function Emotes() {
           {emotes.map((emote, index) => (
             <li key={emote.name}>
               <Reveal variant="pop" delay={(index % 4) * 90} className={styles.reveal}>
-                <article className={styles.card} style={{ '--tile': TILE_TONES[index % TILE_TONES.length] } as React.CSSProperties}>
+                <article className={styles.card} style={{ '--tile': TILE_TONES[index % TILE_TONES.length] } as CSSProperties}>
                   <div className={styles.tile}>
                     <img
                       className={styles.face}
