@@ -6,6 +6,7 @@ import '@fontsource/zen-maru-gothic/latin-700.css';
 import './styles/global.css';
 import { App } from './App.tsx';
 import { hideLoader, updateLoader } from './lib/loader.ts';
+import { ScrollTrigger } from './lib/motion.ts';
 import { preloadAssets } from './lib/preload.ts';
 
 const MIN_LOADER_MS = 600;
@@ -25,3 +26,5 @@ createRoot(container).render(
 );
 
 await hideLoader();
+// Fonts and images are in, so measure every scroll animation again.
+ScrollTrigger.refresh();
