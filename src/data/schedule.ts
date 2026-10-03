@@ -10,7 +10,6 @@ export const streamSlots: StreamSlot[] = [
     durationMinutes: 180,
     platform: 'youtube',
     membersOnly: false,
-    // TODO: replace with the real thumbnail URL, e.g. https://i.ytimg.com/vi/<VIDEO_ID>/maxresdefault.jpg
-    thumbnailUrl: 'https://placehold.co/1280x720/f0b863/373332/png?text=Stream+thumbnail',
+    thumbnailUrl: 'https://i.ytimg.com/vi/618FhJnhs8g/maxresdefault.jpg',
   },
 ];
