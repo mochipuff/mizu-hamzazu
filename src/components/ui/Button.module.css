@@ -31,11 +31,6 @@
   --bg: var(--sun);
 }
 
-.button[data-variant='dark'] {
-  --bg: var(--ink);
-  --fg: var(--white);
-}
-
 .button[data-size='sm'] {
   padding: 0.45rem 0.95rem;
   font-size: 0.9rem;

@@ -16,29 +16,15 @@
   border-radius: 50% 50% 46% 46%;
   background: linear-gradient(155deg, rgb(255 255 255 / 0.55) 0%, rgb(218 160 71 / 0.55) 55%, rgb(122 91 77 / 0.5) 100%);
   opacity: 0.75;
-  animation: fall var(--duration) linear var(--delay) infinite;
 }
 
 .seed[data-kind='burst'] {
   z-index: 3;
-  animation-iteration-count: 1;
-  animation-fill-mode: both;
   opacity: 0.95;
-}
-
-@keyframes fall {
-  from {
-    transform: translate3d(0, 0, 0) rotate(0deg);
-  }
-
-  to {
-    transform: translate3d(var(--drift), calc(100vh + var(--size) * 4), 0) rotate(var(--spin));
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .seed[data-kind='ambient'] {
-    animation: none;
     top: calc(var(--delay) * -3vh - 10vh);
     opacity: 0.4;
   }

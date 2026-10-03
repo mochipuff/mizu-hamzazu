@@ -28,12 +28,6 @@
   --tone: var(--coral-soft);
 }
 
-.panel[data-tone='ink'] {
-  --tone: var(--ink);
-
-  color: var(--white);
-}
-
 .panel[data-shape='leaf'] {
   --radius: 44px 14px 44px 14px;
 }

@@ -2,7 +2,7 @@ import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'reac
 import { Icon, type IconName } from './Icon.tsx';
 import styles from './Button.module.css';
 
-type Variant = 'primary' | 'secondary' | 'sun' | 'dark';
+type Variant = 'primary' | 'secondary' | 'sun';
 type Size = 'sm' | 'md' | 'lg';
 
 interface SharedProps {

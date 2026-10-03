@@ -5,10 +5,6 @@
   pointer-events: none;
 }
 
-.wave[data-flip='true'] {
-  transform: scaleY(-1);
-}
-
 .back,
 .front {
   position: absolute;
@@ -17,24 +13,8 @@
   width: 200%;
   max-width: none;
   height: 100%;
-  animation: drift 16s linear infinite;
 }
 
 .back {
   bottom: 0.4rem;
-  animation-duration: 24s;
-  animation-direction: reverse;
-}
-
-@keyframes drift {
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .back,
-  .front {
-    animation: none;
-  }
 }
