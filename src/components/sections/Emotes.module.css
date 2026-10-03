@@ -2,12 +2,6 @@
   padding-block: clamp(3rem, 8vw, 5.5rem);
 }
 
-.packAction {
-  display: flex;
-  justify-content: center;
-  margin-top: 2rem;
-}
-
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -20,6 +14,9 @@
 }
 
 .card {
+  --garland-size: 4rem;
+
+  position: relative;
   display: grid;
   justify-items: center;
   gap: 0.35rem;
@@ -108,32 +105,6 @@
   background: var(--shallows);
 }
 
-.save {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 2.4rem;
-  height: 2.4rem;
-  padding: 0;
-  border: 2px solid var(--ink);
-  border-radius: 50%;
-  background: var(--sun);
-  transition: transform 0.18s var(--ease-pop);
-}
-
-.save:hover:not(:disabled) {
-  transform: rotate(-10deg) scale(1.1);
-}
-
-.save:active:not(:disabled) {
-  transform: scale(0.94);
-}
-
-.save:disabled {
-  opacity: 0.55;
-  cursor: progress;
-}
-
 @media (min-width: 720px) {
   .grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -143,8 +114,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .card:hover,
-  .card:hover .face,
-  .save:hover:not(:disabled) {
+  .card:hover .face {
     transform: none;
   }
 }
