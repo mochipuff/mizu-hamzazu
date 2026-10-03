@@ -7,7 +7,7 @@ export interface ContactInput {
 
 export type ContactErrors = Partial<Record<keyof ContactInput, string>>;
 
-export const MESSAGE_MIN = 20;
+const MESSAGE_MIN = 20;
 export const MESSAGE_MAX = 2000;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;

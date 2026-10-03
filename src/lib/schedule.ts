@@ -47,6 +47,7 @@ interface WallDate {
 }
 
 const MINUTE = 60_000;
+const RELATIVE_LABELS = ['Today', 'Tomorrow'] as const;
 const WEEKDAYS: Record<string, Weekday> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 
 const partsFormatters = new Map<string, Intl.DateTimeFormat>();
@@ -79,7 +80,7 @@ export function isValidTimeZone(timeZone: string): boolean {
   }
 }
 
-export function getZonedParts(epoch: number, timeZone: string): ZonedParts {
+function getZonedParts(epoch: number, timeZone: string): ZonedParts {
   const parts = getPartsFormatter(timeZone).formatToParts(epoch);
   const read = (type: Intl.DateTimeFormatPartTypes): string => parts.find((part) => part.type === type)?.value ?? '0';
 
@@ -121,14 +122,11 @@ function parseTime(time: string): [number, number] {
 function firstStartAtOrAfter(slot: StreamSlot, from: number, baseTimeZone: string): number {
   const [hour, minute] = parseTime(slot.time);
   const today = getZonedParts(from, baseTimeZone);
+  const startOn = (daysAhead: number): number => wallTimeToEpoch(addWallDays(today, daysAhead), hour, minute, baseTimeZone);
 
-  for (let ahead = 0; ahead <= 7; ahead += 1) {
-    if ((today.weekday + ahead) % 7 !== slot.weekday) continue;
-    const start = wallTimeToEpoch(addWallDays(today, ahead), hour, minute, baseTimeZone);
-    if (start >= from) return start;
-  }
-
-  throw new Error(`No upcoming start found for stream slot "${slot.id}".`);
+  const daysAhead = (slot.weekday - today.weekday + 7) % 7;
+  const thisWeek = startOn(daysAhead);
+  return thisWeek >= from ? thisWeek : startOn(daysAhead + 7);
 }
 
 export function getOccurrence(slot: StreamSlot, now: number, baseTimeZone: string): StreamOccurrence {
@@ -167,7 +165,7 @@ export function getWeekColumns(
       key: dayKey(date),
       weekday: weekdayFormat.format(noon),
       date: dateFormat.format(noon),
-      relative: index === 0 ? 'Today' : index === 1 ? 'Tomorrow' : null,
+      relative: RELATIVE_LABELS[index] ?? null,
       isToday: index === 0,
       items: [],
     };
@@ -190,17 +188,6 @@ export function formatTimeRange(start: number, end: number, timeZone: string): s
   return `${format.format(start)} – ${format.format(end)}`;
 }
 
-export function formatDayAndTime(start: number, timeZone: string): string {
-  return new Intl.DateTimeFormat(undefined, {
-    timeZone,
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(start);
-}
-
 export function getTimeZoneLabel(timeZone: string, epoch: number): string {
   const parts = new Intl.DateTimeFormat('en-US', { timeZone, timeZoneName: 'short' }).formatToParts(epoch);
   return parts.find((part) => part.type === 'timeZoneName')?.value ?? timeZone;
@@ -218,12 +205,11 @@ export function listTimeZones(current: string): string[] {
   return [...zones].sort((a, b) => a.localeCompare(b));
 }
 
-export function splitDuration(milliseconds: number): { days: number; hours: number; minutes: number; seconds: number } {
-  const total = Math.max(0, Math.floor(milliseconds / 1000));
+export function splitDuration(milliseconds: number): { days: number; hours: number; minutes: number } {
+  const totalMinutes = Math.max(0, Math.floor(milliseconds / MINUTE));
   return {
-    days: Math.floor(total / 86_400),
-    hours: Math.floor((total % 86_400) / 3600),
-    minutes: Math.floor((total % 3600) / 60),
-    seconds: total % 60,
+    days: Math.floor(totalMinutes / 1440),
+    hours: Math.floor((totalMinutes % 1440) / 60),
+    minutes: totalMinutes % 60,
   };
 }
