@@ -1,6 +1,6 @@
 import { SoundProvider } from './context/SoundProvider.tsx';
 import { ToastProvider } from './context/ToastProvider.tsx';
-import { marqueeLines, navItems } from './data/content.ts';
+import { marqueeLines } from './data/content.ts';
 import { useScrollDepth } from './hooks/useScrollDepth.ts';
 import { Footer } from './components/layout/Footer.tsx';
 import { Header } from './components/layout/Header.tsx';
@@ -17,7 +17,7 @@ import { Marquee } from './components/ui/Marquee.tsx';
 import { WaveDivider } from './components/ui/WaveDivider.tsx';
 
 export function App() {
-  useScrollDepth(navItems.length * 12);
+  useScrollDepth();
 
   return (
     <SoundProvider>

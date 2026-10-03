@@ -68,23 +68,8 @@
   text-wrap: pretty;
 }
 
-.item[open] .answer {
-  animation: answer-in 0.3s ease-out;
-}
-
-@keyframes answer-in {
-  from {
-    opacity: 0;
-    translate: 0 -6px;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .toggle {
     transition: none;
-  }
-
-  .item[open] .answer {
-    animation: none;
   }
 }

@@ -1,7 +1,9 @@
+import { gsap, prefersReducedMotion } from './motion.ts';
+
 const loader = document.getElementById('loader');
 const bar = loader?.querySelector('[role="progressbar"]');
 
-const FADE_MS = 450;
+const FADE_SECONDS = 0.45;
 
 export function updateLoader(done: number, total: number): void {
   const progress = total === 0 ? 1 : done / total;
@@ -14,9 +16,8 @@ export async function hideLoader(): Promise<void> {
 
   updateLoader(1, 1);
   loader.inert = true;
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const fade = loader.animate({ opacity: [1, 0] }, { duration: reduceMotion ? 0 : FADE_MS, easing: 'ease' });
-
-  await fade.finished;
+  await new Promise<void>((resolve) => {
+    gsap.to(loader, { opacity: 0, duration: prefersReducedMotion() ? 0 : FADE_SECONDS, ease: 'sine.inOut', onComplete: resolve });
+  });
   loader.remove();
 }

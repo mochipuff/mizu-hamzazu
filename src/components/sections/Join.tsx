@@ -1,6 +1,7 @@
 import { site } from '../../config/site.ts';
 import { perks } from '../../data/content.ts';
 import { ButtonLink } from '../ui/Button.tsx';
+import { FloatingBadges } from '../ui/FloatingBadges.tsx';
 import { Icon, type IconName } from '../ui/Icon.tsx';
 import { Panel, type PanelTone } from '../ui/Panel.tsx';
 import { platformIcon } from '../ui/platformIcon.ts';
@@ -23,7 +24,8 @@ export function Join() {
           {perks.map((perk, index) => (
             <li key={perk.title}>
               <Reveal variant={index % 2 === 0 ? 'swing' : 'pop'} delay={index * 90} className={styles.reveal}>
-                <Panel tone={perkTones[index % perkTones.length] ?? 'white'} shape={index % 2 === 0 ? 'leaf' : 'soft'} className={styles.perk}>
+                <Panel tone={perkTones[index % perkTones.length] ?? 'white'} shape={index % 2 === 0 ? 'leaf' : 'soft'} className={perk.tiers ? `${styles.perk} ${styles.hasBadges}` : styles.perk}>
+                  {perk.tiers && <FloatingBadges tiers={perk.tiers} />}
                   <span className={styles.perkIcon}>
                     <Icon name={perkIcons[index % perkIcons.length] ?? 'star'} size={26} />
                   </span>

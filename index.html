@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="color-scheme" content="light" />
+    <meta name="format-detection" content="telephone=no" />
     <!-- Critical CSS for the loading screen: inlined so it never waits on a network request.
          Keep it self-contained (no dependency on global.css). -->
     <style>
@@ -210,24 +211,9 @@
       <div class="loader-bar" role="progressbar" aria-label="Loading progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <span class="loader-fill"></span>
       </div>
-      <p class="loader-note">Mizu is warming up the wheel</p>
+      <p class="loader-note">Waking up mizu...</p>
     </div>
     <div id="root"></div>
-    <noscript>
-      <main style="max-width: 40rem; margin: 4rem auto; padding: 0 1.5rem; font-family: system-ui, sans-serif; line-height: 1.6">
-        <h1>Mizu Hamzazu</h1>
-        <p>
-          Mizu Hamzazu is a virtual streamer who plays cozy games, sings karaoke and chats live from her hamster wheel
-          studio.
-          Turn on JavaScript to see her schedule in your time zone and download emotes.
-        </p>
-        <ul>
-          <li><a href="https://www.youtube.com/@MizuHamzazu">YouTube</a></li>
-          <li><a href="https://www.twitch.tv/mizuhamzazu">Twitch</a></li>
-          <li><a href="https://x.com/MizuHamzazu">X</a></li>
-        </ul>
-      </main>
-    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

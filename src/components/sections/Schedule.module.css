@@ -1,4 +1,6 @@
 .section {
+  position: relative;
+  isolation: isolate;
   padding-block: clamp(3rem, 8vw, 5.5rem);
 }
 
@@ -108,21 +110,114 @@
 }
 
 .event {
+  --event-bg: var(--white);
+  --media-width: 62%;
+
+  position: relative;
+  isolation: isolate;
   display: grid;
-  gap: 0.35rem;
+  align-content: end;
+  min-height: 13.5rem;
   padding: 0.75rem;
   border: 2px solid var(--ink);
   border-radius: 16px;
-  background: var(--white);
+  background: var(--event-bg);
+  overflow: hidden;
 }
 
 .event[data-status='live'] {
-  background: var(--coral-soft);
+  --event-bg: var(--coral-soft);
+
   box-shadow: 3px 3px 0 var(--ink);
 }
 
-.event[data-status='done'] {
-  opacity: 0.6;
+/* Thumbnail layer: the right side of the card background, melting into the card colour towards the text. */
+.media {
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: -1;
+  width: var(--media-width);
+  background: linear-gradient(135deg, var(--sun) 0%, var(--lilac) 100%);
+  overflow: hidden;
+}
+
+.media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, color-mix(in srgb, var(--event-bg) 85%, transparent) 0%, transparent 45%),
+    linear-gradient(
+      to right,
+      var(--event-bg) 0%,
+      color-mix(in srgb, var(--event-bg) 72%, transparent) 30%,
+      color-mix(in srgb, var(--event-bg) 18%, transparent) 75%,
+      transparent 100%
+    );
+}
+
+.thumb {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: filter 0.4s;
+}
+
+.eventBody {
+  display: grid;
+  gap: 0.35rem;
+  text-shadow:
+    0 0 6px var(--event-bg),
+    0 0 2px var(--event-bg);
+}
+
+.event[data-status='done'] .thumb {
+  filter: grayscale(1) contrast(1.1) brightness(0.7);
+}
+
+.event[data-status='done'] .media {
+  background: linear-gradient(135deg, #8d8582 0%, #5b5553 100%);
+}
+
+/* Live ended: scanlines sit above the thumbnail. GSAP animates them. */
+.endedFx {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.scanlines {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: var(--media-width);
+  background: repeating-linear-gradient(0deg, rgb(0 0 0 / 0.28) 0 2px, transparent 2px 5px);
+  mask-image: linear-gradient(to right, transparent 0%, #000 55%);
+}
+
+.timeRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.3rem 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.endedStamp {
+  display: block;
+  padding: 0.12rem 0.6rem;
+  border: 2.5px solid var(--ink);
+  border-radius: 10px;
+  background: var(--white);
+  box-shadow: 2px 2px 0 var(--ink);
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-shadow: none;
+  rotate: -5deg;
 }
 
 .time {

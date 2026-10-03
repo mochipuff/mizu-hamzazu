@@ -6,19 +6,14 @@ export type IconName =
   | 'post'
   | 'discord'
   | 'copy'
-  | 'check'
   | 'calendar'
-  | 'download'
   | 'menu'
   | 'close'
   | 'sound-on'
   | 'sound-off'
-  | 'mail'
   | 'heart'
   | 'star'
-  | 'drop'
   | 'arrow-up'
-  | 'external'
   | 'plus'
   | 'send'
   | 'clock'
@@ -51,14 +46,12 @@ const glyphs: Record<IconName, ReactNode> = {
       <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
     </>
   ),
-  check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
   calendar: (
     <>
       <rect x="4" y="5" width="16" height="15" rx="3" />
       <path d="M8 3v4M16 3v4M4 10h16" />
     </>
   ),
-  download: <path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 20h14" />,
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
   close: <path d="m6 6 12 12M18 6 6 18" />,
   'sound-on': (
@@ -73,17 +66,9 @@ const glyphs: Record<IconName, ReactNode> = {
       <path d="m16 9.5 5 5M21 9.5l-5 5" />
     </>
   ),
-  mail: (
-    <>
-      <rect x="3" y="5" width="18" height="14" rx="3" />
-      <path d="m4 7 8 6 8-6" />
-    </>
-  ),
   heart: <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />,
   star: <path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9l-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z" />,
-  drop: <path d="M12 3.5C9 8 6 11 6 14.5a6 6 0 0 0 12 0C18 11 15 8 12 3.5z" />,
   'arrow-up': <path d="M12 19V6M6.5 11.5 12 6l5.5 5.5" />,
-  external: <path d="M14 5h5v5M19 5l-8 8M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4" />,
   plus: <path d="M12 5v14M5 12h14" />,
   send: (
     <>

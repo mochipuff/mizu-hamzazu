@@ -1,12 +1,13 @@
 import { emotes } from '../data/emotes.ts';
 import { heroImages } from '../data/hero.ts';
+import { membershipTiers } from '../data/membership.ts';
 import { emotePng } from './assets.ts';
 
 // Must match the @font-face families imported in main.tsx.
 const FONTS = ['400 1em "Mochiy Pop One"', '500 1em "Zen Maru Gothic"', '700 1em "Zen Maru Gothic"'];
 
-// Every image on the site comes from these two lists, so nothing else needs to be discovered.
-const IMAGES = [...Object.values(heroImages), ...emotes.map(({ name }) => emotePng(name))];
+// Every local image on the site comes from these lists (schedule thumbnails are remote and lazy-loaded).
+const IMAGES = [...Object.values(heroImages), ...emotes.map(({ name }) => emotePng(name)), ...membershipTiers.map(({ badge }) => badge)];
 
 const TIMEOUT_MS = 10_000;
 

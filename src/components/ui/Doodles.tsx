@@ -16,36 +16,6 @@ export function Sparkle({ color = '#f0b863', outline = '#373332', ...rest }: Doo
   );
 }
 
-export function Squiggle({ color = '#daa047', ...rest }: DoodleProps) {
-  return (
-    <svg viewBox="0 0 160 16" aria-hidden="true" focusable="false" preserveAspectRatio="none" {...rest}>
-      <path
-        d="M3 9c8-8 14-8 22 0s14 8 22 0 14-8 22 0 14 8 22 0 14-8 22 0 14 8 22 0 14-8 22 0"
-        fill="none"
-        stroke={color}
-        strokeWidth="5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-export function Droplet({ color = '#daa047', outline = '#373332', ...rest }: DoodleProps) {
-  return (
-    <svg viewBox="0 0 32 40" aria-hidden="true" focusable="false" {...rest}>
-      <path
-        d="M16 3C11 12 4 18 4 26a12 12 0 0 0 24 0C28 18 21 12 16 3z"
-        fill={color}
-        stroke={outline}
-        strokeWidth="2.5"
-        strokeLinejoin="round"
-      />
-      <path d="M10 26a6 6 0 0 0 5 6" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 export function Paw({ color = '#daa047', outline = '#373332', ...rest }: DoodleProps) {
   return (
     <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false" {...rest}>
@@ -70,6 +40,59 @@ export function Starfish({ color = '#daa047', outline = '#373332', ...rest }: Do
       <circle cx="30" cy="30" r="2.5" fill={outline} />
       <circle cx="23" cy="24" r="1.6" fill={outline} />
       <circle cx="37" cy="24" r="1.6" fill={outline} />
+    </svg>
+  );
+}
+
+const LEAVES = [
+  [18, 27, -35],
+  [18, 28, 35],
+  [44, 23, -40],
+  [44, 24, 30],
+  [72, 18, -45],
+  [72, 19, 25],
+  [98, 13, -50],
+  [98, 14, 20],
+] as const;
+
+/** A twig with paired leaves, growing up and to the right. Mirror it with CSS for the other side. */
+export function Branch({ color = 'var(--leaf)', outline = '#373332', ...rest }: DoodleProps) {
+  return (
+    <svg viewBox="0 0 120 40" aria-hidden="true" focusable="false" {...rest}>
+      <path d="M2 31C30 29 62 21 116 10" fill="none" stroke={outline} strokeWidth="3" strokeLinecap="round" />
+      {LEAVES.map(([x, y, angle]) => (
+        <path
+          key={`${x}-${angle}`}
+          d="M0 0c4-7 13-7 17 0-4 7-13 7-17 0z"
+          transform={`translate(${x} ${y}) rotate(${angle})`}
+          fill={color}
+          stroke={outline}
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+      ))}
+    </svg>
+  );
+}
+
+const CLOVER_ROTATIONS = [0, 90, 180, 270] as const;
+
+/** A four-leaf clover. */
+export function Clover({ color = 'var(--leaf)', outline = '#373332', ...rest }: DoodleProps) {
+  return (
+    <svg viewBox="0 0 40 44" aria-hidden="true" focusable="false" {...rest}>
+      <path d="M20 21q2 9-3 20" fill="none" stroke={outline} strokeWidth="2.5" strokeLinecap="round" />
+      {CLOVER_ROTATIONS.map((angle) => (
+        <path
+          key={angle}
+          d="M20 20c-7-1-12-5-10-10 2-4 8-3 10 2 2-5 8-6 10-2 2 5-3 9-10 10z"
+          transform={`rotate(${angle} 20 20)`}
+          fill={color}
+          stroke={outline}
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+      ))}
     </svg>
   );
 }

@@ -78,7 +78,7 @@ export function About() {
             {streamTypes.map((type, index) => (
               <li key={type.title}>
                 <Reveal variant="pop" delay={index * 110} className={styles.streamReveal}>
-                  <Panel tone={index === 1 ? 'lilac' : 'white'} tilt={STREAM_TILTS[index] ?? 0} className={styles.streamCard}>
+                  <Panel tone={index === 1 ? 'lilac' : 'white'} tilt={STREAM_TILTS[index] ?? 0} className={styles.streamCard} garland={index % 2 === 0 ? 'top-right' : 'top-left'}>
                     <img
                       className={styles.streamFace}
                       src={emotePng(type.emote)}

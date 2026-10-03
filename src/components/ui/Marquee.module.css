@@ -12,6 +12,7 @@
 .rotate {
   width: 106%;
   margin-inline: -3%;
+  overflow: hidden;
   transform: rotate(var(--tilt, 0deg));
 }
 
@@ -20,27 +21,9 @@
   --fg: var(--ink);
 }
 
-.marquee[data-tone='coral'] {
-  --bg: var(--coral);
-  --fg: var(--ink);
-}
-
 .track {
   display: flex;
   width: max-content;
-  animation: slide var(--duration, 32s) linear infinite;
-}
-
-.rotate[data-reverse='true'] .track {
-  animation-direction: reverse;
-}
-
-.marquee:hover .track {
-  animation-play-state: paused;
-}
-
-.rotate {
-  overflow: hidden;
 }
 
 .group {
@@ -62,16 +45,4 @@
 .icon {
   width: 1.3rem;
   height: 1.3rem;
-}
-
-@keyframes slide {
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .track {
-    animation: none;
-  }
 }

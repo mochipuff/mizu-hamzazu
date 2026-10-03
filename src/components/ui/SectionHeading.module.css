@@ -8,12 +8,6 @@
   text-align: center;
 }
 
-.head[data-align='start'] {
-  align-items: flex-start;
-  margin-inline: 0;
-  text-align: left;
-}
-
 .titleWrap {
   position: relative;
   display: inline-block;
@@ -33,7 +27,6 @@
   position: absolute;
   width: 1.5rem;
   height: 1.5rem;
-  animation: twinkle 2.6s ease-in-out infinite;
 }
 
 .sparkleLeft {
@@ -46,35 +39,32 @@
   bottom: -0.3rem;
   width: 1.15rem;
   height: 1.15rem;
-  animation-delay: -1.3s;
 }
 
-.squiggle {
-  width: 8.5rem;
-  height: 0.8rem;
+/* the twigs mirror each other around the clover */
+.ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.branchLeft,
+.branchRight {
+  width: 4.5rem;
+  height: 1.5rem;
+}
+
+.branchLeft {
+  scale: -1 1;
+}
+
+.clover {
+  width: 1.9rem;
 }
 
 .lead {
   max-width: 36rem;
   font-size: 1.15rem;
   text-wrap: pretty;
-}
-
-@keyframes twinkle {
-  0%,
-  100% {
-    transform: scale(0.85) rotate(0deg);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(1.15) rotate(20deg);
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .sparkleLeft,
-  .sparkleRight {
-    animation: none;
-  }
 }

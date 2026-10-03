@@ -96,7 +96,7 @@ export function Header() {
         </div>
       </div>
 
-      <div ref={panel} id="mobile-menu" className={styles.mobilePanel} data-open={open} hidden={!open}>
+      <div ref={panel} id="mobile-menu" className={styles.mobilePanel} hidden={!open}>
         <nav aria-label="Mobile">
           <ul className={styles.mobileList}>{links}</ul>
         </nav>
