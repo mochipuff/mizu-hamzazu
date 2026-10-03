@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from 'react';
+import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 
 export function useLocalStorage<T>(key: string, initialValue: T): [T, Dispatch<SetStateAction<T>>] {
   const [value, setValue] = useState<T>(() => {
@@ -18,6 +18,5 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, Dispatch<S
     }
   }, [key, value]);
 
-  const update = useCallback<Dispatch<SetStateAction<T>>>((next) => setValue(next), []);
-  return [value, update];
+  return [value, setValue];
 }
