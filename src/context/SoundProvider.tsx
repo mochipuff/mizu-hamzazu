@@ -1,32 +1,27 @@
-import { useCallback, useMemo, type ReactNode } from 'react';
-import { playSfx, unlockAudio, type SfxName } from '../lib/audio.ts';
+import { useMemo, type ReactNode } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage.ts';
+import { playSfx, unlockAudio, type SfxName } from '../lib/audio.ts';
 import { SoundContext } from './sound.ts';
 
 export function SoundProvider({ children }: { children: ReactNode }) {
-  const [enabled, setStoredEnabled] = useLocalStorage('mizu:sound', false);
+  const [enabled, setEnabled] = useLocalStorage('mizu:sound', false);
 
-  const setEnabled = useCallback(
-    (next: boolean) => {
-      if (next) {
-        unlockAudio();
-        playSfx('toggle');
-      }
-      setStoredEnabled(next);
-    },
-    [setStoredEnabled],
+  const value = useMemo(
+    () => ({
+      enabled,
+      toggle: () => {
+        if (!enabled) {
+          unlockAudio();
+          playSfx('toggle');
+        }
+        setEnabled(!enabled);
+      },
+      play: (name: SfxName) => {
+        if (enabled) playSfx(name);
+      },
+    }),
+    [enabled, setEnabled],
   );
-
-  const toggle = useCallback(() => setEnabled(!enabled), [enabled, setEnabled]);
-
-  const play = useCallback(
-    (name: SfxName) => {
-      if (enabled) playSfx(name);
-    },
-    [enabled],
-  );
-
-  const value = useMemo(() => ({ enabled, setEnabled, toggle, play }), [enabled, setEnabled, toggle, play]);
 
   return <SoundContext value={value}>{children}</SoundContext>;
 }

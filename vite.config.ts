@@ -2,7 +2,8 @@ import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv, type HtmlTagDescriptor, type Plugin } from 'vite';
 import { site } from './src/config/site.ts';
 
-const OG_IMAGE_PATH = '/og-image.png';
+// Served from public/og-image.png. Keep the size in sync with the real file.
+const OG_IMAGE = { path: '/og-image.png', width: 1200, height: 630 } as const;
 
 function seoPlugin(rawSiteUrl: string): Plugin {
   const siteUrl = rawSiteUrl.trim().replace(/\/+$/, '');
@@ -34,13 +35,13 @@ function seoPlugin(rawSiteUrl: string): Plugin {
       ];
 
       if (siteUrl) {
-        const imageUrl = `${siteUrl}${OG_IMAGE_PATH}`;
+        const imageUrl = `${siteUrl}${OG_IMAGE.path}`;
         tags.push(
           { tag: 'link', attrs: { rel: 'canonical', href: `${siteUrl}/` }, injectTo: 'head' },
           meta({ property: 'og:url', content: `${siteUrl}/` }),
           meta({ property: 'og:image', content: imageUrl }),
-          meta({ property: 'og:image:width', content: '1200' }),
-          meta({ property: 'og:image:height', content: '630' }),
+          meta({ property: 'og:image:width', content: String(OG_IMAGE.width) }),
+          meta({ property: 'og:image:height', content: String(OG_IMAGE.height) }),
           meta({ property: 'og:image:alt', content: seo.imageAlt }),
           meta({ name: 'twitter:image', content: imageUrl }),
           meta({ name: 'twitter:image:alt', content: seo.imageAlt }),
@@ -64,7 +65,7 @@ function seoPlugin(rawSiteUrl: string): Plugin {
             jobTitle: 'Virtual streamer',
             description: seo.description,
             sameAs: site.platforms.map((platform) => platform.url),
-            ...(siteUrl && { url: `${siteUrl}/`, image: `${siteUrl}${OG_IMAGE_PATH}` }),
+            ...(siteUrl && { url: `${siteUrl}/`, image: `${siteUrl}${OG_IMAGE.path}` }),
           },
         ],
       };

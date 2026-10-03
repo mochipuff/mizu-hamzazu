@@ -3,7 +3,6 @@ import type { SfxName } from '../lib/audio.ts';
 
 export interface SoundApi {
   enabled: boolean;
-  setEnabled: (enabled: boolean) => void;
   toggle: () => void;
   play: (name: SfxName) => void;
 }

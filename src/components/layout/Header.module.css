@@ -145,6 +145,10 @@
 }
 
 @media (min-width: 900px) {
+  .header {
+    padding-top: 1.4rem;
+  }
+
   .desktopNav {
     display: block;
   }

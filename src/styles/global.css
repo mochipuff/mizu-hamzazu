@@ -16,7 +16,6 @@
   --lilac-soft: #f0ddd4;
   --sand: #f5e5dc;
   --rust: #c1592d;
-  --rust-soft: #f0c9ae;
 
   --font-display: 'Mochiy Pop One', 'Zen Maru Gothic', ui-rounded, system-ui, sans-serif;
   --font-body: 'Zen Maru Gothic', ui-rounded, system-ui, sans-serif;
@@ -47,8 +46,7 @@ html {
 
 body {
   margin: 0;
-  min-height: 100vh;
-  overflow-x: hidden;
+  min-height: 100dvh;
   /* clip does not create a scroll container, so the sticky header keeps working */
   overflow-x: clip;
   font-family: var(--font-body);
@@ -56,7 +54,7 @@ body {
   font-weight: 500;
   line-height: 1.65;
   color: var(--ink);
-  background-color: var(--bg-secondary, #f5e5dc);
+  background-color: var(--sand);
   background-image:
     radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.6) 1.6px, transparent 0),
     linear-gradient(180deg, #fdf8f4 0%, #f9ecdf 26%, #f3ddc4 60%, #ecceac 100%);

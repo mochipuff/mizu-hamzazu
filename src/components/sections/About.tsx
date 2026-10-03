@@ -7,6 +7,8 @@ import { Reveal } from '../ui/Reveal.tsx';
 import { SectionHeading } from '../ui/SectionHeading.tsx';
 import styles from './About.module.css';
 
+const STREAM_TILTS = [-1.2, 0, 1.2] as const;
+
 export function About() {
   return (
     <section id="about" className={styles.section} aria-labelledby="about-title">
@@ -76,7 +78,7 @@ export function About() {
             {streamTypes.map((type, index) => (
               <li key={type.title}>
                 <Reveal variant="pop" delay={index * 110} className={styles.streamReveal}>
-                  <Panel tone={index === 1 ? 'lilac' : 'white'} shape="soft" tilt={index === 0 ? -1.2 : index === 2 ? 1.2 : 0} className={styles.streamCard}>
+                  <Panel tone={index === 1 ? 'lilac' : 'white'} tilt={STREAM_TILTS[index] ?? 0} className={styles.streamCard}>
                     <img
                       className={styles.streamFace}
                       src={emotePng(type.emote)}
