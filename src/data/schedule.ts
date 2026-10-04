@@ -18,7 +18,7 @@ export const streamSlots: StreamSlot[] = [
     description: 'Collab stream',
     weekday: 1,
     time: '20:00',
-    durationMinutes: 180,
+    durationMinutes: 150,
     platform: 'youtube',
     membersOnly: false,
     thumbnailUrl: 'https://i.ytimg.com/vi/M1ANn11KH2Q/sddefault.jpg',
