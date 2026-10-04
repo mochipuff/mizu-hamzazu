@@ -1,6 +1,6 @@
 import { dislikes, likes, lore, profileFacts } from '../../data/content.ts';
 import { streamTypes } from '../../data/streams.ts';
-import { emotePng } from '../../lib/assets.ts';
+import { emoteUrl } from '../../lib/assets.ts';
 import { Paw } from '../ui/Doodles.tsx';
 import { Panel } from '../ui/Panel.tsx';
 import { Reveal } from '../ui/Reveal.tsx';
@@ -81,10 +81,11 @@ export function About() {
                   <Panel tone={index === 1 ? 'lilac' : 'white'} tilt={STREAM_TILTS[index] ?? 0} className={styles.streamCard} garland={index % 2 === 0 ? 'top-right' : 'top-left'}>
                     <img
                       className={styles.streamFace}
-                      src={emotePng(type.emote)}
+                      src={emoteUrl(type.emote)}
                       alt={`${type.emote} emote for ${type.title}`}
                       width={512}
                       height={512}
+                      loading="lazy"
                       decoding="async"
                       draggable={false}
                     />

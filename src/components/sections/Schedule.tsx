@@ -199,6 +199,9 @@ export function Schedule() {
                                 className={styles.thumb}
                                 src={occurrence.slot.thumbnailUrl}
                                 alt={`${occurrence.slot.title} stream thumbnail`}
+                                width={320}
+                                height={180}
+                                loading="lazy"
                                 decoding="async"
                                 draggable={false}
                                 onError={handleThumbnailError}
