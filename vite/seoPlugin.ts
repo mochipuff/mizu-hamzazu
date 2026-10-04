@@ -1,6 +1,11 @@
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 import type { HtmlTagDescriptor, Plugin } from 'vite';
 import { isFilled, profileUrls, site } from '../src/config/site.ts';
 import { faqItems, profileFacts } from '../src/data/content.ts';
+import { emotes } from '../src/data/emotes.ts';
+import { heroImages } from '../src/data/hero.ts';
+import { emotePng } from '../src/lib/assets.ts';
 
 const AI_CRAWLERS = [
   'GPTBot',
@@ -17,6 +22,9 @@ const AI_CRAWLERS = [
 
 const { seo, profile } = site;
 const twitterHandle = site.platforms.find(({ id }) => id === 'x')?.handle;
+
+const IMAGE_MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg' }[seo.image.path.split('.').pop()?.toLowerCase() ?? ''];
+const MAX_IMAGE_BYTES = 600 * 1024;
 
 const escapeHtml = (value: string): string => value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
 
@@ -45,7 +53,6 @@ function buildJsonLd(siteUrl: string): string {
     description: profile.bio,
     jobTitle: 'Virtual YouTuber',
     nationality: { '@type': 'Country', name: profile.nationality },
-    birthDate: isFilled(profile.birthday) ? profile.birthday : undefined,
     height: { '@type': 'QuantitativeValue', value: profile.heightCm, unitCode: 'CMT' },
     knowsAbout: profile.topics,
     knowsLanguage: profile.languages,
@@ -131,6 +138,8 @@ function buildHead(siteUrl: string): HtmlTagDescriptor[] {
       { tag: 'link', attrs: { rel: 'alternate', hreflang: 'x-default', href: home }, injectTo: 'head' },
       meta({ property: 'og:url', content: home }),
       meta({ property: 'og:image', content: imageUrl }),
+      meta({ property: 'og:image:secure_url', content: imageUrl }),
+      ...(IMAGE_MIME ? [meta({ property: 'og:image:type', content: IMAGE_MIME })] : []),
       meta({ property: 'og:image:width', content: String(seo.image.width) }),
       meta({ property: 'og:image:height', content: String(seo.image.height) }),
       meta({ property: 'og:image:alt', content: seo.imageAlt }),
@@ -220,8 +229,11 @@ function buildLlmsTxt(siteUrl: string): string {
   return lines.join('\n');
 }
 
+const sitemapImage = (siteUrl: string, path: string): string => `    <image:image><image:loc>${siteUrl}${path}</image:loc></image:image>`;
+
 function buildSitemap(siteUrl: string): string {
   const today = new Date().toISOString().slice(0, 10);
+  const imagePaths = [seo.image.path, ...Object.values(heroImages), ...emotes.map(({ name }) => emotePng(name))];
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">',
@@ -230,11 +242,28 @@ function buildSitemap(siteUrl: string): string {
     `    <lastmod>${today}</lastmod>`,
     '    <changefreq>weekly</changefreq>',
     '    <priority>1.0</priority>',
-    `    <image:image><image:loc>${siteUrl}${seo.image.path}</image:loc><image:caption>${escapeHtml(seo.imageAlt)}</image:caption></image:image>`,
+    ...imagePaths.map((path) => sitemapImage(siteUrl, path)),
     '  </url>',
     '</urlset>',
     '',
   ].join('\n');
+}
+
+/** Warns at build time when the share image would be rejected or ignored by social platforms. */
+function checkShareImage(warn: (message: string) => void): void {
+  const file = join(process.cwd(), 'public', seo.image.path);
+  if (!existsSync(file)) return warn(`${seo.image.path} is missing from public/, so link previews will have no image.`);
+
+  const { size } = statSync(file);
+  if (size > MAX_IMAGE_BYTES) warn(`${seo.image.path} is ${Math.round(size / 1024)} KB. Keep it under ${MAX_IMAGE_BYTES / 1024} KB so WhatsApp and Facebook accept it.`);
+
+  const bytes = readFileSync(file);
+  const isPng = bytes.subarray(1, 4).toString('ascii') === 'PNG';
+  if (!isPng) return;
+  const [width, height] = [bytes.readUInt32BE(16), bytes.readUInt32BE(20)];
+  if (width !== seo.image.width || height !== seo.image.height) {
+    warn(`${seo.image.path} is ${width}x${height}, but site.ts declares ${seo.image.width}x${seo.image.height}.`);
+  }
 }
 
 export function seoPlugin(rawSiteUrl: string): Plugin {
@@ -246,11 +275,12 @@ export function seoPlugin(rawSiteUrl: string): Plugin {
     generateBundle() {
       const emit = (fileName: string, source: string) => this.emitFile({ type: 'asset', fileName, source });
 
+      checkShareImage((message) => this.warn(message));
       emit('robots.txt', buildRobots(siteUrl));
       emit('llms.txt', buildLlmsTxt(siteUrl));
 
       if (!siteUrl) {
-        this.warn('VITE_SITE_URL is not set: canonical, hreflang, Open Graph image URLs and sitemap.xml were skipped.');
+        this.warn('VITE_SITE_URL is not set (and no Vercel production domain was found): canonical, hreflang, Open Graph image URLs and sitemap.xml were skipped.');
         return;
       }
       emit('sitemap.xml', buildSitemap(siteUrl));
