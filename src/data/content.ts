@@ -35,10 +35,17 @@ export const navItems: NavItem[] = [
 const formatDate = (isoDate: string): string =>
   isFilled(isoDate) ? new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(isoDate)) : isoDate;
 
+const formatMonthDay = (monthDay: string): string => {
+  if (!isFilled(monthDay)) return monthDay;
+  const [month = 1, day = 1] = monthDay.split('-').map(Number);
+  // 2000 is a leap year, so 02-29 stays valid.
+  return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(2000, month - 1, day)));
+};
+
 /** Built from `site.profile`, so the page and the search/AI output can never disagree. Unfilled TODO values are skipped. */
 export const profileFacts: ProfileFact[] = [
   { label: 'Species', value: site.profile.species },
-  { label: 'Birthday', value: formatDate(site.profile.birthday) },
+  { label: 'Birthday', value: formatMonthDay(site.profile.birthday) },
   { label: 'Height', value: `${site.profile.heightCm} cm` },
   { label: 'Debut', value: formatDate(site.profile.debut) },
   { label: 'Fan name', value: site.fanName },
