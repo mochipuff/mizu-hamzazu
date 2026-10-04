@@ -1,3 +1,3 @@
-export const emotePng = (name: string): string => `/emotes/${name}.png`;
-export const heroPng = (name: string): string => `/hero/${name}.png`;
-export const membershipBadgePng = (id: string): string => `/membership/${id}.png`;
+export const emoteUrl = (name: string): string => `/emotes/${name}.webp`;
+export const heroUrl = (name: string): string => `/hero/${name}.webp`;
+export const membershipBadgeUrl = (id: string): string => `/membership/${id}.webp`;
