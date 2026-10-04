@@ -198,8 +198,7 @@ export function Schedule() {
                               <img
                                 className={styles.thumb}
                                 src={occurrence.slot.thumbnailUrl}
-                                alt=""
-                                loading="lazy"
+                                alt={`${occurrence.slot.title} stream thumbnail`}
                                 decoding="async"
                                 draggable={false}
                                 onError={handleThumbnailError}
