@@ -66,7 +66,7 @@ export function FloatingBadges({ tiers }: { tiers: readonly MembershipTier[] }) 
     <div ref={ref} className={styles.cluster} role="img" aria-label={`Membership badges: ${tiers.map((tier) => tier.name).join(', ')}`}>
       {tiers.map((tier) => (
         <span key={tier.id} className={styles.slot}>
-          <img className={styles.badge} src={tier.badge} alt="" width={256} height={256} loading="lazy" decoding="async" draggable={false} onError={handleImageError} />
+          <img className={styles.badge} src={tier.badge} alt="" width={256} height={256} decoding="async" draggable={false} onError={handleImageError} />
         </span>
       ))}
       {SPARKLES.map(({ top, left, size }) => (

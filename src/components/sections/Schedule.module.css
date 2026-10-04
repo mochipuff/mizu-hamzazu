@@ -70,7 +70,12 @@
   box-shadow: var(--pop);
 }
 
+.day[data-empty='true'] {
+  align-self: start;
+}
+
 .day[data-empty='true'] .dayReveal {
+  height: auto;
   background: rgb(255 255 255 / 0.4);
   box-shadow: none;
   border-style: dashed;

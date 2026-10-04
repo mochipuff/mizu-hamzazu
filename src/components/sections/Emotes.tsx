@@ -40,10 +40,9 @@ export function Emotes() {
                     <img
                       className={styles.face}
                       src={emotePng(emote.name)}
-                      alt={`${emote.label} emote`}
+                      alt={`${emote.name} emote: ${emote.usage}`}
                       width={512}
                       height={512}
-                      loading="lazy"
                       decoding="async"
                       draggable={false}
                     />

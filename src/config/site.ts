@@ -29,6 +29,7 @@ export interface Profile {
   nationality: string;
   debut: string;
   heightCm: number;
+  /** Month and day only, as MM-DD. */
   birthday: string;
   agency: string;
   illustrator: string;
@@ -86,7 +87,7 @@ export const site: SiteConfig = {
     nationality: 'Indonesia',
     debut: '2021-11-01',
     heightCm: 165,
-    birthday: '1999-03-12',
+    birthday: '03-12',
     agency: 'Independent',
     illustrator: 'TODO: character illustrator',
     riggerOrModeler: 'Ardi Sketch and Gromb Yan',
@@ -106,7 +107,7 @@ export const site: SiteConfig = {
     { tag: '#DekMizu', purpose: 'General posts' },
     { tag: '#forMizu', purpose: 'Fan art' },
     { tag: '#Mizuislive', purpose: 'Live' },
-    { tag: '#Mizungelag', purpose: 'Meme Posts'
+    { tag: '#Mizungelag', purpose: 'Meme Posts' },
     { tag: '#MizuClips', purpose: 'Clips and highlights' },
   ],
   platforms: [

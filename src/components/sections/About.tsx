@@ -82,10 +82,9 @@ export function About() {
                     <img
                       className={styles.streamFace}
                       src={emotePng(type.emote)}
-                      alt=""
+                      alt={`${type.emote} emote for ${type.title}`}
                       width={512}
                       height={512}
-                      loading="lazy"
                       decoding="async"
                       draggable={false}
                     />

@@ -7,7 +7,7 @@ import './styles/global.css';
 import { App } from './App.tsx';
 import { hideLoader, updateLoader } from './lib/loader.ts';
 import { ScrollTrigger } from './lib/motion.ts';
-import { preloadAssets } from './lib/preload.ts';
+import { preloadAssets, waitForDomImages } from './lib/preload.ts';
 
 const MIN_LOADER_MS = 600;
 
@@ -25,6 +25,8 @@ createRoot(container).render(
   </StrictMode>,
 );
 
+// The loader stays up until the rendered <img> elements are decoded too.
+await waitForDomImages();
 await hideLoader();
 // Fonts and images are in, so measure every scroll animation again.
 ScrollTrigger.refresh();
