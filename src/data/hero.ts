@@ -1,13 +1,13 @@
 import type { EmoteName } from './emotes.ts';
-import { heroPng } from '../lib/assets.ts';
+import { heroUrl } from '../lib/assets.ts';
 
 export const heroIntro =
   'Mizu Hamzazu is an isekai hamster who arrived with one primary mission: to find her lost younger sibling. Eternally 18 years old, Mizu is turning a new page in her journey.';
 
 export const heroImages = {
-  stand: heroPng('stand'),
-  wheel: heroPng('wheel'),
-  stage: heroPng('stage'),
+  stand: heroUrl('stand'),
+  wheel: heroUrl('wheel'),
+  stage: heroUrl('stage'),
 } as const;
 
 export const heroDefaultMood: EmoteName = 'mizuSleepy';

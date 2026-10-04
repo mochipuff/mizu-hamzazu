@@ -10,6 +10,6 @@ export const streamSlots: StreamSlot[] = [
     durationMinutes: 180,
     platform: 'youtube',
     membersOnly: false,
-    thumbnailUrl: 'https://i.ytimg.com/vi/618FhJnhs8g/maxresdefault.jpg',
+    thumbnailUrl: 'https://i.ytimg.com/vi_webp/618FhJnhs8g/mqdefault.webp',
   },
 ];
