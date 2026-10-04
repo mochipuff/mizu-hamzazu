@@ -26,8 +26,6 @@
   --pop-small: 3px 3px 0 var(--ink);
   --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
   --container: min(100% - 2.5rem, 1180px);
-
-  --depth: 0;
 }
 
 *,
@@ -47,7 +45,6 @@ html {
 body {
   margin: 0;
   min-height: 100dvh;
-  /* clip does not create a scroll container, so the sticky header keeps working */
   overflow-x: clip;
   font-family: var(--font-body);
   font-size: 1.0625rem;
@@ -69,8 +66,22 @@ body::before {
   inset: 0;
   z-index: -1;
   background: #4a2f1f;
-  opacity: calc(var(--depth) * 0.16);
+  opacity: 0;
   pointer-events: none;
+}
+
+/* The page darkens slightly as you scroll down. Runs on the compositor, no JS or layout reads. */
+@supports (animation-timeline: scroll()) {
+  body::before {
+    animation: depth-veil linear both;
+    animation-timeline: scroll(root);
+  }
+}
+
+@keyframes depth-veil {
+  to {
+    opacity: 0.16;
+  }
 }
 
 #root {

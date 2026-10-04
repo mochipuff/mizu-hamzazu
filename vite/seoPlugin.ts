@@ -1,11 +1,11 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import type { HtmlTagDescriptor, Plugin } from 'vite';
+import type { HtmlTagDescriptor, IndexHtmlTransformContext, Plugin } from 'vite';
 import { isFilled, profileUrls, site } from '../src/config/site.ts';
 import { faqItems, profileFacts } from '../src/data/content.ts';
 import { emotes } from '../src/data/emotes.ts';
-import { heroImages } from '../src/data/hero.ts';
-import { emotePng } from '../src/lib/assets.ts';
+import { heroDefaultMood, heroImages } from '../src/data/hero.ts';
+import { emoteUrl } from '../src/lib/assets.ts';
 
 const AI_CRAWLERS = [
   'GPTBot',
@@ -26,9 +26,12 @@ const twitterHandle = site.platforms.find(({ id }) => id === 'x')?.handle;
 const IMAGE_MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg' }[seo.image.path.split('.').pop()?.toLowerCase() ?? ''];
 const MAX_IMAGE_BYTES = 600 * 1024;
 
+// Google requires a full ISO 8601 datetime with a UTC offset. site.scheduleTimeZone (Asia/Jakarta) has no DST, so the offset is fixed.
+const SITE_UTC_OFFSET = '+07:00';
+const toDateTime = (isoDate: string): string | undefined => (isFilled(isoDate) ? `${isoDate}T00:00:00${SITE_UTC_OFFSET}` : undefined);
+
 const escapeHtml = (value: string): string => value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
 
-/** Drops empty values so unfilled placeholders never reach the published markup. */
 const compact = (entries: Record<string, unknown>): Record<string, unknown> =>
   Object.fromEntries(
     Object.entries(entries).filter(([, value]) => {
@@ -77,7 +80,7 @@ function buildJsonLd(siteUrl: string): string {
       '@id': id('profile'),
       name: seo.title,
       description: seo.description,
-      dateCreated: profile.debut,
+      dateCreated: toDateTime(profile.debut),
       isPartOf: { '@id': id('website') },
       mainEntity: { '@id': id('person') },
       primaryImageOfPage: image ? { '@type': 'ImageObject', url: image, width: seo.image.width, height: seo.image.height } : undefined,
@@ -151,6 +154,18 @@ function buildHead(siteUrl: string): HtmlTagDescriptor[] {
   return tags;
 }
 
+const FONT_FILE = /(mochiy-pop-one|zen-maru-gothic)-latin-\d+-normal.*\.woff2$/;
+
+/** Lets the browser start the above-the-fold images and fonts while the JS bundle is still downloading. */
+function buildPreloads(bundle: IndexHtmlTransformContext['bundle']): HtmlTagDescriptor[] {
+  const fonts = Object.keys(bundle ?? {}).filter((file) => FONT_FILE.test(file));
+  const images = [...Object.values(heroImages), emoteUrl(heroDefaultMood)];
+  return [
+    ...fonts.map((file): HtmlTagDescriptor => ({ tag: 'link', attrs: { rel: 'preload', as: 'font', type: 'font/woff2', href: `/${file}`, crossorigin: true }, injectTo: 'head' })),
+    ...images.map((href): HtmlTagDescriptor => ({ tag: 'link', attrs: { rel: 'preload', as: 'image', type: 'image/webp', href, fetchpriority: 'high' }, injectTo: 'head' })),
+  ];
+}
+
 const facts = (): Array<[string, string]> => [
   ...profileFacts.map(({ label, value }): [string, string] => [label, value]),
   ['Nationality', profile.nationality],
@@ -162,7 +177,6 @@ const facts = (): Array<[string, string]> => [
 
 const publishableFacts = (): Array<[string, string]> => facts().filter(([, value]) => isFilled(value));
 
-/** Plain HTML for crawlers that do not run JavaScript. Built from the same data as the visible page. */
 function buildNoscript(): HtmlTagDescriptor {
   const links = [...site.platforms.map(({ label, url, blurb }) => ({ label, url, purpose: blurb })), ...profile.socials]
     .filter(({ url }) => isFilled(url))
@@ -200,7 +214,6 @@ function buildRobots(siteUrl: string): string {
   ].join('\n');
 }
 
-/** llms.txt: a short Markdown brief for AI assistants (https://llmstxt.org). */
 function buildLlmsTxt(siteUrl: string): string {
   const lines = [
     `# ${site.name}`,
@@ -233,7 +246,7 @@ const sitemapImage = (siteUrl: string, path: string): string => `    <image:imag
 
 function buildSitemap(siteUrl: string): string {
   const today = new Date().toISOString().slice(0, 10);
-  const imagePaths = [seo.image.path, ...Object.values(heroImages), ...emotes.map(({ name }) => emotePng(name))];
+  const imagePaths = [seo.image.path, ...Object.values(heroImages), ...emotes.map(({ name }) => emoteUrl(name))];
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">',
@@ -249,7 +262,6 @@ function buildSitemap(siteUrl: string): string {
   ].join('\n');
 }
 
-/** Warns at build time when the share image would be rejected or ignored by social platforms. */
 function checkShareImage(warn: (message: string) => void): void {
   const file = join(process.cwd(), 'public', seo.image.path);
   if (!existsSync(file)) return warn(`${seo.image.path} is missing from public/, so link previews will have no image.`);
@@ -271,7 +283,7 @@ export function seoPlugin(rawSiteUrl: string): Plugin {
 
   return {
     name: 'mizu:seo',
-    transformIndexHtml: () => [...buildHead(siteUrl), buildNoscript()],
+    transformIndexHtml: (_html, { bundle }) => [...buildHead(siteUrl), ...buildPreloads(bundle), buildNoscript()],
     generateBundle() {
       const emit = (fileName: string, source: string) => this.emitFile({ type: 'asset', fileName, source });
 

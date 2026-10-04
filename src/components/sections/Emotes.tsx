@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import { useSound } from '../../context/sound.ts';
 import { useToast } from '../../context/toast.ts';
 import { emotes, type Emote } from '../../data/emotes.ts';
-import { emotePng } from '../../lib/assets.ts';
+import { emoteUrl } from '../../lib/assets.ts';
 import { copyText } from '../../lib/clipboard.ts';
 import { Garland } from '../ui/Garland.tsx';
 import { Icon } from '../ui/Icon.tsx';
@@ -39,10 +39,11 @@ export function Emotes() {
                   <div className={styles.tile}>
                     <img
                       className={styles.face}
-                      src={emotePng(emote.name)}
+                      src={emoteUrl(emote.name)}
                       alt={`${emote.name} emote: ${emote.usage}`}
                       width={512}
                       height={512}
+                      loading="lazy"
                       decoding="async"
                       draggable={false}
                     />

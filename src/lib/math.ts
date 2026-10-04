@@ -1,5 +1,3 @@
-export const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
-
 export function createRandom(seed: number): () => number {
   let state = seed >>> 0;
   return () => {

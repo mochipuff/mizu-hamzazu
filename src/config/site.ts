@@ -29,7 +29,6 @@ export interface Profile {
   nationality: string;
   debut: string;
   heightCm: number;
-  /** Month and day only, as MM-DD. */
   birthday: string;
   agency: string;
   illustrator: string;

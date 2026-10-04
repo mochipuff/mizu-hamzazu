@@ -45,7 +45,7 @@ function fall(layer: HTMLElement, seeds: SeedSpec[], kind: SeedKind): void {
       { x: 0, y: 0, rotation: 0 },
       {
         x: seed.drift,
-        y: () => window.innerHeight + seed.size * 4,
+        y: '105vh',
         rotation: seed.spin,
         duration: seed.duration,
         delay: kind === 'burst' ? seed.delay : 0,
