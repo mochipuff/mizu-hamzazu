@@ -6,6 +6,9 @@ import { streamSlots } from '../../data/schedule.ts';
 import { useGsap } from '../../hooks/useGsap.ts';
 import { useLocalStorage } from '../../hooks/useLocalStorage.ts';
 import { useNow } from '../../hooks/useNow.ts';
+import { useI18n } from '../../i18n/i18n.ts';
+import { localeInfo, type Locale } from '../../i18n/locales.ts';
+import type { Messages } from '../../i18n/types.ts';
 import { downloadBlob } from '../../lib/download.ts';
 import { buildCalendar, type CalendarEvent } from '../../lib/ics.ts';
 import { gsap, POP } from '../../lib/motion.ts';
@@ -65,7 +68,7 @@ function LiveEndedScanlines() {
 }
 
 /** A stamp that slams down the first time the card scrolls into view. */
-function LiveEndedStamp() {
+function LiveEndedStamp({ label }: { label: string }) {
   const ref = useRef<HTMLSpanElement>(null);
 
   useGsap(ref, () => {
@@ -80,19 +83,19 @@ function LiveEndedStamp() {
 
   return (
     <span ref={ref} className={styles.endedStamp}>
-      Live ended
+      {label}
     </span>
   );
 }
 
-function toCalendarEvent(occurrence: StreamOccurrence): CalendarEvent {
+function toCalendarEvent(occurrence: StreamOccurrence, locale: Locale, t: Messages): CalendarEvent {
   const platform = platformById.get(occurrence.slot.platform);
   return {
     uid: `${occurrence.slot.id}@mizuhamzazu`,
     start: occurrence.start,
     end: occurrence.end,
     title: `${site.name}: ${occurrence.slot.title}`,
-    description: `${occurrence.slot.description}${occurrence.slot.membersOnly ? ' (Members only)' : ''}`,
+    description: `${occurrence.slot.description[locale]}${occurrence.slot.membersOnly ? t.schedule.membersOnlySuffix : ''}`,
     location: platform?.label ?? '',
     url: platform?.liveUrl ?? site.platforms[0]?.url ?? '',
     weekly: true,
@@ -100,6 +103,8 @@ function toCalendarEvent(occurrence: StreamOccurrence): CalendarEvent {
 }
 
 export function Schedule() {
+  const { locale, t } = useI18n();
+  const language = localeInfo[locale].htmlLang;
   const now = useNow();
   const toast = useToast();
   const sound = useSound();
@@ -108,33 +113,33 @@ export function Schedule() {
 
   const zone = storedZone && isValidTimeZone(storedZone) ? storedZone : detectedZone;
   const zones = useMemo(() => listTimeZones(zone), [zone]);
-  const columns = getWeekColumns(streamSlots, now, zone, BASE_ZONE);
+  const columns = getWeekColumns(streamSlots, now, zone, BASE_ZONE, language);
   const zoneLabel = getTimeZoneLabel(zone, now);
   const isBaseZone = zone === BASE_ZONE;
 
   const downloadEvents = (events: CalendarEvent[], filename: string) => {
-    downloadBlob(new Blob([buildCalendar(events, `${site.name} streams`)], { type: 'text/calendar;charset=utf-8' }), filename);
+    downloadBlob(new Blob([buildCalendar(events, t.schedule.calendarName(site.name), t.schedule.reminder)], { type: 'text/calendar;charset=utf-8' }), filename);
     sound.play('pop');
-    toast.notify('Calendar file downloaded.');
+    toast.notify(t.schedule.calendarDownloaded);
   };
 
   const downloadAll = () => {
     downloadEvents(
-      streamSlots.map((slot) => toCalendarEvent(getOccurrence(slot, now, BASE_ZONE))),
+      streamSlots.map((slot) => toCalendarEvent(getOccurrence(slot, now, BASE_ZONE), locale, t)),
       'mizu-hamzazu-streams.ics',
     );
   };
 
   const downloadOne = (occurrence: StreamOccurrence) => {
-    downloadEvents([toCalendarEvent(occurrence)], `mizu-${occurrence.slot.id}.ics`);
+    downloadEvents([toCalendarEvent(occurrence, locale, t)], `mizu-${occurrence.slot.id}.ics`);
   };
 
   return (
     <section id="schedule" className={styles.section} aria-labelledby="schedule-title">
       <StreamDecor />
       <div className="container">
-        <SectionHeading headingId="schedule-title" title="Stream schedule">
-          Times below are shown in your time zone, so you never have to do the math.
+        <SectionHeading headingId="schedule-title" title={t.schedule.title}>
+          {t.schedule.lead}
         </SectionHeading>
 
         <Reveal variant="drop">
@@ -142,7 +147,7 @@ export function Schedule() {
             <label className={styles.zoneField}>
               <span className={styles.zoneLabel}>
                 <Icon name="clock" size={18} />
-                Your time zone
+                {t.schedule.yourTimeZone}
               </span>
               <select
                 className={styles.select}
@@ -160,32 +165,32 @@ export function Schedule() {
             <div className={styles.controlActions}>
               {!isBaseZone && (
                 <Button variant="secondary" size="sm" onClick={() => setStoredZone(BASE_ZONE)}>
-                  Show {getTimeZoneLabel(BASE_ZONE, now)} time
+                  {t.schedule.showBaseTime(getTimeZoneLabel(BASE_ZONE, now))}
                 </Button>
               )}
               {zone !== detectedZone && (
                 <Button variant="secondary" size="sm" onClick={() => setStoredZone(detectedZone)}>
-                  Use my time zone
+                  {t.schedule.useMyTimeZone}
                 </Button>
               )}
               <Button variant="sun" size="sm" icon="calendar" onClick={downloadAll}>
-                Add all to calendar
+                {t.schedule.addAll}
               </Button>
             </div>
           </Panel>
         </Reveal>
 
-        <ol className={styles.week} aria-label={`Streams for the next 7 days in ${zoneLabel}`}>
+        <ol className={styles.week} aria-label={t.schedule.weekLabel(zoneLabel)}>
           {columns.map((column, index) => (
             <li key={column.key} className={styles.day} data-today={column.isToday} data-empty={column.items.length === 0}>
               <Reveal variant="pop" delay={index * 60} className={styles.dayReveal}>
                 <div className={styles.dayHead}>
                   <span className={styles.weekday}>{column.weekday}</span>
-                  <span className={styles.date}>{column.relative ?? column.date}</span>
+                  <span className={styles.date}>{column.relative ? t.schedule[column.relative] : column.date}</span>
                 </div>
 
                 {column.items.length === 0 ? (
-                  <p className={styles.rest}>Rest day</p>
+                  <p className={styles.rest}>{t.schedule.restDay}</p>
                 ) : (
                   <ul className={styles.events}>
                     {column.items.map((occurrence) => {
@@ -198,7 +203,7 @@ export function Schedule() {
                               <img
                                 className={styles.thumb}
                                 src={occurrence.slot.thumbnailUrl}
-                                alt={`${occurrence.slot.title} stream thumbnail`}
+                                alt={t.schedule.thumbnailAlt(occurrence.slot.title)}
                                 width={320}
                                 height={180}
                                 loading="lazy"
@@ -214,19 +219,19 @@ export function Schedule() {
                             <div className={styles.timeRow}>
                               <p className={styles.time}>
                                 <Icon name={status === 'live' ? 'play' : 'clock'} size={16} />
-                                <span>{formatTimeRange(occurrence.start, occurrence.end, zone)}</span>
+                                <span>{formatTimeRange(occurrence.start, occurrence.end, zone, language)}</span>
                               </p>
-                              {status === 'done' && <LiveEndedStamp />}
+                              {status === 'done' && <LiveEndedStamp label={t.schedule.liveEnded} />}
                             </div>
                             <p className={styles.eventTitle}>{occurrence.slot.title}</p>
-                            <p className={styles.eventDesc}>{occurrence.slot.description}</p>
+                            <p className={styles.eventDesc}>{occurrence.slot.description[locale]}</p>
 
                             <div className={styles.badges}>
-                              {status === 'live' && <span className={styles.badgeLive}>Live now</span>}
+                              {status === 'live' && <span className={styles.badgeLive}>{t.schedule.liveNow}</span>}
                               {occurrence.slot.membersOnly && (
                                 <span className={styles.badge}>
                                   <Icon name="lock" size={13} />
-                                  Members
+                                  {t.schedule.members}
                                 </span>
                               )}
                             </div>
@@ -238,7 +243,7 @@ export function Schedule() {
                                   size="sm"
                                   icon={platformIcon[platform.id]}
                                   href={platform.liveUrl}
-                                  aria-label={`${occurrence.slot.title} on ${platform.label}`}
+                                  aria-label={t.schedule.watchOn(occurrence.slot.title, platform.label)}
                                 >
                                   {platform.label}
                                 </ButtonLink>
@@ -247,7 +252,7 @@ export function Schedule() {
                                 type="button"
                                 className={styles.calendarButton}
                                 onClick={() => downloadOne(occurrence)}
-                                aria-label={`Add ${occurrence.slot.title} to your calendar`}
+                                aria-label={t.schedule.addToCalendar(occurrence.slot.title)}
                               >
                                 <Icon name="calendar" size={18} />
                               </button>
@@ -263,10 +268,7 @@ export function Schedule() {
           ))}
         </ol>
 
-        <p className={styles.note}>
-          Streams are planned in {getTimeZoneLabel(BASE_ZONE, now)} time ({BASE_CITY}). Plans can change, so follow on X for surprise
-          streams and cancellations.
-        </p>
+        <p className={styles.note}>{t.schedule.note(getTimeZoneLabel(BASE_ZONE, now), BASE_CITY)}</p>
       </div>
     </section>
   );
