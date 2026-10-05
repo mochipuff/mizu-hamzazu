@@ -1,8 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react';
 import { useSound } from '../../context/sound.ts';
 import type { EmoteName } from '../../data/emotes.ts';
-import { heroDefaultMood, heroImages, heroReactions, pokeLines, pokeMilestones, welcomeLine } from '../../data/hero.ts';
+import { heroDefaultMood, heroImages, heroReactions } from '../../data/hero.ts';
 import { useGsap } from '../../hooks/useGsap.ts';
+import { useI18n } from '../../i18n/i18n.ts';
 import { emoteUrl } from '../../lib/assets.ts';
 import { triggerSplash } from '../../lib/events.ts';
 import { gsap, IDLE, POP, prefersReducedMotion } from '../../lib/motion.ts';
@@ -11,6 +12,9 @@ import styles from './HamsterWheelScene.module.css';
 const RESET_MS = 1600;
 const SPEECH_MS = 2600;
 const SPIN_PER_POKE = 46;
+
+/** What the speech bubble shows: the welcome line, or the line for the n-th poke. Kept as an id so a language switch re-translates it. */
+type SpeechId = 'welcome' | number;
 
 interface Ripple {
   id: number;
@@ -35,9 +39,10 @@ function RippleRing({ x, y, onDone }: { x: number; y: number; onDone: () => void
 
 export function HamsterWheelScene() {
   const sound = useSound();
+  const { t } = useI18n();
   const [pokes, setPokes] = useState(0);
   const [mood, setMood] = useState<EmoteName>(heroDefaultMood);
-  const [speech, setSpeech] = useState(welcomeLine);
+  const [speechId, setSpeechId] = useState<SpeechId>('welcome');
   const [ripples, setRipples] = useState<Ripple[]>([]);
   const sceneRef = useRef<HTMLDivElement>(null);
   const wheelRef = useRef<HTMLImageElement>(null);
@@ -61,7 +66,10 @@ export function HamsterWheelScene() {
     gsap.to(characterRef.current, { y: 4, duration: 1.7, ease: IDLE, yoyo: true, repeat: -1 });
   });
 
-  useGsap(sceneRef, () => void gsap.from(`.${styles.speech}`, { opacity: 0, scale: 0.7, y: 8, duration: 0.35, ease: POP }), [speech]);
+  const { welcome, pokeLines, pokeMilestones } = t.hero;
+  const speech = speechId === 'welcome' ? welcome : (pokeMilestones[speechId] ?? pokeLines[speechId % pokeLines.length] ?? welcome);
+
+  useGsap(sceneRef, () => void gsap.from(`.${styles.speech}`, { opacity: 0, scale: 0.7, y: 8, duration: 0.35, ease: POP }), [speechId]);
 
   const poke = (event: PointerEvent<HTMLButtonElement> | KeyboardEvent<HTMLButtonElement>) => {
     const next = pokes + 1;
@@ -74,13 +82,13 @@ export function HamsterWheelScene() {
     gsap.to(wheelRef.current, { rotation: spinTarget.current, duration: prefersReducedMotion() ? 0 : 0.52, ease: POP, overwrite: 'auto' });
     setPokes(next);
     setMood(heroReactions[next % heroReactions.length] ?? heroDefaultMood);
-    setSpeech(pokeMilestones[next] ?? pokeLines[next % pokeLines.length] ?? welcomeLine);
+    setSpeechId(next);
     setRipples((current) => [...current.slice(-3), { id: (rippleId.current += 1), x, y }]);
 
     window.clearTimeout(resetTimer.current);
     resetTimer.current = window.setTimeout(() => setMood(heroDefaultMood), RESET_MS);
     window.clearTimeout(speechTimer.current);
-    speechTimer.current = window.setTimeout(() => setSpeech(welcomeLine), SPEECH_MS);
+    speechTimer.current = window.setTimeout(() => setSpeechId('welcome'), SPEECH_MS);
 
     sound.play('bloop');
     if (pokeMilestones[next]) {
@@ -91,7 +99,7 @@ export function HamsterWheelScene() {
 
   return (
     <div ref={sceneRef} className={styles.scene}>
-      <p className={styles.speech} key={speech} role="status" aria-live="polite">
+      <p className={styles.speech} key={speechId} role="status" aria-live="polite">
         {speech}
       </p>
 
@@ -105,7 +113,7 @@ export function HamsterWheelScene() {
             poke(event);
           }
         }}
-        aria-label={`Spin the wheel and poke Mizu. Poked ${pokes} ${pokes === 1 ? 'time' : 'times'}.`}
+        aria-label={t.hero.pokeLabel(pokes)}
       >
         <span className={styles.art} aria-hidden="true">
           <img className={`${styles.layer} ${styles.stand}`} src={heroImages.stand} alt="" width={400} height={400} fetchPriority="high" draggable={false} />
@@ -119,7 +127,7 @@ export function HamsterWheelScene() {
         ))}
       </button>
 
-      <p className={styles.hint}>Give the wheel a spin, she reacts.</p>
+      <p className={styles.hint}>{t.hero.spinHint}</p>
     </div>
   );
 }
