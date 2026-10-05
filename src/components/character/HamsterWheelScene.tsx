@@ -13,7 +13,6 @@ const RESET_MS = 1600;
 const SPEECH_MS = 2600;
 const SPIN_PER_POKE = 46;
 
-/** What the speech bubble shows: the welcome line, or the line for the n-th poke. Kept as an id so a language switch re-translates it. */
 type SpeechId = 'welcome' | number;
 
 interface Ripple {
