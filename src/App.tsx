@@ -1,6 +1,6 @@
+import { getContactEmail } from './config/site.ts';
 import { SoundProvider } from './context/SoundProvider.tsx';
 import { ToastProvider } from './context/ToastProvider.tsx';
-import { marqueeLines } from './data/content.ts';
 import { Footer } from './components/layout/Footer.tsx';
 import { Header } from './components/layout/Header.tsx';
 import { About } from './components/sections/About.tsx';
@@ -14,30 +14,46 @@ import { AmbientSeeds } from './components/ui/AmbientSeeds.tsx';
 import { KonamiStorm } from './components/ui/KonamiStorm.tsx';
 import { Marquee } from './components/ui/Marquee.tsx';
 import { WaveDivider } from './components/ui/WaveDivider.tsx';
+import { I18nProvider } from './i18n/I18nProvider.tsx';
+import { useI18n } from './i18n/i18n.ts';
+import type { Locale } from './i18n/locales.ts';
 
-export function App() {
+function Page() {
+  const { t } = useI18n();
+  const contactEmail = getContactEmail();
+
   return (
-    <SoundProvider>
-      <ToastProvider>
-        <a className="skip-link" href="#main">
-          Skip to content
-        </a>
-        <AmbientSeeds />
-        <KonamiStorm />
-        <Header />
-        <main id="main">
-          <Hero />
-          <About />
-          <Schedule />
-          <Emotes />
-          <Marquee items={marqueeLines} tone="sun" tilt={-1.5} />
-          <Join />
-          <Faq />
-          <Contact />
-        </main>
-        <WaveDivider color="var(--ink)" />
-        <Footer />
-      </ToastProvider>
-    </SoundProvider>
+    <>
+      <a className="skip-link" href="#main">
+        {t.skipLink}
+      </a>
+      <AmbientSeeds />
+      <KonamiStorm />
+      <Header />
+      <main id="main">
+        <Hero />
+        <About />
+        <Schedule />
+        <Emotes />
+        <Marquee items={t.marquee} tone="sun" tilt={-1.5} />
+        <Join />
+        <Faq />
+        {contactEmail && <Contact email={contactEmail} />}
+      </main>
+      <WaveDivider color="var(--ink)" />
+      <Footer />
+    </>
+  );
+}
+
+export function App({ initialLocale }: { initialLocale: Locale }) {
+  return (
+    <I18nProvider initialLocale={initialLocale}>
+      <SoundProvider>
+        <ToastProvider>
+          <Page />
+        </ToastProvider>
+      </SoundProvider>
+    </I18nProvider>
   );
 }
