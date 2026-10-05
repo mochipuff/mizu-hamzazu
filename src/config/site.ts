@@ -2,7 +2,6 @@ import type { Messages } from '../i18n/types.ts';
 
 export type PlatformId = 'youtube' | 'twitch' | 'x' | 'discord';
 
-/** The call to action and blurb of each platform live in the messages (`platforms.<id>`). */
 export interface Platform {
   id: PlatformId;
   label: string;
@@ -25,10 +24,6 @@ export interface ExtraProfile {
   purpose: SocialPurpose;
 }
 
-/**
- * Facts that are the same in every language. Anything that has words (bio, species, languages, ...) is in `src/i18n/messages`.
- * Any value starting with "TODO" is skipped everywhere it would be published.
- */
 export interface Profile {
   debut: string;
   heightCm: number;
@@ -36,7 +31,6 @@ export interface Profile {
   illustrator: string;
   riggerOrModeler: string;
   alternateNames: string[];
-  /** No agency: the translated `agency` label ("Independent") is shown on the page but never published as an organization. */
   independent: boolean;
   socials: ExtraProfile[];
 }
@@ -128,7 +122,6 @@ export const site: SiteConfig = {
 
 export const isFilled = (value: string | undefined): value is string => Boolean(value) && !value?.startsWith('TODO');
 
-/** The business address, or `undefined` while it is still a TODO placeholder. */
 export const getContactEmail = (): string | undefined => (isFilled(site.contactEmail) ? site.contactEmail : undefined);
 
 export const profileUrls = (): string[] =>
