@@ -44,7 +44,7 @@ function fold(line: string): string {
   return chunks.join(CRLF);
 }
 
-export function buildCalendar(events: CalendarEvent[], calendarName: string): string {
+export function buildCalendar(events: CalendarEvent[], calendarName: string, describeReminder: (title: string) => string): string {
   const stamp = toIcsDate(Date.now());
   const lines = [
     'BEGIN:VCALENDAR',
@@ -70,7 +70,7 @@ export function buildCalendar(events: CalendarEvent[], calendarName: string): st
       'BEGIN:VALARM',
       'TRIGGER:-PT15M',
       'ACTION:DISPLAY',
-      `DESCRIPTION:${escapeText(`${event.title} starts in 15 minutes`)}`,
+      `DESCRIPTION:${escapeText(describeReminder(event.title))}`,
       'END:VALARM',
       'END:VEVENT',
     );

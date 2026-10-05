@@ -1,11 +1,12 @@
 import type { PlatformId } from '../config/site.ts';
+import type { Localized } from '../i18n/locales.ts';
 
 export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface StreamSlot {
   id: string;
   title: string;
-  description: string;
+  description: Localized;
   weekday: Weekday;
   time: string;
   durationMinutes: number;
@@ -27,7 +28,7 @@ export interface DayColumn {
   key: string;
   weekday: string;
   date: string;
-  relative: string | null;
+  relative: 'today' | 'tomorrow' | null;
   isToday: boolean;
   items: StreamOccurrence[];
 }
@@ -49,7 +50,7 @@ interface WallDate {
 }
 
 const MINUTE = 60_000;
-const RELATIVE_LABELS = ['Today', 'Tomorrow'] as const;
+const RELATIVE_DAYS = ['today', 'tomorrow'] as const;
 const WEEKDAYS: Record<string, Weekday> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 
 const partsFormatters = new Map<string, Intl.DateTimeFormat>();
@@ -152,13 +153,14 @@ export function getWeekColumns(
   now: number,
   viewerTimeZone: string,
   baseTimeZone: string,
+  language: string,
 ): DayColumn[] {
   const today = getZonedParts(now, viewerTimeZone);
   const todayDate: WallDate = { year: today.year, month: today.month, day: today.day };
   const rangeStart = wallTimeToEpoch(todayDate, 0, 0, viewerTimeZone);
 
-  const weekdayFormat = new Intl.DateTimeFormat(undefined, { timeZone: viewerTimeZone, weekday: 'short' });
-  const dateFormat = new Intl.DateTimeFormat(undefined, { timeZone: viewerTimeZone, month: 'short', day: 'numeric' });
+  const weekdayFormat = new Intl.DateTimeFormat(language, { timeZone: viewerTimeZone, weekday: 'short' });
+  const dateFormat = new Intl.DateTimeFormat(language, { timeZone: viewerTimeZone, month: 'short', day: 'numeric' });
 
   const columns: DayColumn[] = Array.from({ length: 7 }, (_, index) => {
     const date = addWallDays(todayDate, index);
@@ -167,7 +169,7 @@ export function getWeekColumns(
       key: dayKey(date),
       weekday: weekdayFormat.format(noon),
       date: dateFormat.format(noon),
-      relative: RELATIVE_LABELS[index] ?? null,
+      relative: RELATIVE_DAYS[index] ?? null,
       isToday: index === 0,
       items: [],
     };
@@ -187,8 +189,8 @@ export function getWeekColumns(
   return columns;
 }
 
-export function formatTimeRange(start: number, end: number, timeZone: string): string {
-  const format = new Intl.DateTimeFormat(undefined, { timeZone, hour: 'numeric', minute: '2-digit' });
+export function formatTimeRange(start: number, end: number, timeZone: string, language: string): string {
+  const format = new Intl.DateTimeFormat(language, { timeZone, hour: 'numeric', minute: '2-digit' });
   return `${format.format(start)} – ${format.format(end)}`;
 }
 
