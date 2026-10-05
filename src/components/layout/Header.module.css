@@ -14,7 +14,7 @@
   border-bottom-color: var(--ink);
   background: rgb(243 252 255 / 0.9);
   backdrop-filter: blur(10px);
-  box-shadow: 0 4px 0 rgb(22 36 95 / 0.12);
+  box-shadow: 0 4px 0 color-mix(in srgb, var(--ink) 12%, transparent);
 }
 
 .bar {
@@ -90,6 +90,23 @@
   gap: 0.6rem;
 }
 
+/* The bar has no room for the language menu on phones, so it lives in the mobile panel there. */
+.desktopLanguage {
+  display: none;
+}
+
+.mobileLanguage {
+  display: grid;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 3px dashed var(--shallows);
+}
+
+.mobileLanguage > div,
+.mobileLanguage select {
+  width: 100%;
+}
+
 .iconButton {
   display: grid;
   place-items: center;
@@ -150,6 +167,10 @@
   }
 
   .desktopNav {
+    display: block;
+  }
+
+  .desktopLanguage {
     display: block;
   }
 

@@ -1,9 +1,11 @@
 import { site } from '../../config/site.ts';
+import { useI18n } from '../../i18n/i18n.ts';
 import { Icon } from '../ui/Icon.tsx';
 import { platformIcon } from '../ui/platformIcon.ts';
 import styles from './Footer.module.css';
 
 export function Footer() {
+  const { t } = useI18n();
   const year = new Date().getFullYear();
 
   return (
@@ -11,10 +13,10 @@ export function Footer() {
       <div className={`container ${styles.inner}`}>
         <div className={styles.brand}>
           <p className={styles.name}>{site.name}</p>
-          <p className={styles.signoff}>Oshi kamu pokoknya harus aku! ya?</p>
+          <p className={styles.signoff}>{t.footer.signoff}</p>
         </div>
 
-        <nav aria-label="Social links">
+        <nav aria-label={t.footer.socialNav}>
           <ul className={styles.socials}>
             {site.platforms.map((platform) => (
               <li key={platform.id}>
@@ -23,7 +25,7 @@ export function Footer() {
                   href={platform.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={`${platform.label}, ${platform.handle} (opens in a new tab)`}
+                  aria-label={t.footer.openInNewTab(platform.label, platform.handle)}
                 >
                   <Icon name={platformIcon[platform.id]} size={22} />
                   <span>{platform.label}</span>
@@ -33,9 +35,9 @@ export function Footer() {
           </ul>
         </nav>
 
-        <ul className={styles.tags} aria-label="Hashtags">
+        <ul className={styles.tags} aria-label={t.footer.hashtags}>
           {site.hashtags.map((hashtag) => (
-            <li key={hashtag.tag} title={hashtag.purpose}>
+            <li key={hashtag.tag} title={t.hashtags[hashtag.purpose]}>
               {hashtag.tag}
             </li>
           ))}
@@ -43,13 +45,11 @@ export function Footer() {
 
         <a className={styles.top} href="#top">
           <Icon name="arrow-up" size={18} />
-          <span>Back to top</span>
+          <span>{t.footer.backToTop}</span>
         </a>
       </div>
 
-      <p className={styles.legal}>
-        &copy; {year} Fikk@MizuHamzazu. Fan art and clips are welcome, please credit and link back.
-      </p>
+      <p className={styles.legal}>{t.footer.legal(year, site.copyrightOwner)}</p>
     </footer>
   );
 }
