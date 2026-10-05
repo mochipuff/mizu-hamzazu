@@ -1,11 +1,12 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{htmlLang}}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="color-scheme" content="light" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="google-site-verification" content="bYUsAbA8e4qv8C7ApbHShxngnbdf1xRDzQ8qR32LlME" />
+    <!--locale-head-->
     <style>
       body {
         margin: 0;
@@ -187,6 +188,7 @@
     <noscript><style>#loader { display: none; }</style></noscript>
   </head>
   <body>
+    <!--locale-noscript-->
     <div id="loader" class="loader" role="status">
       <svg class="loader-wheel" viewBox="0 0 120 120" width="120" height="120" aria-hidden="true" focusable="false">
         <g class="loader-spin">
@@ -204,12 +206,12 @@
         </g>
       </svg>
       <p class="loader-title">
-        Loading<span class="loader-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        {{loaderTitle}}<span class="loader-dots" aria-hidden="true"><i></i><i></i><i></i></span>
       </p>
-      <div class="loader-bar" role="progressbar" aria-label="Loading progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="loader-bar" role="progressbar" aria-label="{{loaderProgress}}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <span class="loader-fill"></span>
       </div>
-      <p class="loader-note">Waking up mizu...</p>
+      <p class="loader-note">{{loaderNote}}</p>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
