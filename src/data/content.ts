@@ -1,96 +1,58 @@
-import { isFilled, site } from '../config/site.ts';
+import { getContactEmail, isFilled, site } from '../config/site.ts';
+import { localeInfo, type Locale } from '../i18n/locales.ts';
+import type { Messages } from '../i18n/types.ts';
 import { membershipTiers, type MembershipTier } from './membership.ts';
 
-export interface NavItem {
-  id: string;
-  label: string;
-}
+// The contact section is only rendered once a real business address is configured, so its link is hidden until then.
+export const navIds = (['about', 'schedule', 'emotes', 'join', 'faq', 'contact'] as const).filter((id) => id !== 'contact' || getContactEmail());
 
 export interface ProfileFact {
   label: string;
   value: string;
 }
 
+export interface OfficialProfile {
+  label: string;
+  url: string;
+  purpose: string;
+}
+
 export interface Perk {
-  title: string;
-  description: string;
+  id: keyof Messages['join']['perks'];
   /** Optional membership tiers whose badges float inside the card. */
   tiers?: readonly MembershipTier[];
 }
 
-export interface FaqItem {
-  question: string;
-  answer: string;
-}
+export const perks: Perk[] = [{ id: 'membership', tiers: membershipTiers }, { id: 'vod' }, { id: 'discord' }, { id: 'info' }];
 
-export const navItems: NavItem[] = [
-  { id: 'about', label: 'About' },
-  { id: 'schedule', label: 'Schedule' },
-  { id: 'emotes', label: 'Emotes' },
-  { id: 'join', label: 'Join' },
-  { id: 'faq', label: 'FAQ' },
-  { id: 'contact', label: 'Contact' },
-];
+export const contactTopicIds = ['collaboration', 'sponsorship', 'press', 'other'] as const;
 
-const formatDate = (isoDate: string): string =>
-  isFilled(isoDate) ? new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(isoDate)) : isoDate;
+const formatDate = (isoDate: string, language: string): string =>
+  isFilled(isoDate) ? new Intl.DateTimeFormat(language, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(isoDate)) : isoDate;
 
-const formatMonthDay = (monthDay: string): string => {
+const formatMonthDay = (monthDay: string, language: string): string => {
   if (!isFilled(monthDay)) return monthDay;
   const [month = 1, day = 1] = monthDay.split('-').map(Number);
   // 2000 is a leap year, so 02-29 stays valid.
-  return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(2000, month - 1, day)));
+  return new Intl.DateTimeFormat(language, { month: 'long', day: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(2000, month - 1, day)));
 };
 
-/** Built from `site.profile`, so the page and the search/AI output can never disagree. Unfilled TODO values are skipped. */
-export const profileFacts: ProfileFact[] = [
-  { label: 'Species', value: site.profile.species },
-  { label: 'Birthday', value: formatMonthDay(site.profile.birthday) },
-  { label: 'Height', value: `${site.profile.heightCm} cm` },
-  { label: 'Debut', value: formatDate(site.profile.debut) },
-  { label: 'Fan name', value: site.fanName },
-].filter(({ value }) => isFilled(value));
+/** Built from `site.profile` and the messages, so the page and the search/AI output can never disagree. Unfilled TODO values are skipped. */
+export function getProfileFacts(locale: Locale, t: Messages): ProfileFact[] {
+  const language = localeInfo[locale].htmlLang;
+  const { labels } = t.profile;
+  return [
+    { label: labels.species, value: t.profile.species },
+    { label: labels.birthday, value: formatMonthDay(site.profile.birthday, language) },
+    { label: labels.height, value: `${site.profile.heightCm} cm` },
+    { label: labels.debut, value: formatDate(site.profile.debut, language) },
+    { label: labels.fanName, value: site.fanName },
+  ].filter(({ value }) => isFilled(value));
+}
 
-export const lore: string[] = [
-  'Ayah siapa itu mizu?',
-  'The goat.',
-];
-
-export const likes: string[] = ['Fikk', 'Valorant', 'Minecraft', 'Tomodachi life', 'Sushi', 'Cimol', 'Spicy food', 'Matcha', 'Coffee', 'Teazzi'];
-
-export const dislikes: string[] = ['Insect', 'Horror games', 'Thunderstorm', 'Makanan mint'];
-
-export const marqueeLines: string[] = [
-  'Kangen? Ngobrol di discord yuk',
-  'Support aku via Trakteer ya',
-  'Join member sabi sih',
-  'Mizu Hamzazu',
-  'Zutopian',
-  'EITS gak nih?',
-];
-
-export const perks: Perk[] = [
-  {
-    title: 'Member badge and emotes',
-    description: 'Sesi nonton bareng, main bareng dan livestream exclusive.',
-    tiers: membershipTiers,
-  },
-  { title: 'VOD Hayden James', description: 'Roleplay jadi pacar pas sleepcall?' },
-  { title: 'Discord channels', description: 'Unlock channel exclusive member dan nonton bareng di discord.' },
-  { title: 'Dapat info A1 lebih cepat', description: 'Dapat informasi terkait mizu lebih cepat, wow!' },
-];
-
-export const faqItems: FaqItem[] = [
-  {
-    question: 'When does Mizu stream?',
-    answer:
-      'Sesuai jadwal tertera diatas dan schedule di discord server.',
-  },
-  {
-    question: 'What does Mizu stream?',
-    answer:
-      'Mostly cozy games, karaoke, tierlist, freetalk, dan produktif stream #RABUATIF.',
-  },
-];
-
-export const contactTopics: string[] = ['Collaboration', 'Sponsorship', 'Press or interview', 'Something else'];
+/** Every platform and social link with its purpose written in the current language. */
+export const getOfficialProfiles = (t: Messages): OfficialProfile[] =>
+  [
+    ...site.platforms.map(({ id, label, url }) => ({ label, url, purpose: t.platforms[id].blurb })),
+    ...site.profile.socials.map(({ label, url, purpose }) => ({ label, url, purpose: t.socials[purpose] })),
+  ].filter(({ url }) => isFilled(url));
