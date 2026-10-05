@@ -18,8 +18,9 @@
   --rust: #c1592d;
   --leaf: #8fae6b;
 
-  --font-display: 'Mochiy Pop One', 'Zen Maru Gothic', ui-rounded, system-ui, sans-serif;
-  --font-body: 'Zen Maru Gothic', ui-rounded, system-ui, sans-serif;
+  --font-cjk-fallback: 'Hiragino Maru Gothic ProN', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR';
+  --font-display: 'Mochiy Pop One', 'Zen Maru Gothic', var(--font-cjk-fallback), ui-rounded, system-ui, sans-serif;
+  --font-body: 'Zen Maru Gothic', var(--font-cjk-fallback), ui-rounded, system-ui, sans-serif;
 
   --outline: 3px solid var(--ink);
   --pop: 5px 5px 0 var(--ink);

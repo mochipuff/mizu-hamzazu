@@ -1,6 +1,7 @@
 import { useRef, type CSSProperties, type SyntheticEvent } from 'react';
 import type { MembershipTier } from '../../data/membership.ts';
 import { useGsap } from '../../hooks/useGsap.ts';
+import { useI18n } from '../../i18n/i18n.ts';
 import { gsap, IDLE } from '../../lib/motion.ts';
 import { Sparkle } from './Doodles.tsx';
 import styles from './FloatingBadges.module.css';
@@ -21,6 +22,7 @@ const handleImageError = (event: SyntheticEvent<HTMLImageElement>) => {
 
 /** Square tier badges that pop in on scroll, then hover and sparkle behind the card's content. */
 export function FloatingBadges({ tiers }: { tiers: readonly MembershipTier[] }) {
+  const { t } = useI18n();
   const ref = useRef<HTMLDivElement>(null);
 
   useGsap(ref, () => {
@@ -63,7 +65,7 @@ export function FloatingBadges({ tiers }: { tiers: readonly MembershipTier[] }) 
   });
 
   return (
-    <div ref={ref} className={styles.cluster} role="img" aria-label={`Membership badges: ${tiers.map((tier) => tier.name).join(', ')}`}>
+    <div ref={ref} className={styles.cluster} role="img" aria-label={t.join.badgesLabel(tiers.map((tier) => t.join.tier(tier.level)).join(', '))}>
       {tiers.map((tier) => (
         <span key={tier.id} className={styles.slot}>
           <img className={styles.badge} src={tier.badge} alt="" width={256} height={256} loading="lazy" decoding="async" draggable={false} onError={handleImageError} />

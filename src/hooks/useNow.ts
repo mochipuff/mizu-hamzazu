@@ -1,6 +1,8 @@
 import { useSyncExternalStore } from 'react';
 
 const MINUTE_MS = 60_000;
+// Timers can fire a millisecond early, which would tick twice around the boundary; land just after it instead.
+const TICK_BUFFER_MS = 50;
 
 const listeners = new Set<() => void>();
 let currentTime = Date.now();
@@ -12,7 +14,7 @@ const scheduleTick = () => {
     currentTime = Date.now();
     listeners.forEach((notify) => notify());
     scheduleTick();
-  }, MINUTE_MS - (Date.now() % MINUTE_MS));
+  }, MINUTE_MS - (Date.now() % MINUTE_MS) + TICK_BUFFER_MS);
 };
 
 function subscribe(listener: () => void): () => void {

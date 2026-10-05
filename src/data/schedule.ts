@@ -1,10 +1,16 @@
 import type { StreamSlot } from '../lib/schedule.ts';
 
+/** `title` is the real title of the stream on YouTube, so it stays as published. `description` is ours and is translated. */
 export const streamSlots: StreamSlot[] = [
   {
     id: 'nobar',
     title: '🔴『NOBAR』sapi- sapi apa yang nempel di dinding? sapidermen',
-    description: 'Nonton bareng membership: spiderman into the spiderverse.',
+    description: {
+      en: 'Membership watch-along: Spider-Man: Into the Spider-Verse.',
+      jp: 'メンバーシップ同時視聴会：『スパイダーマン：スパイダーバース』。',
+      id: 'Nonton bareng membership: spiderman into the spiderverse.',
+      kr: '멤버십 함께 보기: 스파이더맨: 뉴 유니버스.',
+    },
     weekday: 1,
     time: '15:30',
     durationMinutes: 180,
@@ -15,7 +21,12 @@ export const streamSlots: StreamSlot[] = [
   {
     id: 'phasmo',
     title: '🔴『PHASMOPHOBIA』nakutin atau ditakutin? ft. @SilveragonAri @RayRxyz',
-    description: 'Collab stream',
+    description: {
+      en: 'Collab stream',
+      jp: 'コラボ配信',
+      id: 'Collab stream',
+      kr: '콜라보 방송',
+    },
     weekday: 1,
     time: '20:00',
     durationMinutes: 150,

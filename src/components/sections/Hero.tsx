@@ -1,9 +1,9 @@
 import { useRef } from 'react';
 import { site } from '../../config/site.ts';
-import { heroIntro } from '../../data/hero.ts';
 import { streamSlots } from '../../data/schedule.ts';
 import { useGsap } from '../../hooks/useGsap.ts';
 import { useNow } from '../../hooks/useNow.ts';
+import { useI18n } from '../../i18n/i18n.ts';
 import { gsap, IDLE } from '../../lib/motion.ts';
 import { getNextOccurrence, getStatus, splitDuration } from '../../lib/schedule.ts';
 import { HamsterWheelScene } from '../character/HamsterWheelScene.tsx';
@@ -15,6 +15,7 @@ import styles from './Hero.module.css';
 const pad = (value: number): string => String(value).padStart(2, '0');
 
 function NextStream() {
+  const { t } = useI18n();
   const now = useNow();
   const dotRef = useRef<HTMLSpanElement>(null);
   const occurrence = getNextOccurrence(streamSlots, now, site.scheduleTimeZone);
@@ -37,25 +38,28 @@ function NextStream() {
     <div className={styles.next} data-live={live}>
       <p className={styles.nextLabel}>
         {live && <span ref={dotRef} className={styles.liveDot} aria-hidden="true" />}
-        {live ? 'Live right now' : 'Next stream'}
+        {live ? t.hero.liveNow : t.hero.nextStream}
       </p>
       <p className={styles.nextTitle}>{occurrence.slot.title}</p>
       {live ? (
         <ButtonLink variant="primary" size="md" icon={platformIcon[occurrence.slot.platform]} href={platform?.liveUrl ?? site.platforms[0]?.url ?? '#'}>
-          Join the stream
+          {t.hero.joinStream}
         </ButtonLink>
       ) : (
-        <p className={styles.clock} role="timer" aria-label={`Starts in ${days} days, ${hours} hours, ${minutes} minutes`}>
+        <p className={styles.clock} role="timer" aria-label={t.hero.startsIn(days, hours, minutes)}>
           {days > 0 && (
             <span>
-              <b>{days}</b>d
+              <b>{days}</b>
+              {t.hero.units.day}
             </span>
           )}
           <span>
-            <b>{pad(hours)}</b>h
+            <b>{pad(hours)}</b>
+            {t.hero.units.hour}
           </span>
           <span>
-            <b>{pad(minutes)}</b>m
+            <b>{pad(minutes)}</b>
+            {t.hero.units.minute}
           </span>
         </p>
       )}
@@ -64,6 +68,7 @@ function NextStream() {
 }
 
 export function Hero() {
+  const { t } = useI18n();
   const ref = useRef<HTMLElement>(null);
 
   useGsap(ref, () => {
@@ -81,12 +86,12 @@ export function Hero() {
 
       <div className={`container ${styles.grid}`}>
         <div className={styles.copy}>
-          <p className={styles.tag}>Virtual Youtuber</p>
+          <p className={styles.tag}>{t.hero.tag}</p>
           <h1 id="hero-title" className={styles.title}>
-            <span className={styles.line}>Cihuyyy,</span>
-            <span className={styles.name}>I&rsquo;m {site.nickname}!</span>
+            <span className={styles.line}>{t.hero.greeting}</span>
+            <span className={styles.name}>{t.hero.iAm(site.nickname)}</span>
           </h1>
-          <p className={styles.intro}>{heroIntro}</p>
+          <p className={styles.intro}>{t.hero.intro}</p>
 
           <div className={styles.actions}>
             {site.platforms
@@ -99,7 +104,7 @@ export function Hero() {
                   icon={platformIcon[platform.id]}
                   href={platform.url}
                 >
-                  {platform.cta}
+                  {t.platforms[platform.id].cta}
                 </ButtonLink>
               ))}
           </div>

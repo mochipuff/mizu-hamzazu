@@ -1,5 +1,5 @@
 import type { SyntheticEvent } from 'react';
-import { faqItems } from '../../data/content.ts';
+import { useI18n } from '../../i18n/i18n.ts';
 import { gsap, prefersReducedMotion } from '../../lib/motion.ts';
 import { Icon } from '../ui/Icon.tsx';
 import { Reveal } from '../ui/Reveal.tsx';
@@ -14,15 +14,17 @@ const handleToggle = (event: SyntheticEvent<HTMLDetailsElement>) => {
 };
 
 export function Faq() {
+  const { t } = useI18n();
+
   return (
     <section id="faq" className={styles.section} aria-labelledby="faq-title">
       <div className="container">
-        <SectionHeading headingId="faq-title" title="Questions">
-          Apa yang sering ditanyakan dan lainnya...
+        <SectionHeading headingId="faq-title" title={t.faq.title}>
+          {t.faq.lead}
         </SectionHeading>
 
         <div className={styles.list}>
-          {faqItems.map((item, index) => (
+          {t.faq.items.map((item, index) => (
             <Reveal key={item.question} variant="pop" delay={Math.min(index, 3) * 70}>
               <details className={styles.item} name="faq" onToggle={handleToggle}>
                 <summary className={styles.question}>
