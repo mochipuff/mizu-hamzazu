@@ -17,7 +17,8 @@ export type IconName =
   | 'plus'
   | 'send'
   | 'clock'
-  | 'lock';
+  | 'lock'
+  | 'globe';
 
 const glyphs: Record<IconName, ReactNode> = {
   play: (
@@ -86,6 +87,12 @@ const glyphs: Record<IconName, ReactNode> = {
     <>
       <rect x="5" y="11" width="14" height="9" rx="3" />
       <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </>
+  ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M3.5 12h17M12 3.5c2.4 2.4 3.6 5.2 3.6 8.5s-1.2 6.1-3.6 8.5c-2.4-2.4-3.6-5.2-3.6-8.5S9.6 5.9 12 3.5z" />
     </>
   ),
 };
