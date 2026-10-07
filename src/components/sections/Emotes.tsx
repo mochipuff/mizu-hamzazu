@@ -18,7 +18,7 @@ export function Emotes() {
   const sound = useSound();
   const { t } = useI18n();
 
-  const copy = async (name: EmoteName) => {
+  const handleCopy = async (name: EmoteName) => {
     const code = `:${name}:`;
     const ok = await copyText(code);
     if (ok) sound.play('copy');
@@ -55,7 +55,7 @@ export function Emotes() {
                     <h3 className={styles.name}>{emote.label}</h3>
                     <p className={styles.usage}>{emote.usage}</p>
                     <div className={styles.actions}>
-                      <button type="button" className={styles.code} onClick={() => copy(name)} aria-label={t.emotes.copyLabel(emote.label)}>
+                      <button type="button" className={styles.code} onClick={() => handleCopy(name)} aria-label={t.emotes.copyLabel(emote.label)}>
                         <Icon name="copy" size={16} />
                         <code>:{name}:</code>
                       </button>
