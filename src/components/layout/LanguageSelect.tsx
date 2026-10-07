@@ -1,27 +1,15 @@
-import type { ChangeEvent } from 'react';
 import { useI18n } from '../../i18n/i18n.ts';
 import { isLocale, LOCALES, localeInfo } from '../../i18n/locales.ts';
-import { Icon } from '../ui/Icon.tsx';
-import styles from './LanguageSelect.module.css';
+import { Dropdown, type DropdownOption } from '../ui/Dropdown.tsx';
+
+const options: DropdownOption[] = LOCALES.map((code) => ({ value: code, label: localeInfo[code].label, lang: localeInfo[code].htmlLang }));
 
 export function LanguageSelect() {
   const { locale, setLocale, t } = useI18n();
 
-  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    const { value } = event.target;
+  const handleChange = (value: string) => {
     if (isLocale(value)) setLocale(value);
   };
 
-  return (
-    <div className={styles.field}>
-      <Icon name="globe" size={20} className={styles.icon} />
-      <select className={styles.select} value={locale} onChange={handleChange} aria-label={t.header.language}>
-        {LOCALES.map((code) => (
-          <option key={code} value={code} lang={localeInfo[code].htmlLang}>
-            {localeInfo[code].label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
+  return <Dropdown value={locale} options={options} onChange={handleChange} label={t.header.language} icon="globe" align="end" />;
 }

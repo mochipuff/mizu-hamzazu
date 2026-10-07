@@ -4,9 +4,10 @@ import { Icon } from '../ui/Icon.tsx';
 import { platformIcon } from '../ui/platformIcon.ts';
 import styles from './Footer.module.css';
 
+const YEAR = new Date().getFullYear();
+
 export function Footer() {
   const { t } = useI18n();
-  const year = new Date().getFullYear();
 
   return (
     <footer className={styles.footer}>
@@ -49,7 +50,7 @@ export function Footer() {
         </a>
       </div>
 
-      <p className={styles.legal}>{t.footer.legal(year, site.copyrightOwner)}</p>
+      <p className={styles.legal}>{t.footer.legal(YEAR, site.copyrightOwner)}</p>
     </footer>
   );
 }
