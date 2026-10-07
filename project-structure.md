@@ -5,7 +5,7 @@
 `mizu-hamzazu` is a high-performance, single-page application (SPA) with static-site generation (SSG) hybrid characteristics, built for the virtual streamer **Mizu Hamzazu**.
 
 * **Core Stack:** React 19, TypeScript (target ES2023, strict mode), Vite 8 (using Rolldown and LightningCSS), GSAP 3 with ScrollTrigger.
-* **Routing & Localisation:** Multi-locale path routing (`/en/`, `/jp/`, `/id/`, `/kr/`) paired with client-side History API manipulation (`pushState`/`popState`) without page reloads.
+* **Routing & Localisation:** One page per language (`/<locale>/` for `en`, `jp`, `id`, `kr`). The URL is the single source of truth for the language: `src/i18n/navigation.ts` reads it through `useSyncExternalStore` and changes it with the History API (`pushState`/`popstate`), without page reloads.
 * **Build-Time Metaprogramming:** A proprietary Vite plugin (`vite/seoPlugin.ts`) compiles distinct static HTML landing pages per language, outputs localized `llms.txt`, generates `robots.txt` with AI crawler rules, dynamically constructs `sitemap.xml`, and emits structured Schema.org JSON-LD and zero-JS `<noscript>` fallbacks.
 * **Asset & Audio Engineering:** Synthesizes sound effects entirely via the browser's native **Web Audio API** (zero external audio payload). Critical above-the-fold assets and web fonts are preloaded before initial paint to eliminate layout shifts and hydration jumps.
 
@@ -19,22 +19,28 @@
 ├── tsconfig.json                  # Root TypeScript configuration with project references
 ├── tsconfig.app.json              # Client-side React compiler options (strict, bundler module resolution)
 ├── tsconfig.node.json             # Build tool/Node environment compiler options
-├── vercel.json                    # CDN edge caching, security headers, and rewrite directives
+├── vercel.json                    # Vite framework preset, CDN edge caching, security headers
+├── .vercelignore                  # Keeps the Python test server out of the Vercel deployment
+├── requirements.txt               # Python deps for the local gzip test server only (starlette, uvicorn)
 ├── vite.config.ts                 # Vite bundle configuration and SEO plugin registration
 │
-├── public/                        # Static assets served as-is
+├── public/                        # Static assets served as-is (images are supplied by you and are not in git)
 │   ├── favicon.svg                # Vector site icon
 │   ├── favicon-32.png             # Bitmap fallback icon
 │   ├── apple-touch-icon.png       # Apple device icon
 │   ├── manifest.webmanifest       # PWA metadata configuration
 │   └── og-image.png               # Social share preview card (1200x630)
 │
+├── server/                        # Local production-build server (not deployed)
+│   └── app.py                     # Starlette app for `uvicorn server.app:app`: serves dist/ and sends the prebuilt .gz files
+│
 ├── vite/                          # Vite custom build plugins
-│   └── seoPlugin.ts               # Multi-locale HTML compiler, sitemap, llms.txt, & JSON-LD generator
+│   ├── seoPlugin.ts               # Multi-locale HTML compiler, sitemap, llms.txt, & JSON-LD generator; also writes the language redirect page (`/`)
+│   └── gzipPlugin.ts              # Writes <file>.gz beside every text file in dist/ (skipped on Vercel)
 │
 └── src/                           # Application source code
     ├── main.tsx                   # Critical preload orchestration, React 19 root mounting, hydration
-    ├── App.tsx                    # Root UI tree, Context Providers composition, skip-to-content logic
+    ├── App.tsx                    # Providers composition and the shared layout: header, home page, footer
     │
     ├── config/                    # Global immutable configurations
     │   └── site.ts                # Streamer profile, platform links, hashtags, social URLs, site metadata
@@ -48,6 +54,7 @@
     │
     ├── data/                      # Structured domain content and data models
     │   ├── content.ts             # Navigation IDs, profile fact formatters, perk definitions
+    │   ├── criticalImages.ts      # First-paint images (loader waits for them, build preloads them)
     │   ├── emotes.ts              # Emote identifiers and typed union definitions
     │   ├── hero.ts                # Hero scene asset bindings and reaction mood maps
     │   ├── membership.ts          # Membership tier definitions and badge asset mappers
@@ -59,14 +66,16 @@
     │   ├── useKonami.ts           # Keyboard sequence listener for easter egg triggers
     │   ├── useLocalStorage.ts     # Synchronized localStorage state wrapper with JSON serialization
     │   ├── useNow.ts              # Global time ticker synchronizing once per minute via useSyncExternalStore
+    │   ├── useOutsidePointerDown.ts # Calls back when a press lands outside an element (menus)
     │   └── useScrollSpy.ts        # IntersectionObserver-based active section detector
     │
     ├── i18n/                      # Internationalization Subsystem
     │   ├── detect.ts              # Pathname and navigator.languages subtag matchers
     │   ├── i18n.ts                # I18nContext API interface and useI18n hook
-    │   ├── I18nProvider.tsx       # Locale provider, history synchronization, document title/meta updates
+    │   ├── I18nProvider.tsx       # Locale provider (locale comes from the URL), document lang/title/meta updates
     │   ├── initial.ts             # Initial locale resolution engine (URL > Storage > Browser > Fallback)
     │   ├── locales.ts             # Locale constants, BCP 47 mapping, and OG locale metadata
+    │   ├── navigation.ts          # usePathname() and navigate() on top of the History API
     │   ├── types.ts               # Compile-time inferred message type structure derived from en.ts
     │   └── messages/
     │       ├── index.ts           # Locale dictionary registry map
@@ -75,18 +84,20 @@
     │       ├── jp.ts              # Japanese translations
     │       └── kr.ts              # Korean translations
     │
+    ├── pages/                     # What fills the space between the shared header and footer
+    │   └── HomePage.tsx           # The landing page sections
+    │
     ├── lib/                       # Pure utilities, domain algorithms, and low-level helpers
     │   ├── assets.ts              # Typed path resolution for generated WebP assets
     │   ├── audio.ts               # Custom Web Audio API synthesizer (sine/triangle oscillator ramps)
     │   ├── clipboard.ts           # Modern navigator.clipboard wrapper with textarea fallback
-    │   ├── contact.ts             # Client-side form validator and mailto URI builder
     │   ├── download.ts            # Client-side Blob download trigger utility
     │   ├── events.ts              # Custom window Event dispatcher for cross-component triggers
     │   ├── ics.ts                 # RFC 5545 iCalendar format generator with 75-byte line-folding
     │   ├── loader.ts              # DOM-level critical loading screen controller
     │   ├── math.ts                # Deterministic PRNG and range interpolation helpers
     │   ├── motion.ts              # GSAP plugin initialization and standard easing curves
-    │   ├── preload.ts             # Font and above-the-fold image preloader with timeout guards
+    │   ├── preload.ts             # Font and above-the-fold image preloader (waits for decode) with timeout guards
     │   └── schedule.ts            # Timezone-aware date arithmetic, occurrence and week column calculator
     │
     ├── styles/                    # Global styles and design system variables
@@ -97,32 +108,32 @@
         │   ├── HamsterWheelScene.tsx        # Interactive SVG/WebP character with rotational physics
         │   └── HamsterWheelScene.module.css # Wheel transforms, speech bubble, and ripple styles
         ├── layout/                # Persistent page framing
-        │   ├── Header.tsx                   # Sticky responsive header with scroll detection
+        │   ├── Header.tsx                   # Sticky responsive header with scroll detection and a plain anchor nav
         │   ├── Header.module.css
         │   ├── Footer.tsx                   # Responsive footer with social links and copyright
         │   ├── Footer.module.css
-        │   ├── LanguageSelect.tsx           # Accessible locale switcher dropdown
-        │   └── LanguageSelect.module.css
+        │   └── LanguageSelect.tsx           # Locale switcher: a Dropdown with the globe icon
         ├── sections/              # Page content sections
         │   ├── Hero.tsx                     # Landing hero with next stream countdown
         │   ├── Hero.module.css
         │   ├── About.tsx                    # Bio, character lore, profile stats, stream genres
         │   ├── About.module.css
-        │   ├── Schedule.tsx                 # Interactive week schedule with dynamic timezone selector
+        │   ├── Schedule.tsx                 # Interactive week schedule: timezone Dropdown, day cards sized by their content
         │   ├── Schedule.module.css
+        │   ├── StreamCard.tsx               # One stream of a day: thumbnail, time, status, watch and calendar buttons, "live ended" effect
         │   ├── Emotes.tsx                   # Emote gallery with one-click code copy
         │   ├── Emotes.module.css
         │   ├── Join.tsx                     # Membership perks, tier badges, community links
         │   ├── Join.module.css
         │   ├── Faq.tsx                      # Accordion FAQ powered by semantic HTML <details>
-        │   ├── Faq.module.css
-        │   ├── Contact.tsx                  # Business contact form with mailto generator
-        │   └── Contact.module.css
+        │   └── Faq.module.css
         └── ui/                    # Reusable, design-system primitives
-            ├── AmbientSeeds.tsx             # Canvas-free animated falling background particle seeds
+            ├── AmbientSeeds.tsx             # Canvas-free falling background seeds, one small <Seed> component per seed
             ├── AmbientSeeds.module.css
             ├── Button.tsx                   # Standardized accessible button and link variants
             ├── Button.module.css
+            ├── Dropdown.tsx                 # Custom div-based select (combobox + listbox): keyboard, type-ahead, outside click (useOutsidePointerDown)
+            ├── Dropdown.module.css
             ├── Doodles.tsx                  # Hand-drawn decorative SVG vectors (Paw, Sparkle, Clover, Branch)
             ├── FloatingBadges.tsx           # Floating membership badge cluster with bobbing motion
             ├── FloatingBadges.module.css
@@ -154,17 +165,23 @@ The application executes a unique hybrid build approach:
 2. **Bundle Phase (`generateBundle`):**
    * Emits `robots.txt` dynamically allowing or blocking specific AI crawlers (`GPTBot`, `ClaudeBot`, `PerplexityBot`, etc.) according to `site.seo.allowAiCrawlers`.
    * Generates localized `llms.txt` documents providing concise context for LLMs and AI search engines.
-   * Compiles an XML sitemap (`sitemap.xml`) referencing localized paths, `xhtml:link` hreflang alternates, `x-default`, and localized media entries.
+   * Compiles an XML sitemap (`sitemap.xml`) with every language, `xhtml:link` hreflang alternates, `x-default`, and media entries.
 3. **Output Emission (`closeBundle`):**
    * Takes the compiled `dist/index.html` as a template.
-   * Generates localized directory trees: `/en/index.html`, `/jp/index.html`, `/id/index.html`, `/kr/index.html` with locale-specific metadata, preloads, and structured schema graphs.
+   * Generates one file per language: `/en/index.html`, `/jp/index.html`, `/id/index.html`, `/kr/index.html`, each with its own title, metadata, hreflang, image preloads, and the full Person/FAQ structured data graph.
    * Replaces root `dist/index.html` with a standalone vanilla JS redirector that evaluates `localStorage` -> `navigator.languages` -> fallback default (`en`) before redirecting via `location.replace()`.
 
 ### B. Internationalization (i18n) Architecture
 * **Single Source of Truth:** `src/i18n/messages/en.ts` is the master translation dictionary.
 * **Type Invariance:** `src/i18n/types.ts` computes `Messages = Widen<typeof en>`. Any added, deleted, or altered translation key in `en.ts` instantly raises a TypeScript compilation error across `jp.ts`, `id.ts`, and `kr.ts`.
 * **Interpolation via Closures:** Dynamic strings are written as pure functions (e.g., `(name: string) => string`) to respect varying language syntax and grammar word order.
-* **In-Memory Locale Switching:** The `I18nProvider` allows instant UI re-rendering when changing language, syncs state with HTML `<html lang="...">`, adjusts document `<title>` and `<meta name="description">`, and calls `history.pushState` to preserve URL routing without hitting the network.
+* **In-Memory Locale Switching:** The `I18nProvider` derives the locale from the URL, so a language switch is just `navigate()` to the same address in another language. It syncs `<html lang="...">`, the document `<title>` and `<meta name="description">`, without hitting the network.
+
+### B2. Routing (`src/i18n/navigation.ts`)
+* **One page:** the site is a single landing page per language. There is no page registry; `App.tsx` renders the header, `HomePage` and the footer.
+* **Links:** navigation inside the page is plain anchors (`#about`, `#top`), so open-in-new-tab, copy link and crawlers work and the browser keeps the smooth scrolling. Only the language menu calls `navigate()`.
+* **Removed pages:** the old `/milestones/` and `/<locale>/milestones/` addresses are permanent redirects to the home page in `vercel.json`.
+* **Adding a page later:** give it its own folder in `src/pages/`, make the URL carry a page again (the language code stays the first segment), and teach `vite/seoPlugin.ts` to write one file per page and language. Git history before this change has a working version of that registry.
 
 ### C. Web Audio Synthesis Engine (`src/lib/audio.ts`)
 The project achieves zero network overhead for sound effects by generating audio entirely through procedural synthesis:
@@ -190,8 +207,8 @@ The project achieves zero network overhead for sound effects by generating audio
 
 ### F. Critical Rendering Path & Loader Lifecycle
 1. **Critical CSS & Inline Markup:** Critical styles for `#loader` are embedded inside `index.html`'s `<style>` block.
-2. **Preload Phase (`src/lib/preload.ts`):** React mounts immediately behind the loader (it is never blocked by assets). Meanwhile the application waits for `@font-face` definitions to load via `document.fonts.load()` alongside critical above-the-fold hero images.
-3. **Safety Timeout:** A hard 4,000ms timeout prevents network failures from locking the loading screen indefinitely.
+2. **Preload Phase (`src/lib/preload.ts`):** React mounts immediately behind the loader (it is never blocked by assets). Meanwhile the application waits for `@font-face` definitions to load via `document.fonts.load()` alongside the critical above-the-fold images (`src/data/criticalImages.ts`), which are downloaded *and decoded* (`HTMLImageElement.decode()`) so they paint the moment the loader fades.
+3. **Safety Timeout:** A hard 4,000ms timeout prevents network failures from locking the loading screen indefinitely; a file that fails counts as done and its timer is cleared once preloading settles.
 4. **Reveal:** once preloading settles, `src/main.tsx` calls `hideLoader()`, which fades the loader overlay using GSAP before purging the DOM node.
 
 ---
@@ -199,8 +216,11 @@ The project achieves zero network overhead for sound effects by generating audio
 ## 4. Key Data Invariants & Coding Guidelines for AI Agents
 
 1. **Translations:** Do not modify `src/i18n/messages/{id,jp,kr}.ts` without updating `src/i18n/messages/en.ts` first. The type system relies on `en.ts` as the schema master.
-2. **TODO Placeholders:** Fields in `src/config/site.ts` prefixed with `"TODO"` (e.g., `"TODO: ..."` ) are programmatically excluded from public display, structured JSON-LD schemas, and `llms.txt`. Do not remove the `isFilled()` check when rendering profile data. The business email goes through `getContactEmail()` (`undefined` while it is a TODO): the Contact section, its nav link, the `<noscript>` block and `llms.txt` all disappear until a real address is set. `profile.independent` keeps an agency-less creator out of the JSON-LD `affiliation`.
+2. **TODO Placeholders:** Fields in `src/config/site.ts` prefixed with `"TODO"` (e.g., `"TODO: ..."` ) are programmatically excluded from public display, structured JSON-LD schemas, and `llms.txt`. Do not remove the `isFilled()` check when rendering profile data. `profile.independent` keeps an agency-less creator out of the JSON-LD `affiliation`.
 3. **Motion Safety:** Never execute raw `gsap.to()` or `gsap.from()` inside React `useEffect` without wrapping it inside `useGsap` or verifying `prefersReducedMotion()`.
 4. **Styling Paradigm:** Prefer CSS Modules (`*.module.css`) for component styling. Leverage global variables defined in `src/styles/global.css` (e.g., `var(--ink)`, `var(--sun)`, `var(--pop)`). Do not hardcode hex values inside component modules.
 5. **Fonts:** only the Latin subsets are bundled on purpose (the Japanese subsets are 1 to 1.5 MB each, or hundreds of CSS rules when sliced). Kana, kanji and Hangul render with the system fonts in `--font-cjk-fallback` (`global.css`).
-6. **Asset Pipeline:** WebP images in `/public` are generated from source PNGs via `npm run images`. When referencing internal assets, use helper functions from `src/lib/assets.ts` (`emoteUrl`, `heroUrl`, `membershipBadgeUrl`).
+6. **Dropdowns:** never use a native `<select>`. Use `src/components/ui/Dropdown.tsx` (`variant="pill"` for the header, `"field"` for forms) so every list looks the same and keeps its icon. Outside-press handling goes through `src/hooks/useOutsidePointerDown.ts`.
+7. **Compression:** `npm run build` writes `.gz` files next to text assets (`vite/gzipPlugin.ts`) for `server/app.py`. Vercel compresses on its own, so nothing there depends on them. If you add a text file type to `dist/`, add its extension to `COMPRESSIBLE` in the plugin.
+8. **Asset Pipeline:** WebP images in `/public` are generated from source PNGs via `npm run images`. When referencing internal assets, use helper functions from `src/lib/assets.ts` (`emoteUrl`, `heroUrl`, `membershipBadgeUrl`).
+9. **Naming:** event handlers start with `handle` (`handleCopy`, `handleScroll`), and platforms are looked up with `getPlatform()` from `src/config/site.ts` instead of searching `site.platforms` again.

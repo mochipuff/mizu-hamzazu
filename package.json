@@ -11,6 +11,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
+    "serve": "uvicorn server.app:app --port 8000",
     "lint": "oxlint",
     "typecheck": "tsc -b",
     "images": "node scripts/optimize-images.mjs"

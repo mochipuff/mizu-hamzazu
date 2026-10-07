@@ -1,5 +1,6 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
+import { gzipPlugin } from './vite/gzipPlugin.ts';
 import { seoPlugin } from './vite/seoPlugin.ts';
 
 const resolveSiteUrl = (env: Record<string, string>): string => {
@@ -11,7 +12,7 @@ const resolveSiteUrl = (env: Record<string, string>): string => {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_');
   return {
-    plugins: [react(), seoPlugin(resolveSiteUrl(env))],
+    plugins: [react(), seoPlugin(resolveSiteUrl(env)), gzipPlugin()],
     build: {
       target: 'es2023',
       cssCodeSplit: false,
