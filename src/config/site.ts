@@ -2,6 +2,7 @@ import type { Messages } from '../i18n/types.ts';
 
 export type PlatformId = 'youtube' | 'twitch' | 'x' | 'discord';
 
+/** The call to action and blurb of each platform live in the messages (`platforms.<id>`). */
 export interface Platform {
   id: PlatformId;
   label: string;
@@ -24,6 +25,10 @@ export interface ExtraProfile {
   purpose: SocialPurpose;
 }
 
+/**
+ * Facts that are the same in every language. Anything that has words (bio, species, languages, ...) is in `src/i18n/messages`.
+ * Any value starting with "TODO" is skipped everywhere it would be published.
+ */
 export interface Profile {
   debut: string;
   heightCm: number;
@@ -31,6 +36,7 @@ export interface Profile {
   illustrator: string;
   riggerOrModeler: string;
   alternateNames: string[];
+  /** No agency: the translated `agency` label ("Independent") is shown on the page but never published as an organization. */
   independent: boolean;
   socials: ExtraProfile[];
 }
@@ -42,7 +48,6 @@ export interface SiteConfig {
   copyrightOwner: string;
   themeColor: string;
   scheduleTimeZone: string;
-  contactEmail: string;
   seo: {
     image: { path: string; width: number; height: number };
     allowAiCrawlers: boolean;
@@ -59,7 +64,6 @@ export const site: SiteConfig = {
   copyrightOwner: 'Fikk@MizuHamzazu',
   themeColor: '#daa047',
   scheduleTimeZone: 'Asia/Jakarta',
-  contactEmail: 'TODO: business@mizu.id',
   seo: {
     image: { path: '/og-image.png', width: 1200, height: 630 },
     allowAiCrawlers: true,
@@ -120,9 +124,11 @@ export const site: SiteConfig = {
   ],
 };
 
-export const isFilled = (value: string | undefined): value is string => Boolean(value) && !value?.startsWith('TODO');
+const platformById = new Map(site.platforms.map((platform) => [platform.id, platform]));
 
-export const getContactEmail = (): string | undefined => (isFilled(site.contactEmail) ? site.contactEmail : undefined);
+export const getPlatform = (id: PlatformId): Platform | undefined => platformById.get(id);
+
+export const isFilled = (value: string | undefined): value is string => Boolean(value) && !value?.startsWith('TODO');
 
 export const profileUrls = (): string[] =>
   [...site.platforms.map(({ url }) => url), ...site.profile.socials.map(({ url }) => url)].filter(isFilled);
