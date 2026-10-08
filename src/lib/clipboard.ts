@@ -5,7 +5,7 @@ export async function copyText(text: string): Promise<boolean> {
       return true;
     }
   } catch {
-    /* fall through to the legacy path */
+    /* the Clipboard API refused (permissions or an insecure page); fall back to the textarea below */
   }
 
   const field = document.createElement('textarea');
