@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, type ReactNode } from 'react';
 import { localeFromPath } from './detect.ts';
 import { I18nContext } from './i18n.ts';
 import { storeLocale } from './initial.ts';
 import { localeInfo, localePath, type Locale } from './locales.ts';
 import { messages } from './messages/index.ts';
+import { navigate, usePathname } from './navigation.ts';
 
 interface I18nProviderProps {
   initialLocale: Locale;
@@ -11,34 +12,24 @@ interface I18nProviderProps {
 }
 
 export function I18nProvider({ initialLocale, children }: I18nProviderProps) {
-  const [locale, setLocaleState] = useState(initialLocale);
+  // The URL decides the language, so a switch, a shared link and the back button all go through the same path.
+  const locale = localeFromPath(usePathname()) ?? initialLocale;
 
   const setLocale = useCallback(
     (next: Locale) => {
       if (next === locale) return;
       storeLocale(next);
-      window.history.pushState(null, '', `${localePath(next)}${window.location.search}${window.location.hash}`);
-      setLocaleState(next);
+      navigate(`${localePath(next)}${window.location.search}${window.location.hash}`);
     },
     [locale],
   );
 
-  // The browser's back and forward buttons walk between languages too.
-  useEffect(() => {
-    const handlePopState = () => {
-      const fromPath = localeFromPath(window.location.pathname);
-      if (fromPath) setLocaleState(fromPath);
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
   // The static HTML already carries the right values for the URL it was served from; this keeps them right after a switch.
   useEffect(() => {
-    const { seo } = messages[locale];
+    const { title, description } = messages[locale].seo;
     document.documentElement.lang = localeInfo[locale].htmlLang;
-    document.title = seo.title;
-    document.querySelector('meta[name="description"]')?.setAttribute('content', seo.description);
+    document.title = title;
+    document.querySelector('meta[name="description"]')?.setAttribute('content', description);
   }, [locale]);
 
   const value = useMemo(() => ({ locale, t: messages[locale], setLocale }), [locale, setLocale]);
