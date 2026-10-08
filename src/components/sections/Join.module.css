@@ -82,7 +82,6 @@
   font-size: 0.95rem;
 }
 
-/* Keep the title clear of the floating tier badges on the right. */
 .hasBadges .perkTitle {
   padding-right: 8.6rem;
 }
@@ -98,7 +97,6 @@
 }
 
 @media (min-width: 1000px) {
-  /* The first card is wider so six badges have room next to its text. */
   .perks {
     grid-template-columns: 1.5fr repeat(3, minmax(0, 1fr));
   }

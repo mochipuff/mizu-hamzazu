@@ -1,3 +1,8 @@
+/**
+ * English is the source of truth. `Messages` (see ../types.ts) is derived from this object, so adding or renaming
+ * a key here makes the compiler list every other language that has to follow.
+ * Strings that need a value are functions, so each language can place the value where its grammar wants it.
+ */
 export const en = {
   skipLink: 'Skip to content',
 
@@ -6,6 +11,7 @@ export const en = {
     secretCode: 'Secret code found! Confetti storm unlocked.',
   },
 
+  // Shown before the app loads. Keep in step with the literal text in index.html.
   loader: {
     title: 'Loading',
     note: 'Waking up mizu...',
@@ -29,9 +35,9 @@ export const en = {
     emotes: 'Emotes',
     join: 'Join',
     faq: 'FAQ',
-    contact: 'Contact',
   },
 
+  // Search engines, link previews and AI crawlers.
   seo: {
     title: 'Mizu Hamzazu | Indonesian Hamster VTuber',
     description: 'Official site of Mizu Hamzazu, an Indonesian hamster VTuber. Weekly stream schedule for freetalk, cozy games and karaoke, emotes, and the Zutopian community.',
@@ -213,39 +219,6 @@ export const en = {
     ],
   },
 
-  contact: {
-    title: 'Get in touch',
-    lead: 'Business and collaboration enquiries only. For everything else, chat on stream is the fastest way to reach Mizu.',
-    name: 'Your name',
-    email: 'Your email',
-    topic: 'Topic',
-    topicPlaceholder: 'Choose one',
-    topics: {
-      collaboration: 'Collaboration',
-      sponsorship: 'Sponsorship',
-      press: 'Press or interview',
-      other: 'Something else',
-    },
-    message: 'Message',
-    submit: 'Write the email',
-    notePrepared: 'Your email app should be opening with the message ready to send. If nothing happened, copy the address and write to us directly.',
-    noteIdle: 'This opens your email app with the message filled in. Nothing is sent until you press send there.',
-    sideTitle: 'Prefer to write directly?',
-    copyAddress: 'Copy address',
-    emailCopied: 'Email address copied.',
-    sideNote: 'Please include links to your channel or company. Replies can take a few days.',
-    fanNote: 'Fan art, clips and messages for Mizu belong on stream and on X, not in this inbox.',
-    errors: {
-      nameRequired: 'Please tell us your name.',
-      nameTooLong: 'That name is a little long. Please shorten it.',
-      emailRequired: 'Please add an email address so we can reply.',
-      emailInvalid: 'That email address does not look right.',
-      topicRequired: 'Please pick a topic.',
-      messageTooShort: (min: number) => `Please write at least ${min} characters so we have enough to go on.`,
-      messageTooLong: (max: number) => `Please keep it under ${max} characters.`,
-    },
-  },
-
   footer: {
     signoff: 'Your oshi has to be me, okay?',
     socialNav: 'Social links',
@@ -255,8 +228,8 @@ export const en = {
     legal: (year: number, owner: string) => `© ${year} ${owner}. Fan art and clips are welcome, please credit and link back.`,
   },
 
+  // The no-JavaScript fallback page that search engines read.
   noscript: {
     findOnline: (name: string) => `Find ${name} online`,
-    business: 'Business inquiries',
   },
 };

@@ -13,7 +13,7 @@ export function useKonami(onMatch: () => void): void {
   useEffect(() => {
     let position = 0;
 
-    const onKeyDown = (event: KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (event.target instanceof HTMLElement && TYPING_TAGS.has(event.target.tagName)) return;
 
       const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
@@ -26,7 +26,7 @@ export function useKonami(onMatch: () => void): void {
       }
     };
 
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 }

@@ -31,7 +31,6 @@ export const jp: Messages = {
     emotes: 'エモート',
     join: '参加',
     faq: 'FAQ',
-    contact: 'お問い合わせ',
   },
 
   seo: {
@@ -215,39 +214,6 @@ export const jp: Messages = {
     ],
   },
 
-  contact: {
-    title: 'お問い合わせ',
-    lead: 'ビジネス・コラボのお問い合わせ専用です。それ以外は、配信のチャットがMizuに一番届きやすい方法です。',
-    name: 'お名前',
-    email: 'メールアドレス',
-    topic: '件名',
-    topicPlaceholder: '選んでください',
-    topics: {
-      collaboration: 'コラボ',
-      sponsorship: 'スポンサー',
-      press: '取材・インタビュー',
-      other: 'その他',
-    },
-    message: 'メッセージ',
-    submit: 'メールを作成',
-    notePrepared: 'メールアプリが開き、メッセージが入力された状態になります。何も起こらない場合は、アドレスをコピーして直接ご連絡ください。',
-    noteIdle: 'メールアプリが開き、内容が入力されます。メールアプリで送信ボタンを押すまで、何も送信されません。',
-    sideTitle: '直接メールしたい方はこちら',
-    copyAddress: 'アドレスをコピー',
-    emailCopied: 'メールアドレスをコピーしました。',
-    sideNote: 'あなたのチャンネルや会社のリンクを添えてください。返信には数日かかることがあります。',
-    fanNote: 'ファンアート、切り抜き、Mizuへのメッセージは、このメールではなく配信やXへお願いします。',
-    errors: {
-      nameRequired: 'お名前を入力してください。',
-      nameTooLong: '名前が少し長すぎます。短くしてください。',
-      emailRequired: '返信できるよう、メールアドレスを入力してください。',
-      emailInvalid: 'メールアドレスの形式が正しくないようです。',
-      topicRequired: '件名を選んでください。',
-      messageTooShort: (min) => `内容を把握できるよう、${min}文字以上で入力してください。`,
-      messageTooLong: (max) => `${max}文字以内にしてください。`,
-    },
-  },
-
   footer: {
     signoff: '推しはぜったい私だよ？ね？',
     socialNav: 'ソーシャルリンク',
@@ -259,6 +225,5 @@ export const jp: Messages = {
 
   noscript: {
     findOnline: (name) => `${name}をオンラインで探す`,
-    business: 'お仕事のご依頼',
   },
 };

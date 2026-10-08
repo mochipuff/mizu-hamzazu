@@ -12,7 +12,6 @@ export interface StreamSlot {
   durationMinutes: number;
   platform: PlatformId;
   membersOnly?: boolean;
-  /** Image URL shown behind the schedule card. Optional: cards fall back to a plain gradient. */
   thumbnailUrl?: string;
 }
 
@@ -177,7 +176,6 @@ export function getWeekColumns(
 
   for (const slot of slots) {
     const duration = slot.durationMinutes * MINUTE;
-    // Look back one stream length so a stream that began before the viewer's midnight but is still running is not skipped.
     const start = firstStartAtOrAfter(slot, rangeStart - duration + 1, baseTimeZone);
     const occurrence: StreamOccurrence = { slot, start, end: start + duration };
     const parts = getZonedParts(start, viewerTimeZone);

@@ -102,11 +102,6 @@
   border-bottom: 3px dashed var(--shallows);
 }
 
-.mobileLanguage > div,
-.mobileLanguage select {
-  width: 100%;
-}
-
 .iconButton {
   display: grid;
   place-items: center;

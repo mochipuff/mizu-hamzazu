@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { site } from '../../config/site.ts';
+import { getPlatform, site } from '../../config/site.ts';
 import { streamSlots } from '../../data/schedule.ts';
 import { useGsap } from '../../hooks/useGsap.ts';
 import { useNow } from '../../hooks/useNow.ts';
@@ -31,7 +31,7 @@ function NextStream() {
 
   if (!occurrence) return null;
 
-  const platform = site.platforms.find((candidate) => candidate.id === occurrence.slot.platform);
+  const platform = getPlatform(occurrence.slot.platform);
   const { days, hours, minutes } = splitDuration(occurrence.start - now);
 
   return (

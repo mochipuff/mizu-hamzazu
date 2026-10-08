@@ -5,6 +5,7 @@
 }
 
 .controls {
+  z-index: 5;
   display: grid;
   gap: 1rem;
   margin-top: 2.25rem;
@@ -24,22 +25,6 @@
   color: var(--ink-soft);
 }
 
-.select {
-  width: 100%;
-  min-height: 2.9rem;
-  padding: 0.55rem 2.5rem 0.55rem 1rem;
-  border: var(--outline);
-  border-radius: 14px;
-  background-color: var(--foam);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23373332' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-position: right 0.75rem center;
-  background-repeat: no-repeat;
-  background-size: 1.2rem;
-  font-weight: 700;
-  appearance: none;
-  cursor: pointer;
-}
-
 .controlActions {
   display: flex;
   flex-wrap: wrap;
@@ -47,12 +32,16 @@
 }
 
 .week {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
   margin-top: 2rem;
 }
 
 .day {
+  --count: 0;
+
+  flex: var(--count) 1 calc(var(--count) * 14rem + 3.5rem);
   min-width: 0;
 }
 
@@ -71,11 +60,12 @@
 }
 
 .day[data-empty='true'] {
-  align-self: start;
+  flex: 1 1 9.5rem;
 }
 
 .day[data-empty='true'] .dayReveal {
-  height: auto;
+  display: flex;
+  flex-direction: column;
   background: rgb(255 255 255 / 0.4);
   box-shadow: none;
   border-style: dashed;
@@ -104,6 +94,7 @@
 }
 
 .rest {
+  margin-block: auto;
   color: var(--ink-soft);
   font-weight: 700;
   font-size: 0.95rem;
@@ -111,6 +102,7 @@
 
 .events {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
   gap: 0.75rem;
 }
 
@@ -136,7 +128,6 @@
   box-shadow: 3px 3px 0 var(--ink);
 }
 
-/* Thumbnail layer: the right side of the card background, melting into the card colour towards the text. */
 .media {
   position: absolute;
   inset: 0 0 0 auto;
@@ -185,7 +176,6 @@
   background: linear-gradient(135deg, #8d8582 0%, #5b5553 100%);
 }
 
-/* Live ended: scanlines sit above the thumbnail. GSAP animates them. */
 .endedFx {
   position: absolute;
   inset: 0;
@@ -318,24 +308,6 @@
 
   .controlActions {
     justify-content: flex-end;
-  }
-
-  .week {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 1100px) {
-  .week {
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-  }
-
-  .day {
-    grid-column: span 3;
-  }
-
-  .day:nth-child(n + 5) {
-    grid-column: span 4;
   }
 }
 

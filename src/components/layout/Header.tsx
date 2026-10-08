@@ -19,38 +19,40 @@ export function Header() {
   const panel = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const update = () => setScrolled(window.scrollY > 12);
-    update();
-    window.addEventListener('scroll', update, { passive: true });
-    return () => window.removeEventListener('scroll', update);
+    const handleScroll = () => setScrolled(window.scrollY > 12);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
     if (!open) return undefined;
 
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setOpen(false);
-        menuButton.current?.focus();
-      }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setOpen(false);
+      menuButton.current?.focus();
     };
-    const onResize = () => {
+    const handleResize = () => {
       if (window.matchMedia('(min-width: 900px)').matches) setOpen(false);
     };
 
-    document.addEventListener('keydown', onKeyDown);
-    window.addEventListener('resize', onResize);
-    panel.current?.querySelector<HTMLElement>('a')?.focus();
+    document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('resize', handleResize);
+    panel.current?.querySelector<HTMLElement>('nav a')?.focus();
 
     return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('resize', onResize);
+      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('resize', handleResize);
     };
   }, [open]);
 
+  const handleCloseMenu = () => setOpen(false);
+
+  // The same links fill the desktop bar and the mobile panel.
   const links = navIds.map((id) => (
     <li key={id}>
-      <a href={`#${id}`} className={styles.link} aria-current={activeId === id ? 'true' : undefined} onClick={() => setOpen(false)}>
+      <a href={`#${id}`} className={styles.link} aria-current={activeId === id ? 'true' : undefined} onClick={handleCloseMenu}>
         {t.nav[id]}
       </a>
     </li>

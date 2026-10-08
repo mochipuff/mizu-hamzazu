@@ -6,7 +6,6 @@ import { Reveal } from '../ui/Reveal.tsx';
 import { SectionHeading } from '../ui/SectionHeading.tsx';
 import styles from './Faq.module.css';
 
-// The answer slides in each time its question opens.
 const handleToggle = (event: SyntheticEvent<HTMLDetailsElement>) => {
   const details = event.currentTarget;
   if (!details.open || prefersReducedMotion()) return;

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react';
 import { useSound } from '../../context/sound.ts';
 import type { EmoteName } from '../../data/emotes.ts';
 import { heroDefaultMood, heroImages, heroReactions } from '../../data/hero.ts';
@@ -21,17 +21,17 @@ interface Ripple {
   y: number;
 }
 
-function RippleRing({ x, y, onDone }: { x: number; y: number; onDone: () => void }) {
+function RippleRing({ id, x, y, onDone }: { id: number; x: number; y: number; onDone: (id: number) => void }) {
   const ref = useRef<HTMLSpanElement>(null);
 
   useLayoutEffect(() => {
     const tween = gsap.fromTo(
       ref.current,
       { scale: 0.4, opacity: 1 },
-      { scale: 3.4, opacity: 0, duration: prefersReducedMotion() ? 0.01 : 0.8, ease: 'power1.out', onComplete: onDone },
+      { scale: 3.4, opacity: 0, duration: prefersReducedMotion() ? 0.01 : 0.8, ease: 'power1.out', onComplete: () => onDone(id) },
     );
     return () => void tween.kill();
-  }, []);
+  }, [id, onDone]);
 
   return <span ref={ref} className={styles.ripple} style={{ '--x': `${x}%`, '--y': `${y}%` } as CSSProperties} />;
 }
@@ -65,12 +65,14 @@ export function HamsterWheelScene() {
     gsap.to(characterRef.current, { y: 4, duration: 1.7, ease: IDLE, yoyo: true, repeat: -1 });
   });
 
+  const handleRippleDone = useCallback((id: number) => setRipples((current) => current.filter((ripple) => ripple.id !== id)), []);
+
   const { welcome, pokeLines, pokeMilestones } = t.hero;
   const speech = speechId === 'welcome' ? welcome : (pokeMilestones[speechId] ?? pokeLines[speechId % pokeLines.length] ?? welcome);
 
   useGsap(sceneRef, () => void gsap.from(`.${styles.speech}`, { opacity: 0, scale: 0.7, y: 8, duration: 0.35, ease: POP }), [speechId]);
 
-  const poke = (event: PointerEvent<HTMLButtonElement> | KeyboardEvent<HTMLButtonElement>) => {
+  const handlePoke = (event: PointerEvent<HTMLButtonElement> | KeyboardEvent<HTMLButtonElement>) => {
     const next = pokes + 1;
     const rect = event.currentTarget.getBoundingClientRect();
     const isPointer = 'clientX' in event;
@@ -96,6 +98,12 @@ export function HamsterWheelScene() {
     }
   };
 
+  const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    handlePoke(event);
+  };
+
   return (
     <div ref={sceneRef} className={styles.scene}>
       <p className={styles.speech} key={speechId} role="status" aria-live="polite">
@@ -105,13 +113,8 @@ export function HamsterWheelScene() {
       <button
         type="button"
         className={styles.wheelButton}
-        onPointerDown={poke}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            poke(event);
-          }
-        }}
+        onPointerDown={handlePoke}
+        onKeyDown={handleKeyDown}
         aria-label={t.hero.pokeLabel(pokes)}
       >
         <span className={styles.art} aria-hidden="true">
@@ -122,7 +125,7 @@ export function HamsterWheelScene() {
         </span>
 
         {ripples.map((ripple) => (
-          <RippleRing key={ripple.id} x={ripple.x} y={ripple.y} onDone={() => setRipples((current) => current.filter((item) => item.id !== ripple.id))} />
+          <RippleRing key={ripple.id} id={ripple.id} x={ripple.x} y={ripple.y} onDone={handleRippleDone} />
         ))}
       </button>
 

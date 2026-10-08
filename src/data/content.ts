@@ -1,10 +1,9 @@
-import { getContactEmail, isFilled, site } from '../config/site.ts';
+import { isFilled, site } from '../config/site.ts';
 import { localeInfo, type Locale } from '../i18n/locales.ts';
 import type { Messages } from '../i18n/types.ts';
 import { membershipTiers, type MembershipTier } from './membership.ts';
 
-// The contact section is only rendered once a real business address is configured, so its link is hidden until then.
-export const navIds = (['about', 'schedule', 'emotes', 'join', 'faq', 'contact'] as const).filter((id) => id !== 'contact' || getContactEmail());
+export const navIds = ['about', 'schedule', 'emotes', 'join', 'faq'] as const;
 
 export interface ProfileFact {
   label: string;
@@ -24,8 +23,6 @@ export interface Perk {
 }
 
 export const perks: Perk[] = [{ id: 'membership', tiers: membershipTiers }, { id: 'vod' }, { id: 'discord' }, { id: 'info' }];
-
-export const contactTopicIds = ['collaboration', 'sponsorship', 'press', 'other'] as const;
 
 const formatDate = (isoDate: string, language: string): string =>
   isFilled(isoDate) ? new Intl.DateTimeFormat(language, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(isoDate)) : isoDate;

@@ -31,7 +31,6 @@ export const id: Messages = {
     emotes: 'Emote',
     join: 'Gabung',
     faq: 'FAQ',
-    contact: 'Kontak',
   },
 
   seo: {
@@ -215,39 +214,6 @@ export const id: Messages = {
     ],
   },
 
-  contact: {
-    title: 'Hubungi kami',
-    lead: 'Hanya untuk pertanyaan bisnis dan kolaborasi. Untuk hal lainnya, chat di stream adalah cara tercepat menghubungi Mizu.',
-    name: 'Namamu',
-    email: 'Emailmu',
-    topic: 'Topik',
-    topicPlaceholder: 'Pilih salah satu',
-    topics: {
-      collaboration: 'Kolaborasi',
-      sponsorship: 'Sponsor',
-      press: 'Pers atau wawancara',
-      other: 'Lainnya',
-    },
-    message: 'Pesan',
-    submit: 'Tulis email',
-    notePrepared: 'Aplikasi emailmu seharusnya terbuka dengan pesan yang siap dikirim. Jika tidak terjadi apa-apa, salin alamatnya dan tulis langsung ke kami.',
-    noteIdle: 'Ini akan membuka aplikasi emailmu dengan pesan yang sudah terisi. Tidak ada yang terkirim sebelum kamu menekan kirim di sana.',
-    sideTitle: 'Mau tulis langsung?',
-    copyAddress: 'Salin alamat',
-    emailCopied: 'Alamat email disalin.',
-    sideNote: 'Sertakan tautan channel atau perusahaanmu. Balasan bisa memakan waktu beberapa hari.',
-    fanNote: 'Fan art, klip, dan pesan untuk Mizu sebaiknya disampaikan lewat stream dan X, bukan ke inbox ini.',
-    errors: {
-      nameRequired: 'Tolong isi namamu.',
-      nameTooLong: 'Namanya agak panjang. Tolong dipersingkat.',
-      emailRequired: 'Tolong isi alamat email agar kami bisa membalas.',
-      emailInvalid: 'Alamat email ini sepertinya kurang tepat.',
-      topicRequired: 'Tolong pilih topik.',
-      messageTooShort: (min) => `Tolong tulis minimal ${min} karakter agar kami punya cukup informasi.`,
-      messageTooLong: (max) => `Tolong tulis kurang dari ${max} karakter.`,
-    },
-  },
-
   footer: {
     signoff: 'Oshi kamu pokoknya harus aku! ya?',
     socialNav: 'Tautan sosial media',
@@ -259,6 +225,5 @@ export const id: Messages = {
 
   noscript: {
     findOnline: (name) => `Temukan ${name} secara online`,
-    business: 'Pertanyaan bisnis',
   },
 };

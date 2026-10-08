@@ -15,6 +15,10 @@ interface SeedSpec {
   spin: number;
 }
 
+type SeedKind = 'ambient' | 'burst';
+
+const STORM_MS = 4200;
+
 function createSeeds(count: number, seed: number, burst: boolean): SeedSpec[] {
   const random = createRandom(seed);
   return Array.from({ length: count }, (_, id) => ({
@@ -28,39 +32,28 @@ function createSeeds(count: number, seed: number, burst: boolean): SeedSpec[] {
   }));
 }
 
-const STORM_MS = 4200;
+// The seeded generator always returns the same seeds, so they are made once, not on every render.
+const AMBIENT_SEEDS = createSeeds(16, 7, false);
 
-type SeedKind = 'ambient' | 'burst';
+/** One seed with its own fall. Ambient seeds loop forever; a burst seed falls once after its delay. */
+function Seed({ seed, kind }: { seed: SeedSpec; kind: SeedKind }) {
+  const ref = useRef<HTMLSpanElement>(null);
 
-const seedId = (kind: SeedKind, id: number): string => `${kind}-${id}`;
-
-/** Drops each seed from above the viewport to below it while it spins and drifts sideways. */
-function fall(layer: HTMLElement, seeds: SeedSpec[], kind: SeedKind): void {
-  seeds.forEach((seed) => {
-    const element = layer.querySelector(`[data-seed="${seedId(kind, seed.id)}"]`);
-    if (!element) return;
-
-    const tween = gsap.fromTo(
-      element,
+  useGsap(ref, () => {
+    const isAmbient = kind === 'ambient';
+    const fall = gsap.fromTo(
+      ref.current,
       { x: 0, y: 0, rotation: 0 },
-      {
-        x: seed.drift,
-        y: '105vh',
-        rotation: seed.spin,
-        duration: seed.duration,
-        delay: kind === 'burst' ? seed.delay : 0,
-        ease: 'none',
-        repeat: kind === 'ambient' ? -1 : 0,
-        repeatRefresh: true,
-      },
+      { x: seed.drift, y: '105vh', rotation: seed.spin, duration: seed.duration, delay: isAmbient ? 0 : seed.delay, ease: 'none', repeat: isAmbient ? -1 : 0, repeatRefresh: true },
     );
-    // Ambient seeds carry a negative delay so the page never starts with an empty sky.
-    if (kind === 'ambient') tween.progress(((-seed.delay % seed.duration) + seed.duration) % seed.duration / seed.duration);
+    // Ambient seeds start part-way down their fall, so the page never opens on an empty sky.
+    if (isAmbient) fall.progress((((-seed.delay % seed.duration) + seed.duration) % seed.duration) / seed.duration);
   });
+
+  return <span ref={ref} className={styles.seed} data-kind={kind} style={{ '--left': `${seed.left}%`, '--size': `${seed.size}px`, '--delay': `${seed.delay}s` } as CSSProperties} />;
 }
 
 export function AmbientSeeds() {
-  const ambient = useMemo(() => createSeeds(16, 7, false), []);
   const [storm, setStorm] = useState(0);
 
   useEffect(() => onSplash(() => setStorm((count) => count + 1)), []);
@@ -71,27 +64,17 @@ export function AmbientSeeds() {
     return () => window.clearTimeout(timer);
   }, [storm]);
 
+  // A new storm gets new seeds, and the storm count in the key restarts every seed's fall.
   const burst = useMemo(() => (storm ? createSeeds(40, storm * 97, true) : []), [storm]);
-  const layerRef = useRef<HTMLDivElement>(null);
-
-  useGsap(layerRef, () => fall(layerRef.current as HTMLElement, ambient, 'ambient'), [ambient]);
-  useGsap(layerRef, () => fall(layerRef.current as HTMLElement, burst, 'burst'), [burst]);
-
-  // --delay is only read by the reduced-motion fallback in the stylesheet, which parks ambient seeds in place.
-  const render = (seed: SeedSpec, kind: SeedKind) => (
-    <span
-      key={`${kind}-${storm}-${seed.id}`}
-      className={styles.seed}
-      data-kind={kind}
-      data-seed={seedId(kind, seed.id)}
-      style={{ '--left': `${seed.left}%`, '--size': `${seed.size}px`, '--delay': `${seed.delay}s` } as CSSProperties}
-    />
-  );
 
   return (
-    <div ref={layerRef} className={styles.layer} aria-hidden="true">
-      {ambient.map((seed) => render(seed, 'ambient'))}
-      {burst.map((seed) => render(seed, 'burst'))}
+    <div className={styles.layer} aria-hidden="true">
+      {AMBIENT_SEEDS.map((seed) => (
+        <Seed key={seed.id} seed={seed} kind="ambient" />
+      ))}
+      {burst.map((seed) => (
+        <Seed key={`${storm}-${seed.id}`} seed={seed} kind="burst" />
+      ))}
     </div>
   );
 }
