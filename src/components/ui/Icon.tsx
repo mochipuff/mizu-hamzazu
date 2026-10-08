@@ -15,10 +15,11 @@ export type IconName =
   | 'star'
   | 'arrow-up'
   | 'plus'
-  | 'send'
   | 'clock'
   | 'lock'
-  | 'globe';
+  | 'globe'
+  | 'chevron-down'
+  | 'check';
 
 const glyphs: Record<IconName, ReactNode> = {
   play: (
@@ -71,12 +72,6 @@ const glyphs: Record<IconName, ReactNode> = {
   star: <path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9l-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z" />,
   'arrow-up': <path d="M12 19V6M6.5 11.5 12 6l5.5 5.5" />,
   plus: <path d="M12 5v14M5 12h14" />,
-  send: (
-    <>
-      <path d="M20 4 4 11l6 2.5 2.5 6.5z" />
-      <path d="m10 13.5 10-9.5" />
-    </>
-  ),
   clock: (
     <>
       <circle cx="12" cy="12" r="8" />
@@ -95,6 +90,8 @@ const glyphs: Record<IconName, ReactNode> = {
       <path d="M3.5 12h17M12 3.5c2.4 2.4 3.6 5.2 3.6 8.5s-1.2 6.1-3.6 8.5c-2.4-2.4-3.6-5.2-3.6-8.5S9.6 5.9 12 3.5z" />
     </>
   ),
+  'chevron-down': <path d="m6 9 6 6 6-6" />,
+  check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
 };
 
 interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {

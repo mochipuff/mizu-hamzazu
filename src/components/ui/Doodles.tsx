@@ -55,7 +55,6 @@ const LEAVES = [
   [98, 14, 20],
 ] as const;
 
-/** A twig with paired leaves, growing up and to the right. Mirror it with CSS for the other side. */
 export function Branch({ color = 'var(--leaf)', outline = '#373332', ...rest }: DoodleProps) {
   return (
     <svg viewBox="0 0 120 40" aria-hidden="true" focusable="false" {...rest}>
@@ -77,7 +76,6 @@ export function Branch({ color = 'var(--leaf)', outline = '#373332', ...rest }: 
 
 const CLOVER_ROTATIONS = [0, 90, 180, 270] as const;
 
-/** A four-leaf clover. */
 export function Clover({ color = 'var(--leaf)', outline = '#373332', ...rest }: DoodleProps) {
   return (
     <svg viewBox="0 0 40 44" aria-hidden="true" focusable="false" {...rest}>
