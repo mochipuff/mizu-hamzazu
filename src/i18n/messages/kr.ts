@@ -31,7 +31,6 @@ export const kr: Messages = {
     emotes: '이모티콘',
     join: '참여',
     faq: 'FAQ',
-    contact: '문의',
   },
 
   seo: {
@@ -215,39 +214,6 @@ export const kr: Messages = {
     ],
   },
 
-  contact: {
-    title: '문의하기',
-    lead: '비즈니스 및 콜라보 문의 전용이에요. 그 밖의 이야기는 방송 채팅이 Mizu에게 가장 빨리 닿는 방법이에요.',
-    name: '이름',
-    email: '이메일',
-    topic: '주제',
-    topicPlaceholder: '선택해 주세요',
-    topics: {
-      collaboration: '콜라보',
-      sponsorship: '스폰서십',
-      press: '취재 또는 인터뷰',
-      other: '기타',
-    },
-    message: '메시지',
-    submit: '메일 작성하기',
-    notePrepared: '이메일 앱이 열리면서 메시지가 입력된 상태로 표시될 거예요. 아무 일도 일어나지 않으면 주소를 복사해서 직접 보내 주세요.',
-    noteIdle: '이메일 앱이 열리고 메시지가 채워져요. 앱에서 보내기를 누르기 전에는 아무것도 전송되지 않아요.',
-    sideTitle: '직접 보내고 싶으신가요?',
-    copyAddress: '주소 복사',
-    emailCopied: '이메일 주소를 복사했어요.',
-    sideNote: '채널이나 회사 링크를 함께 보내 주세요. 답장에는 며칠 걸릴 수 있어요.',
-    fanNote: '팬아트, 클립, Mizu에게 보내는 메시지는 이 메일함이 아니라 방송이나 X에 남겨 주세요.',
-    errors: {
-      nameRequired: '이름을 알려 주세요.',
-      nameTooLong: '이름이 조금 길어요. 줄여 주세요.',
-      emailRequired: '답장할 수 있도록 이메일 주소를 입력해 주세요.',
-      emailInvalid: '이메일 주소 형식이 올바르지 않아요.',
-      topicRequired: '주제를 선택해 주세요.',
-      messageTooShort: (min) => `내용을 파악할 수 있도록 ${min}자 이상 입력해 주세요.`,
-      messageTooLong: (max) => `${max}자 이내로 작성해 주세요.`,
-    },
-  },
-
   footer: {
     signoff: '네 최애는 무조건 나야! 알겠지?',
     socialNav: '소셜 링크',
@@ -259,6 +225,5 @@ export const kr: Messages = {
 
   noscript: {
     findOnline: (name) => `온라인에서 ${name} 찾기`,
-    business: '비즈니스 문의',
   },
 };
