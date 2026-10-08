@@ -2,7 +2,6 @@ import type { EmoteName } from './emotes.ts';
 import type { Messages } from '../i18n/types.ts';
 
 export interface StreamType {
-  /** Key of the title and description in the messages (`about.streamTypes.<id>`). */
   id: keyof Messages['about']['streamTypes'];
   emote: EmoteName;
 }
