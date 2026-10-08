@@ -1,10 +1,11 @@
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { HtmlTagDescriptor, IndexHtmlTransformContext, Plugin } from 'vite';
-import { getContactEmail, isFilled, profileUrls, site } from '../src/config/site.ts';
+import { isFilled, profileUrls, site } from '../src/config/site.ts';
 import { getOfficialProfiles, getProfileFacts } from '../src/data/content.ts';
+import { criticalImages } from '../src/data/criticalImages.ts';
 import { emoteNames } from '../src/data/emotes.ts';
-import { heroDefaultMood, heroImages } from '../src/data/hero.ts';
+import { heroImages } from '../src/data/hero.ts';
 import { browserLanguageMap, localeFromPath } from '../src/i18n/detect.ts';
 import { DEFAULT_LOCALE, LOCALE_STORAGE_KEY, LOCALES, localeInfo, localePath, type Locale } from '../src/i18n/locales.ts';
 import { messages } from '../src/i18n/messages/index.ts';
@@ -64,11 +65,17 @@ const renderAttrs = (attrs: HtmlTagDescriptor['attrs']): string =>
 const renderTag = ({ tag, attrs, children }: HtmlTagDescriptor): string =>
   VOID_TAGS.has(tag) ? `<${tag}${renderAttrs(attrs)}>` : `<${tag}${renderAttrs(attrs)}>${typeof children === 'string' ? children : ''}</${tag}>`;
 
-const pageUrl = (siteUrl: string, locale: Locale): string => `${siteUrl}${localePath(locale)}`;
+const localeUrl = (siteUrl: string, locale: Locale): string => `${siteUrl}${localePath(locale)}`;
+
+/** The language versions of the page, for hreflang. `/` is the language redirect, so it is the x-default. */
+const languageAlternates = (siteUrl: string): HtmlTagDescriptor[] => [
+  ...LOCALES.map((locale) => link({ rel: 'alternate', hreflang: localeInfo[locale].htmlLang, href: localeUrl(siteUrl, locale) })),
+  link({ rel: 'alternate', hreflang: 'x-default', href: `${siteUrl}/` }),
+];
 
 function buildJsonLd(siteUrl: string, locale: Locale): string {
   const t = messages[locale];
-  const url = pageUrl(siteUrl, locale);
+  const url = localeUrl(siteUrl, locale);
   const id = (fragment: string) => `${url}#${fragment}`;
   const image = siteUrl ? `${siteUrl}${seo.image.path}` : undefined;
 
@@ -127,10 +134,11 @@ function buildJsonLd(siteUrl: string, locale: Locale): string {
 
 function buildHead(siteUrl: string, locale: Locale): HtmlTagDescriptor[] {
   const t = messages[locale];
-  const home = pageUrl(siteUrl, locale);
+  const { title, description } = t.seo;
+  const canonical = localeUrl(siteUrl, locale);
   const tags: HtmlTagDescriptor[] = [
-    { tag: 'title', children: escapeHtml(t.seo.title) },
-    meta({ name: 'description', content: t.seo.description }),
+    { tag: 'title', children: escapeHtml(title) },
+    meta({ name: 'description', content: description }),
     meta({ name: 'keywords', content: t.seo.keywords.join(', ') }),
     meta({ name: 'robots', content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' }),
     meta({ name: 'theme-color', content: site.themeColor }),
@@ -139,16 +147,17 @@ function buildHead(siteUrl: string, locale: Locale): HtmlTagDescriptor[] {
     meta({ name: 'referrer', content: 'strict-origin-when-cross-origin' }),
     meta({ property: 'og:type', content: 'profile' }),
     meta({ property: 'og:site_name', content: site.name }),
-    meta({ property: 'og:title', content: t.seo.title }),
-    meta({ property: 'og:description', content: t.seo.description }),
+    meta({ property: 'og:title', content: title }),
+    meta({ property: 'og:description', content: description }),
     meta({ property: 'og:locale', content: localeInfo[locale].ogLocale }),
     ...LOCALES.filter((other) => other !== locale).map((other) => meta({ property: 'og:locale:alternate', content: localeInfo[other].ogLocale })),
     meta({ property: 'profile:username', content: site.name }),
     meta({ name: 'twitter:card', content: 'summary_large_image' }),
-    meta({ name: 'twitter:title', content: t.seo.title }),
-    meta({ name: 'twitter:description', content: t.seo.description }),
+    meta({ name: 'twitter:title', content: title }),
+    meta({ name: 'twitter:description', content: description }),
     link({ rel: 'alternate', type: 'text/plain', href: `${localePath(locale)}llms.txt`, title: 'Summary for AI assistants' }),
     { tag: 'script', attrs: { type: 'application/ld+json' }, children: buildJsonLd(siteUrl, locale) },
+    ...criticalImages.map((href) => link({ rel: 'preload', as: 'image', type: 'image/webp', href, fetchpriority: 'high' })),
   ];
 
   if (twitterHandle) {
@@ -158,10 +167,9 @@ function buildHead(siteUrl: string, locale: Locale): HtmlTagDescriptor[] {
   if (siteUrl) {
     const imageUrl = `${siteUrl}${seo.image.path}`;
     tags.push(
-      link({ rel: 'canonical', href: home }),
-      ...LOCALES.map((other) => link({ rel: 'alternate', hreflang: localeInfo[other].htmlLang, href: pageUrl(siteUrl, other) })),
-      link({ rel: 'alternate', hreflang: 'x-default', href: `${siteUrl}/` }),
-      meta({ property: 'og:url', content: home }),
+      link({ rel: 'canonical', href: canonical }),
+      ...languageAlternates(siteUrl),
+      meta({ property: 'og:url', content: canonical }),
       meta({ property: 'og:image', content: imageUrl }),
       meta({ property: 'og:image:secure_url', content: imageUrl }),
       ...(IMAGE_MIME ? [meta({ property: 'og:image:type', content: IMAGE_MIME })] : []),
@@ -178,14 +186,10 @@ function buildHead(siteUrl: string, locale: Locale): HtmlTagDescriptor[] {
 
 const FONT_FILE = /(mochiy-pop-one|zen-maru-gothic)-latin-\d+-normal.*\.woff2$/;
 
-/** Lets the browser start the above-the-fold images and fonts while the JS bundle is still downloading. Same for every language. */
+/** Lets the browser start the fonts while the JS bundle is still downloading. Same for every language; the first-paint images are preloaded in `buildHead`. */
 function buildPreloads(bundle: IndexHtmlTransformContext['bundle']): HtmlTagDescriptor[] {
   const fonts = Object.keys(bundle ?? {}).filter((file) => FONT_FILE.test(file));
-  const images = [...Object.values(heroImages), emoteUrl(heroDefaultMood)];
-  return [
-    ...fonts.map((file): HtmlTagDescriptor => ({ tag: 'link', attrs: { rel: 'preload', as: 'font', type: 'font/woff2', href: `/${file}`, crossorigin: true }, injectTo: 'head' })),
-    ...images.map((href): HtmlTagDescriptor => ({ tag: 'link', attrs: { rel: 'preload', as: 'image', type: 'image/webp', href, fetchpriority: 'high' }, injectTo: 'head' })),
-  ];
+  return fonts.map((file): HtmlTagDescriptor => ({ tag: 'link', attrs: { rel: 'preload', as: 'font', type: 'font/woff2', href: `/${file}`, crossorigin: true }, injectTo: 'head' }));
 }
 
 const facts = (locale: Locale): Array<[string, string]> => {
@@ -205,7 +209,6 @@ const publishableFacts = (locale: Locale): Array<[string, string]> => facts(loca
 
 function buildNoscript(locale: Locale): string {
   const t = messages[locale];
-  const email = getContactEmail();
   const links = getOfficialProfiles(t).map(
     ({ label, url, purpose }) => `<li><a href="${escapeHtml(url)}" rel="me noopener">${escapeHtml(label)}</a>: ${escapeHtml(purpose)}</li>`,
   );
@@ -224,12 +227,11 @@ function buildNoscript(locale: Locale): string {
   <ul>${site.hashtags.map(({ tag, purpose }) => `<li>${escapeHtml(tag)}: ${escapeHtml(t.hashtags[purpose])}</li>`).join('')}</ul>
   <h2>${escapeHtml(t.faq.title)}</h2>
   ${t.faq.items.map(({ question, answer }) => `<h3>${escapeHtml(question)}</h3><p>${escapeHtml(answer)}</p>`).join('')}
-  ${email ? `<p>${escapeHtml(t.noscript.business)}: <a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></p>` : ''}
 </main>
 </noscript>`;
 }
 
-/** Turns the index.html template into the page for one language. */
+/** Turns the index.html template into the page of one language. */
 function fillTemplate(template: string, locale: Locale, siteUrl: string): string {
   const { loader } = messages[locale];
   const values: Record<string, string> = {
@@ -250,7 +252,7 @@ function fillTemplate(template: string, locale: Locale, siteUrl: string): string
  * Saved choice first, then the device languages, then the default. Mirrors `resolveInitialLocale` in src/i18n/initial.ts.
  */
 function buildRootPage(siteUrl: string): string {
-  const t = messages[DEFAULT_LOCALE];
+  const { title, description } = messages[DEFAULT_LOCALE].seo;
   const redirect = `(function(){
   var map=${JSON.stringify(Object.fromEntries(browserLanguageMap))},locales=${JSON.stringify(LOCALES)},locale=null;
   try{locale=localStorage.getItem(${JSON.stringify(LOCALE_STORAGE_KEY)})}catch(e){}
@@ -262,12 +264,7 @@ function buildRootPage(siteUrl: string): string {
   location.replace('/'+(locale||${JSON.stringify(DEFAULT_LOCALE)})+'/'+location.search+location.hash);
 })();`;
 
-  const alternates = siteUrl
-    ? [
-        ...LOCALES.map((locale) => link({ rel: 'alternate', hreflang: localeInfo[locale].htmlLang, href: pageUrl(siteUrl, locale) })),
-        link({ rel: 'alternate', hreflang: 'x-default', href: `${siteUrl}/` }),
-      ].map(renderTag)
-    : [];
+  const alternates = siteUrl ? languageAlternates(siteUrl).map(renderTag) : [];
 
   const languageLinks = LOCALES.map(
     (locale) => `<li><a href="${localePath(locale)}" hreflang="${localeInfo[locale].htmlLang}" lang="${localeInfo[locale].htmlLang}">${escapeHtml(localeInfo[locale].label)}</a></li>`,
@@ -278,8 +275,8 @@ function buildRootPage(siteUrl: string): string {
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${escapeHtml(t.seo.title)}</title>
-    <meta name="description" content="${escapeHtml(t.seo.description)}">
+    <title>${escapeHtml(title)}</title>
+    <meta name="description" content="${escapeHtml(description)}">
     <meta name="robots" content="index, follow">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     ${alternates.join('\n    ')}
@@ -310,7 +307,6 @@ function buildRobots(siteUrl: string): string {
 
 function buildLlmsTxt(siteUrl: string, locale: Locale): string {
   const t = messages[locale];
-  const email = getContactEmail();
   const lines = [
     `# ${site.name}`,
     '',
@@ -327,8 +323,7 @@ function buildLlmsTxt(siteUrl: string, locale: Locale): string {
     '',
     '## FAQ',
     ...t.faq.items.map(({ question, answer }) => `- ${question} ${answer}`),
-    ...(email ? ['', '## Contact', `- ${t.noscript.business}: ${email}`] : []),
-    ...(siteUrl ? ['', '## Website', ...LOCALES.map((other) => `- [${site.name} (${localeInfo[other].label})](${pageUrl(siteUrl, other)})`)] : []),
+    ...(siteUrl ? ['', '## Website', ...LOCALES.map((other) => `- [${site.name} (${localeInfo[other].label})](${localeUrl(siteUrl, other)})`)] : []),
     '',
   ];
   return lines.join('\n');
@@ -336,11 +331,12 @@ function buildLlmsTxt(siteUrl: string, locale: Locale): string {
 
 const sitemapImage = (siteUrl: string, path: string): string => `    <image:image><image:loc>${siteUrl}${path}</image:loc></image:image>`;
 
+const sitemapImagePaths = [seo.image.path, ...Object.values(heroImages), ...emoteNames.map((name) => emoteUrl(name))];
+
 function buildSitemap(siteUrl: string): string {
   const today = new Date().toISOString().slice(0, 10);
-  const imagePaths = [seo.image.path, ...Object.values(heroImages), ...emoteNames.map((name) => emoteUrl(name))];
   const alternates = [
-    ...LOCALES.map((locale) => `    <xhtml:link rel="alternate" hreflang="${localeInfo[locale].htmlLang}" href="${pageUrl(siteUrl, locale)}"/>`),
+    ...LOCALES.map((locale) => `    <xhtml:link rel="alternate" hreflang="${localeInfo[locale].htmlLang}" href="${localeUrl(siteUrl, locale)}"/>`),
     `    <xhtml:link rel="alternate" hreflang="x-default" href="${siteUrl}/"/>`,
   ];
 
@@ -349,12 +345,12 @@ function buildSitemap(siteUrl: string): string {
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
     ...LOCALES.flatMap((locale) => [
       '  <url>',
-      `    <loc>${pageUrl(siteUrl, locale)}</loc>`,
+      `    <loc>${localeUrl(siteUrl, locale)}</loc>`,
       `    <lastmod>${today}</lastmod>`,
       '    <changefreq>weekly</changefreq>',
       `    <priority>${locale === DEFAULT_LOCALE ? '1.0' : '0.9'}</priority>`,
       ...alternates,
-      ...imagePaths.map((path) => sitemapImage(siteUrl, path)),
+      ...sitemapImagePaths.map((path) => sitemapImage(siteUrl, path)),
       '  </url>',
     ]),
     '</urlset>',
@@ -394,7 +390,8 @@ export function seoPlugin(rawSiteUrl: string): Plugin {
       // A build keeps the markers: closeBundle fills them once per language. The dev server fills them for the URL being requested.
       if (isBuild) return { html, tags };
 
-      const locale = localeFromPath(new URL(originalUrl ?? '/', 'http://localhost').pathname) ?? DEFAULT_LOCALE;
+      const { pathname } = new URL(originalUrl ?? '/', 'http://localhost');
+      const locale = localeFromPath(pathname) ?? DEFAULT_LOCALE;
       return { html: fillTemplate(html, locale, siteUrl), tags };
     },
     generateBundle() {
@@ -411,7 +408,7 @@ export function seoPlugin(rawSiteUrl: string): Plugin {
       }
       emit('sitemap.xml', buildSitemap(siteUrl));
     },
-    // Runs after the files are written: index.html becomes /en/, /jp/, /id/, /kr/ pages, and the root page becomes the language redirect.
+    // Runs after the files are written: index.html becomes the page of every language (/en/, /jp/ ...), and the root page becomes the language redirect.
     closeBundle() {
       if (!isBuild) return;
 
@@ -422,8 +419,9 @@ export function seoPlugin(rawSiteUrl: string): Plugin {
       }
 
       for (const locale of LOCALES) {
-        mkdirSync(join(outDir, locale), { recursive: true });
-        writeFileSync(join(outDir, locale, 'index.html'), fillTemplate(template, locale, siteUrl));
+        const folder = join(outDir, localePath(locale));
+        mkdirSync(folder, { recursive: true });
+        writeFileSync(join(folder, 'index.html'), fillTemplate(template, locale, siteUrl));
       }
       writeFileSync(rootFile, buildRootPage(siteUrl));
     },
