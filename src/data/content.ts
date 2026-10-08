@@ -18,7 +18,6 @@ export interface OfficialProfile {
 
 export interface Perk {
   id: keyof Messages['join']['perks'];
-  /** Optional membership tiers whose badges float inside the card. */
   tiers?: readonly MembershipTier[];
 }
 
@@ -30,11 +29,9 @@ const formatDate = (isoDate: string, language: string): string =>
 const formatMonthDay = (monthDay: string, language: string): string => {
   if (!isFilled(monthDay)) return monthDay;
   const [month = 1, day = 1] = monthDay.split('-').map(Number);
-  // 2000 is a leap year, so 02-29 stays valid.
   return new Intl.DateTimeFormat(language, { month: 'long', day: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(2000, month - 1, day)));
 };
 
-/** Built from `site.profile` and the messages, so the page and the search/AI output can never disagree. Unfilled TODO values are skipped. */
 export function getProfileFacts(locale: Locale, t: Messages): ProfileFact[] {
   const language = localeInfo[locale].htmlLang;
   const { labels } = t.profile;
@@ -47,7 +44,6 @@ export function getProfileFacts(locale: Locale, t: Messages): ProfileFact[] {
   ].filter(({ value }) => isFilled(value));
 }
 
-/** Every platform and social link with its purpose written in the current language. */
 export const getOfficialProfiles = (t: Messages): OfficialProfile[] =>
   [
     ...site.platforms.map(({ id, label, url }) => ({ label, url, purpose: t.platforms[id].blurb })),
