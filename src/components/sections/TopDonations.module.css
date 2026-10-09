@@ -1,0 +1,314 @@
+.section {
+  padding-block: clamp(3rem, 8vw, 5.5rem);
+}
+
+.notebook {
+  width: min(100%, 62rem);
+  margin-inline: auto;
+}
+
+/* a ribbon bookmark hanging from the top of the page */
+.bookmark {
+  position: absolute;
+  top: 0;
+  right: clamp(1rem, 5vw, 3rem);
+  z-index: 1;
+  display: grid;
+  place-items: start center;
+  width: 3rem;
+  height: 5rem;
+  padding-top: 0.7rem;
+  background: linear-gradient(90deg, var(--pastel-pink) 0 78%, #eba9b6 78%);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+}
+
+.bookmarkHeart {
+  width: 1.5rem;
+}
+
+.list {
+  display: grid;
+  gap: 1.25rem;
+  padding-top: 0.5rem;
+}
+
+/* Podium cards: polaroids taped into the notebook. */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 15rem);
+  height: 100%;
+  margin-inline: auto;
+  padding: 0.8rem 0.8rem 1.1rem;
+  border: var(--outline);
+  border-radius: 6px;
+  background: var(--white);
+  box-shadow: var(--pop-small);
+  text-align: center;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  width: 78px;
+  height: 24px;
+  translate: -50% 0;
+  rotate: -4deg;
+  border: 2px solid color-mix(in srgb, var(--ink) 20%, transparent);
+  background: repeating-linear-gradient(135deg, var(--pastel-mint) 0 8px, rgb(255 255 255 / 0.65) 8px 16px);
+  opacity: 0.92;
+}
+
+.podium:nth-child(1) {
+  rotate: 1deg;
+}
+
+.podium:nth-child(2) {
+  rotate: -2.2deg;
+}
+
+.podium:nth-child(3) {
+  rotate: 2deg;
+}
+
+.podium:nth-child(1) .card::before {
+  background: repeating-linear-gradient(135deg, var(--pastel-pink) 0 8px, rgb(255 255 255 / 0.65) 8px 16px);
+}
+
+.podium:nth-child(3) .card::before {
+  background: repeating-linear-gradient(135deg, var(--pastel-sky) 0 8px, rgb(255 255 255 / 0.65) 8px 16px);
+}
+
+.photo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 2px solid var(--ink);
+  background:
+    radial-gradient(circle at 24% 22%, rgb(255 255 255 / 0.75) 0 18%, transparent 19%),
+    var(--pastel-sky);
+}
+
+.podium[data-rank='1'] .photo {
+  background:
+    radial-gradient(circle at 24% 22%, rgb(255 255 255 / 0.75) 0 18%, transparent 19%),
+    var(--pastel-butter);
+}
+
+.podium[data-rank='3'] .photo {
+  background:
+    radial-gradient(circle at 24% 22%, rgb(255 255 255 / 0.75) 0 18%, transparent 19%),
+    var(--pastel-pink);
+}
+
+.initial {
+  font-family: var(--font-display);
+  font-size: clamp(4rem, 14vw, 6rem);
+  line-height: 1;
+  color: var(--white);
+  paint-order: stroke fill;
+  -webkit-text-stroke: 0.14em var(--ink);
+}
+
+.photoSticker {
+  position: absolute;
+  top: -1.1rem;
+  right: -0.9rem;
+  width: 3.4rem;
+  rotate: 14deg;
+}
+
+.podium[data-rank='1'] .photoSticker {
+  top: -1.6rem;
+  width: 4.4rem;
+}
+
+.badge {
+  position: absolute;
+  top: -1.1rem;
+  left: -1rem;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 3.6rem;
+  aspect-ratio: 1;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  rotate: -10deg;
+}
+
+.burst {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.badge > span {
+  position: relative;
+}
+
+.name {
+  margin-top: 0.8rem;
+  max-width: 100%;
+  font-family: var(--font-hand);
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.amount {
+  margin-top: 0.15rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 3.4vw, 1.45rem);
+  color: var(--rust);
+  line-height: 1.2;
+}
+
+.via {
+  margin-top: 0.15rem;
+  font-family: var(--font-hand);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+/* Ranks 4 to 10: paper tickets. */
+.row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.65rem 1rem 0.65rem 0.7rem;
+  border: var(--outline);
+  border-radius: 16px;
+  background: var(--white);
+  box-shadow: var(--pop-small);
+}
+
+.row:nth-child(4n + 4) {
+  background: var(--pastel-butter);
+  rotate: -0.4deg;
+}
+
+.row:nth-child(4n + 5) {
+  background: var(--pastel-mint);
+  rotate: 0.35deg;
+}
+
+.row:nth-child(4n + 6) {
+  background: var(--pastel-lilac);
+  rotate: -0.3deg;
+}
+
+.row:nth-child(4n + 7) {
+  background: var(--pastel-sky);
+  rotate: 0.4deg;
+}
+
+.rowRank {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  aspect-ratio: 1;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--white);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+}
+
+.rowWho {
+  display: grid;
+  min-width: 0;
+}
+
+.rowName {
+  font-family: var(--font-hand);
+  font-size: 1.55rem;
+  font-weight: 700;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.rowVia {
+  font-family: var(--font-hand);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.rowAmount {
+  padding: 0.2rem 0.8rem;
+  border: 2px dashed var(--ink);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.75);
+  font-family: var(--font-display);
+  font-size: clamp(0.95rem, 3vw, 1.15rem);
+  white-space: nowrap;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 479px) {
+  .row {
+    grid-template-columns: auto 1fr;
+  }
+
+  .rowAmount {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+
+@media (min-width: 760px) {
+  .card {
+    width: min(100%, 18rem);
+  }
+
+  .list {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+
+  /* second place on the left, first in the middle and taller, third on the right */
+  .podium:nth-child(1) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .podium:nth-child(2) {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: end;
+  }
+
+  .podium:nth-child(3) {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: end;
+  }
+
+  .row {
+    grid-column: 1 / -1;
+    padding-inline: 1rem 1.4rem;
+  }
+
+  .podium:nth-child(1) .card {
+    padding-top: 1.1rem;
+  }
+}

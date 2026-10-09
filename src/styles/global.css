@@ -15,11 +15,17 @@
   --lilac: #d8a593;
   --lilac-soft: #f0ddd4;
   --sand: #f5e5dc;
+  --pastel-pink: #f8cfd6;
+  --pastel-butter: #fbe9b7;
+  --pastel-mint: #d5ead7;
+  --pastel-sky: #d3e4f2;
+  --pastel-lilac: #e3d6f0;
   --rust: #c1592d;
   --leaf: #8fae6b;
 
   --font-cjk-fallback: 'Hiragino Maru Gothic ProN', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR';
   --font-display: 'Mochiy Pop One', 'Zen Maru Gothic', var(--font-cjk-fallback), ui-rounded, system-ui, sans-serif;
+  --font-hand: 'Gaegu', 'Zen Maru Gothic', var(--font-cjk-fallback), ui-rounded, cursive;
   --font-body: 'Zen Maru Gothic', var(--font-cjk-fallback), ui-rounded, system-ui, sans-serif;
 
   --outline: 3px solid var(--ink);

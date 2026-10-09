@@ -1,0 +1,5 @@
+/* A die-cut sticker: a white edge around the drawing and a soft offset shadow. */
+.sticker {
+  filter: drop-shadow(2px 0 0 var(--white)) drop-shadow(-2px 0 0 var(--white)) drop-shadow(0 2px 0 var(--white)) drop-shadow(0 -2px 0 var(--white))
+    drop-shadow(3px 4px 0 rgb(55 51 50 / 0.3));
+}

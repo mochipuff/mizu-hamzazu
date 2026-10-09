@@ -16,6 +16,7 @@ export const id: Messages = {
 
   header: {
     brandLabel: (name) => `${name}, kembali ke atas`,
+    brandHomeLabel: (name) => `${name}, ke halaman utama`,
     primaryNav: 'Utama',
     mobileNav: 'Seluler',
     soundOn: 'Nyalakan efek suara',
@@ -31,6 +32,7 @@ export const id: Messages = {
     emotes: 'Emote',
     join: 'Gabung',
     faq: 'FAQ',
+    supports: 'Dukungan',
   },
 
   seo: {
@@ -38,6 +40,36 @@ export const id: Messages = {
     description: 'Situs resmi Mizu Hamzazu, VTuber hamster asal Indonesia. Jadwal stream mingguan freetalk, cozy games, dan karaoke, emote, serta komunitas Zutopian.',
     imageAlt: 'Mizu Hamzazu, virtual youtuber asal Indonesia',
     keywords: ['Mizu Hamzazu', 'VTuber Indonesia', 'virtual youtuber Indonesia', 'VTuber hamster', 'Zutopian', 'cozy gaming', 'karaoke stream'],
+  },
+
+  supports: {
+    seo: {
+      title: 'Dukungan | Mizu Hamzazu',
+      description: 'Top 10 donasi dan catatan manis dari penonton untuk Mizu Hamzazu. Terima kasih, Zutopian!',
+    },
+    marquee: ['Terima kasih, Zutopian!', 'Setiap traktiran bikin kincir terus berputar', 'Mizu Hamzazu', 'Catatan ditempel penuh cinta'],
+    cover: {
+      sticker: 'makasih!',
+      title: 'Dukungan',
+      lead: 'Buku tempel berisi traktiran dan catatan yang bikin kincir Mizu terus berputar. Terima kasih, Zutopian!',
+      waysLabel: 'Cara mendukung',
+    },
+    donations: {
+      title: 'Top 10 donasi',
+      lead: 'Traktiran terbesar untuk Mizu sejauh ini.',
+      listLabel: 'Top 10 donasi',
+      rank: (rank) => `Peringkat ${rank}`,
+      via: (platform) => `lewat ${platform}`,
+    },
+    notes: {
+      title: 'Catatan penonton',
+      lead: 'Pesan-pesan kecil dari penonton, ditempel untuk Mizu.',
+      listLabel: 'Catatan dari penonton',
+      from: (name) => `dari ${name}`,
+      inviteTitle: 'Catatanmu bisa ada di sini',
+      inviteLead: 'Kirim traktiran beserta pesan, dan catatanmu mungkin ikut ditempel di dinding ini.',
+      inviteCta: 'Kirim traktiran',
+    },
   },
 
   profile: {
