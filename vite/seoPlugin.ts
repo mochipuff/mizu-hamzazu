@@ -1,15 +1,11 @@
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { HtmlTagDescriptor, IndexHtmlTransformContext, Plugin } from 'vite';
-import { isFilled, profileUrls, site } from '../src/config/site.ts';
-import { getOfficialProfiles, getProfileFacts } from '../src/data/content.ts';
-import { criticalImages } from '../src/data/criticalImages.ts';
-import { emoteNames } from '../src/data/emotes.ts';
-import { heroImages } from '../src/data/hero.ts';
-import { browserLanguageMap, localeFromPath } from '../src/i18n/detect.ts';
-import { DEFAULT_LOCALE, LOCALE_STORAGE_KEY, LOCALES, localeInfo, localePath, type Locale } from '../src/i18n/locales.ts';
+import { site } from '../src/config/site.ts';
+import { getProfileFacts } from '../src/data/content.ts';
+import { criticalImages, emoteNames, emoteUrl, heroImages } from '../src/data/images.ts';
+import { browserLanguageMap, DEFAULT_LOCALE, LOCALE_STORAGE_KEY, LOCALES, localeFromPath, localeInfo, localePath, type Locale } from '../src/i18n/locales.ts';
 import { messages } from '../src/i18n/messages/index.ts';
-import { emoteUrl } from '../src/lib/assets.ts';
 
 const AI_CRAWLERS = [
   'GPTBot',
@@ -32,7 +28,7 @@ const MAX_IMAGE_BYTES = 600 * 1024;
 
 // Google requires a full ISO 8601 datetime with a UTC offset. site.scheduleTimeZone (Asia/Jakarta) has no DST, so the offset is fixed.
 const SITE_UTC_OFFSET = '+07:00';
-const toDateTime = (isoDate: string): string | undefined => (isFilled(isoDate) ? `${isoDate}T00:00:00${SITE_UTC_OFFSET}` : undefined);
+const toDateTime = (isoDate: string): string => `${isoDate}T00:00:00${SITE_UTC_OFFSET}`;
 
 // index.html carries these markers; every language page is that file with the markers filled in.
 const HEAD_MARKER = '<!--locale-head-->';
@@ -48,7 +44,13 @@ const compact = (entries: Record<string, unknown>): Record<string, unknown> =>
     }),
   );
 
-const publishable = (values: string[]): string[] => values.filter(isFilled);
+const profileUrls = [...site.platforms.map(({ url }) => url), ...site.profile.socials.map(({ url }) => url)];
+
+/** Every official link with what it is for, in the language of `t`. */
+const officialProfiles = (t: (typeof messages)[Locale]): { label: string; url: string; purpose: string }[] => [
+  ...site.platforms.map(({ id, label, url }) => ({ label, url, purpose: t.platforms[id].blurb })),
+  ...site.profile.socials.map(({ label, url, purpose }) => ({ label, url, purpose: t.socials[purpose] })),
+];
 
 const meta = (attrs: Record<string, string>): HtmlTagDescriptor => ({ tag: 'meta', attrs });
 const link = (attrs: Record<string, string>): HtmlTagDescriptor => ({ tag: 'link', attrs });
@@ -83,15 +85,15 @@ function buildJsonLd(siteUrl: string, locale: Locale): string {
     '@type': 'Person',
     '@id': id('person'),
     name: site.name,
-    alternateName: publishable(profile.alternateNames),
+    alternateName: profile.alternateNames,
     description: t.profile.bio,
     jobTitle: t.profile.jobTitle,
     nationality: { '@type': 'Country', name: t.profile.nationality },
     height: { '@type': 'QuantitativeValue', value: profile.heightCm, unitCode: 'CMT' },
     knowsAbout: t.profile.topics,
     knowsLanguage: t.profile.languages,
-    affiliation: !profile.independent && isFilled(t.profile.agency) ? { '@type': 'Organization', name: t.profile.agency } : undefined,
-    sameAs: profileUrls(),
+    affiliation: !profile.independent && t.profile.agency ? { '@type': 'Organization', name: t.profile.agency } : undefined,
+    sameAs: profileUrls,
     url: siteUrl ? url : undefined,
     image,
   });
@@ -205,11 +207,11 @@ const facts = (locale: Locale): Array<[string, string]> => {
   ];
 };
 
-const publishableFacts = (locale: Locale): Array<[string, string]> => facts(locale).filter(([, value]) => isFilled(value));
+const publishableFacts = (locale: Locale): Array<[string, string]> => facts(locale).filter(([, value]) => value);
 
 function buildNoscript(locale: Locale): string {
   const t = messages[locale];
-  const links = getOfficialProfiles(t).map(
+  const links = officialProfiles(t).map(
     ({ label, url, purpose }) => `<li><a href="${escapeHtml(url)}" rel="me noopener">${escapeHtml(label)}</a>: ${escapeHtml(purpose)}</li>`,
   );
 
@@ -249,7 +251,7 @@ function fillTemplate(template: string, locale: Locale, siteUrl: string): string
 
 /**
  * What `/` serves: a tiny page that sends the visitor to their language without downloading the app.
- * Saved choice first, then the device languages, then the default. Mirrors `resolveInitialLocale` in src/i18n/initial.ts.
+ * Saved choice first, then the device languages, then the default. Mirrors `ensureLocaleInUrl` in src/i18n/navigation.ts.
  */
 function buildRootPage(siteUrl: string): string {
   const { title, description } = messages[DEFAULT_LOCALE].seo;
@@ -316,7 +318,7 @@ function buildLlmsTxt(siteUrl: string, locale: Locale): string {
     ...publishableFacts(locale).map(([label, value]) => `- ${label}: ${value}`),
     '',
     '## Official profiles',
-    ...getOfficialProfiles(t).map(({ label, url, purpose }) => `- [${label}](${url}): ${purpose}`),
+    ...officialProfiles(t).map(({ label, url, purpose }) => `- [${label}](${url}): ${purpose}`),
     '',
     '## Hashtags',
     ...site.hashtags.map(({ tag, purpose }) => `- ${tag}: ${t.hashtags[purpose]}`),
