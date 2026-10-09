@@ -1,0 +1,111 @@
+.paper {
+  position: relative;
+  transform: rotate(var(--tilt, 0deg));
+}
+
+/* Drop shadows stack on the clipped sheet, so the outline hugs the torn edge. */
+.outline {
+  filter: drop-shadow(3px 0 0 var(--ink)) drop-shadow(-3px 0 0 var(--ink)) drop-shadow(0 3px 0 var(--ink)) drop-shadow(0 -3px 0 var(--ink))
+    drop-shadow(6px 7px 0 var(--ink));
+}
+
+.sheet {
+  --paper: #fffbf3;
+  --line: rgb(130 170 205 / 0.5);
+
+  position: relative;
+  padding: clamp(1.25rem, 3.5vw, 2.25rem);
+  background-color: var(--paper);
+  color: var(--ink);
+}
+
+.sheet[data-tone='pink'] {
+  --paper: var(--pastel-pink);
+}
+
+.sheet[data-tone='butter'] {
+  --paper: var(--pastel-butter);
+}
+
+.sheet[data-tone='mint'] {
+  --paper: var(--pastel-mint);
+}
+
+.sheet[data-tone='sky'] {
+  --paper: var(--pastel-sky);
+}
+
+.sheet[data-tone='lilac'] {
+  --paper: var(--pastel-lilac);
+}
+
+.sheet[data-pattern='ruled'] {
+  padding-left: clamp(2.75rem, 7vw, 4.25rem);
+  background-image:
+    linear-gradient(90deg, transparent clamp(2rem, 5.2vw, 3.2rem), rgb(236 110 135 / 0.55) clamp(2rem, 5.2vw, 3.2rem) calc(clamp(2rem, 5.2vw, 3.2rem) + 2px), transparent calc(clamp(2rem, 5.2vw, 3.2rem) + 2px)),
+    repeating-linear-gradient(to bottom, transparent 0 33px, var(--line) 33px 35px);
+}
+
+/* punched holes down the left edge */
+.sheet[data-pattern='ruled']::before {
+  content: '';
+  position: absolute;
+  inset: 1.4rem auto 1.4rem 0.7rem;
+  width: 1rem;
+  background: radial-gradient(circle, var(--sand) 0 0.38rem, rgb(55 51 50 / 0.28) 0.4rem 0.5rem, transparent 0.55rem) 0 0 / 1rem 4.2rem repeat-y;
+  pointer-events: none;
+}
+
+.sheet[data-pattern='dots'] {
+  background-image: radial-gradient(circle, rgb(255 255 255 / 0.85) 0 2.4px, transparent 2.8px);
+  background-size: 22px 22px;
+}
+
+.sheet[data-pattern='gingham'] {
+  background-image:
+    repeating-linear-gradient(0deg, rgb(255 255 255 / 0.5) 0 14px, transparent 14px 28px),
+    repeating-linear-gradient(90deg, rgb(255 255 255 / 0.5) 0 14px, transparent 14px 28px);
+}
+
+.sheet[data-torn='true'] {
+  padding-bottom: calc(clamp(1.25rem, 3.5vw, 2.25rem) + 10px);
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - 9px),
+    96% calc(100% - 3px),
+    92% calc(100% - 10px),
+    87% calc(100% - 4px),
+    82% calc(100% - 9px),
+    76% calc(100% - 2px),
+    71% calc(100% - 8px),
+    65% calc(100% - 3px),
+    59% calc(100% - 10px),
+    53% calc(100% - 4px),
+    47% calc(100% - 9px),
+    41% calc(100% - 2px),
+    35% calc(100% - 8px),
+    29% calc(100% - 3px),
+    23% calc(100% - 10px),
+    17% calc(100% - 4px),
+    11% calc(100% - 9px),
+    5% calc(100% - 3px),
+    0 calc(100% - 8px)
+  );
+}
+
+.tape {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  z-index: 2;
+  width: 104px;
+  height: 28px;
+  translate: -50% 0;
+  rotate: -3deg;
+  border: 2px solid color-mix(in srgb, var(--ink) 20%, transparent);
+  background:
+    repeating-conic-gradient(rgb(255 255 255 / 0.55) 0 25%, transparent 0 50%) 0 0 / 14px 14px,
+    var(--pastel-lilac);
+  opacity: 0.92;
+}
