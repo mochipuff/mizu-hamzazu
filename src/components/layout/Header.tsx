@@ -4,14 +4,21 @@ import { site } from '../../config/site.ts';
 import { navIds } from '../../data/content.ts';
 import { useScrollSpy } from '../../hooks/useScrollSpy.ts';
 import { useI18n } from '../../i18n/i18n.ts';
+import { usePage } from '../../i18n/navigation.ts';
+import { pagePath } from '../../i18n/pages.ts';
 import { Icon } from '../ui/Icon.tsx';
 import { Paw } from '../ui/Doodles.tsx';
+import { Link } from '../ui/Link.tsx';
 import { LanguageSelect } from './LanguageSelect.tsx';
 import styles from './Header.module.css';
 
 export function Header() {
-  const { t } = useI18n();
-  const activeId = useScrollSpy(navIds);
+  const { t, locale } = useI18n();
+  const page = usePage();
+  const isHome = page === 'home';
+  const homePath = pagePath(locale, 'home');
+  // The sections only exist on the home page, so the spy is quiet elsewhere.
+  const activeId = useScrollSpy(navIds, page);
   const sound = useSound();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -34,7 +41,7 @@ export function Header() {
       menuButton.current?.focus();
     };
     const handleResize = () => {
-      if (window.matchMedia('(min-width: 900px)').matches) setOpen(false);
+      if (window.matchMedia('(min-width: 1024px)').matches) setOpen(false);
     };
 
     document.addEventListener('keydown', handleKeyDown);
@@ -49,22 +56,39 @@ export function Header() {
 
   const handleCloseMenu = () => setOpen(false);
 
-  // The same links fill the desktop bar and the mobile panel.
-  const links = navIds.map((id) => (
+  // From another page a section link goes back to the home page first. The same links fill the desktop bar and the mobile panel.
+  const sectionLinks = navIds.map((id) => (
     <li key={id}>
-      <a href={`#${id}`} className={styles.link} aria-current={activeId === id ? 'true' : undefined} onClick={handleCloseMenu}>
+      <Link
+        to={isHome ? `#${id}` : `${homePath}#${id}`}
+        className={styles.link}
+        aria-current={isHome && activeId === id ? 'true' : undefined}
+        onClick={handleCloseMenu}
+      >
         {t.nav[id]}
-      </a>
+      </Link>
     </li>
   ));
+  const links = [
+    ...sectionLinks,
+    <li key="supports">
+      <Link to={pagePath(locale, 'supports')} className={styles.link} aria-current={page === 'supports' ? 'page' : undefined} onClick={handleCloseMenu}>
+        {t.nav.supports}
+      </Link>
+    </li>,
+  ];
 
   return (
     <header className={styles.header} data-scrolled={scrolled}>
       <div className={`container ${styles.bar}`}>
-        <a href="#top" className={styles.brand} aria-label={t.header.brandLabel(site.name)}>
+        <Link
+          to={isHome ? '#top' : homePath}
+          className={styles.brand}
+          aria-label={isHome ? t.header.brandLabel(site.name) : t.header.brandHomeLabel(site.name)}
+        >
           <Paw className={styles.brandDrop} />
           <span>{site.nickname}</span>
-        </a>
+        </Link>
 
         <nav className={styles.desktopNav} aria-label={t.header.primaryNav}>
           <ul className={styles.list}>{links}</ul>
