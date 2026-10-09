@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { pageFromPath, type PageId } from './pages.ts';
 
 const NAVIGATE_EVENT = 'mizu:navigate';
 
@@ -16,6 +17,9 @@ const getPathname = (): string => window.location.pathname;
 
 /** The URL is the single source of truth for the language. */
 export const usePathname = (): string => useSyncExternalStore(subscribe, getPathname);
+
+/** Which page the URL shows, whatever the language. */
+export const usePage = (): PageId => pageFromPath(usePathname());
 
 /** Moves to another URL of this site without a reload. `to` is a path with an optional query and hash. */
 export function navigate(to: string): void {
