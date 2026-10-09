@@ -17,6 +17,7 @@
     "images": "node scripts/optimize-images.mjs"
   },
   "dependencies": {
+    "@fontsource/gaegu": "^5.0.0",
     "@fontsource/mochiy-pop-one": "^5.3.0",
     "@fontsource/zen-maru-gothic": "^5.3.0",
     "@img/sharp-wasm32": "^0.35.5",
