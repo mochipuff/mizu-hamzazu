@@ -1,9 +1,9 @@
-import type { Messages } from '../i18n/types.ts';
+import type { Messages } from '../i18n/messages/index.ts';
 
 export type PlatformId = 'youtube' | 'twitch' | 'x' | 'discord';
 
 /** The call to action and blurb of each platform live in the messages (`platforms.<id>`). */
-export interface Platform {
+interface Platform {
   id: PlatformId;
   label: string;
   handle: string;
@@ -11,12 +11,11 @@ export interface Platform {
   liveUrl: string;
 }
 
-export type HashtagPurpose = keyof Messages['hashtags'];
 export type SocialPurpose = keyof Messages['socials'];
 
-export interface Hashtag {
+interface Hashtag {
   tag: string;
-  purpose: HashtagPurpose;
+  purpose: keyof Messages['hashtags'];
 }
 
 export interface ExtraProfile {
@@ -27,9 +26,9 @@ export interface ExtraProfile {
 
 /**
  * Facts that are the same in every language. Anything that has words (bio, species, languages, ...) is in `src/i18n/messages`.
- * Any value starting with "TODO" is skipped everywhere it would be published.
+ * An empty value (for example `illustrator` until it is known) is left out of everything that gets published.
  */
-export interface Profile {
+interface Profile {
   debut: string;
   heightCm: number;
   birthday: string;
@@ -41,7 +40,7 @@ export interface Profile {
   socials: ExtraProfile[];
 }
 
-export interface SiteConfig {
+interface SiteConfig {
   name: string;
   nickname: string;
   fanName: string;
@@ -72,7 +71,7 @@ export const site: SiteConfig = {
     debut: '2021-11-01',
     heightCm: 165,
     birthday: '03-12',
-    illustrator: 'TODO: character illustrator',
+    illustrator: '',
     riggerOrModeler: 'Ardi Sketch and Gromb Yan',
     alternateNames: ['Mizu', 'Hamzazu', 'みず'],
     independent: true,
@@ -127,8 +126,3 @@ export const site: SiteConfig = {
 const platformById = new Map(site.platforms.map((platform) => [platform.id, platform]));
 
 export const getPlatform = (id: PlatformId): Platform | undefined => platformById.get(id);
-
-export const isFilled = (value: string | undefined): value is string => Boolean(value) && !value?.startsWith('TODO');
-
-export const profileUrls = (): string[] =>
-  [...site.platforms.map(({ url }) => url), ...site.profile.socials.map(({ url }) => url)].filter(isFilled);
