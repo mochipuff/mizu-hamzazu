@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react';
 import { useSound } from '../../context/sound.ts';
-import type { EmoteName } from '../../data/emotes.ts';
-import { heroDefaultMood, heroImages, heroReactions } from '../../data/hero.ts';
+import { emoteUrl, heroDefaultMood, heroImages, heroReactions, type EmoteName } from '../../data/images.ts';
 import { useGsap } from '../../hooks/useGsap.ts';
 import { useI18n } from '../../i18n/i18n.ts';
-import { emoteUrl } from '../../lib/assets.ts';
 import { triggerSplash } from '../../lib/events.ts';
 import { gsap, IDLE, POP, prefersReducedMotion } from '../../lib/motion.ts';
 import styles from './HamsterWheelScene.module.css';
