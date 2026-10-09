@@ -1,20 +1,14 @@
 import { useCallback, useEffect, useMemo, type ReactNode } from 'react';
-import { localeFromPath } from './detect.ts';
 import { I18nContext } from './i18n.ts';
-import { storeLocale } from './initial.ts';
-import { localeInfo, type Locale } from './locales.ts';
+import { DEFAULT_LOCALE, localeFromPath, localeInfo, type Locale } from './locales.ts';
 import { messages } from './messages/index.ts';
-import { navigate, usePage, usePathname } from './navigation.ts';
+import { navigate, storeLocale, usePage, usePathname } from './navigation.ts';
 import { pagePath, pageSeo } from './pages.ts';
 
-interface I18nProviderProps {
-  initialLocale: Locale;
-  children: ReactNode;
-}
-
-export function I18nProvider({ initialLocale, children }: I18nProviderProps) {
+export function I18nProvider({ children }: { children: ReactNode }) {
   // The URL decides the language, so a switch, a shared link and the back button all go through the same path.
-  const locale = localeFromPath(usePathname()) ?? initialLocale;
+  // `ensureLocaleInUrl` has already put a language in the address by the time this renders.
+  const locale = localeFromPath(usePathname()) ?? DEFAULT_LOCALE;
   const page = usePage();
 
   const setLocale = useCallback(

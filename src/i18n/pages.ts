@@ -1,8 +1,8 @@
 import { isLocale, type Locale } from './locales.ts';
-import type { Messages } from './types.ts';
+import type { Messages } from './messages/index.ts';
 
 /** Every page of the site. Each one exists once per language: /<locale>/<slug>. */
-export const PAGES = ['home', 'supports'] as const;
+const PAGES = ['home', 'supports'] as const;
 
 export type PageId = (typeof PAGES)[number];
 
@@ -13,9 +13,6 @@ const pageBySlug = new Map<string, PageId>(PAGES.map((page) => [SLUGS[page], pag
 
 /** `/en/` for the home page, `/en/supports/` for the others. Always ends with a slash, like the folders in the build output. */
 export const pagePath = (locale: Locale, page: PageId): string => (page === 'home' ? `/${locale}/` : `/${locale}/${SLUGS[page]}/`);
-
-/** The path without a language: `/` or `/supports/`. This is where the visitor lands when the URL has no language yet. */
-export const languageFreePath = (page: PageId): string => (page === 'home' ? '/' : `/${SLUGS[page]}/`);
 
 /**
  * Works with and without the language: `/jp/supports/` and `/supports/` are both the supports page.

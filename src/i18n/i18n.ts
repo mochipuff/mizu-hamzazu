@@ -1,8 +1,8 @@
 import { createContext, useContext } from 'react';
 import type { Locale } from './locales.ts';
-import type { Messages } from './types.ts';
+import type { Messages } from './messages/index.ts';
 
-export interface I18nApi {
+interface I18nApi {
   locale: Locale;
   t: Messages;
   setLocale: (locale: Locale) => void;

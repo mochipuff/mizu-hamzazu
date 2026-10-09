@@ -27,6 +27,29 @@ export const localeInfo: Record<Locale, LocaleInfo> = {
 /** Text that exists once per language, for content that lives next to its data (for example the stream schedule). */
 export type Localized = Record<Locale, string>;
 
+/** Browser language subtags mapped to the site's URL codes. `in` is the legacy tag for Indonesian. */
+export const browserLanguageMap = new Map<string, Locale>([
+  ['en', 'en'],
+  ['ja', 'jp'],
+  ['id', 'id'],
+  ['in', 'id'],
+  ['ko', 'kr'],
+]);
+
 export const isLocale = (value: unknown): value is Locale => LOCALES.some((locale) => locale === value);
 
 export const localePath = (locale: Locale): string => `/${locale}/`;
+
+export function localeFromPath(pathname: string): Locale | null {
+  const code = pathname.split('/')[1];
+  return isLocale(code) ? code : null;
+}
+
+/** `languages` is ordered by the visitor's preference, so the first one the site supports wins. */
+export function localeFromBrowser(languages: readonly string[]): Locale | null {
+  for (const tag of languages) {
+    const locale = browserLanguageMap.get(tag.toLowerCase().split('-')[0] ?? '');
+    if (locale) return locale;
+  }
+  return null;
+}
