@@ -14,7 +14,6 @@ export const streamSlots: StreamSlot[] = [
     time: '08:00',
     durationMinutes: 180,
     platform: 'youtube',
-    membersOnly: false,
     thumbnailUrl: 'https://i.ytimg.com/vi/S6PD4T8H4Cw/maxresdefault.jpg',
   },
   {
@@ -30,7 +29,5 @@ export const streamSlots: StreamSlot[] = [
     time: '15:30',
     durationMinutes: 180,
     platform: 'youtube',
-    membersOnly: false,
-    thumbnailUrl: 'https://placehold.co/1080x720?text=Mizu+Live',
   },
 ];

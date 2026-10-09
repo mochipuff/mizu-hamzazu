@@ -1,6 +1,6 @@
-import { isFilled, site, type ExtraProfile, type SocialPurpose } from '../config/site.ts';
+import { site, type ExtraProfile, type SocialPurpose } from '../config/site.ts';
 
-export type DonationPlatform = Extract<SocialPurpose, 'trakteer' | 'tako' | 'membership'>;
+type DonationPlatform = Extract<SocialPurpose, 'trakteer' | 'tako' | 'membership'>;
 
 export interface Donation {
   name: string;
@@ -8,12 +8,7 @@ export interface Donation {
   platform: DonationPlatform;
 }
 
-export interface ViewerNote {
-  name: string;
-  text: string;
-}
-
-export const TOP_COUNT = 10;
+const TOP_COUNT = 10;
 
 const donations: readonly Donation[] = [
   { name: 'Nathsuzashyee', amount: 1_500_000, platform: 'trakteer' },
@@ -28,7 +23,7 @@ const donations: readonly Donation[] = [
   { name: 'Seseorang', amount: 100_000, platform: 'trakteer' },
 ];
 
-export const viewerNotes: readonly ViewerNote[] = [
+export const viewerNotes: readonly { name: string; text: string }[] = [
   { name: 'Fikk', text: 'Semangat streaming dan bikin kontennya, btw mizu kangen.' },
 ];
 
@@ -39,6 +34,6 @@ export const formatAmount = (amount: number, language: string): string =>
 
 const supportPurposes: readonly SocialPurpose[] = ['trakteer', 'tako', 'membership'];
 
-export const supportLinks: ExtraProfile[] = site.profile.socials.filter(({ purpose, url }) => supportPurposes.includes(purpose) && isFilled(url));
+export const supportLinks: ExtraProfile[] = site.profile.socials.filter(({ purpose }) => supportPurposes.includes(purpose));
 
 export const platformLabel = (platform: DonationPlatform): string => site.profile.socials.find(({ purpose }) => purpose === platform)?.label ?? platform;

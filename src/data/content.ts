@@ -1,38 +1,16 @@
-import { isFilled, site } from '../config/site.ts';
+import { site } from '../config/site.ts';
 import { localeInfo, type Locale } from '../i18n/locales.ts';
-import type { Messages } from '../i18n/types.ts';
-import { membershipTiers, type MembershipTier } from './membership.ts';
-
-export const navIds = ['about', 'schedule', 'emotes', 'join', 'faq'] as const;
-
-export interface ProfileFact {
-  label: string;
-  value: string;
-}
-
-export interface OfficialProfile {
-  label: string;
-  url: string;
-  purpose: string;
-}
-
-export interface Perk {
-  id: keyof Messages['join']['perks'];
-  tiers?: readonly MembershipTier[];
-}
-
-export const perks: Perk[] = [{ id: 'membership', tiers: membershipTiers }, { id: 'vod' }, { id: 'discord' }, { id: 'info' }];
+import type { Messages } from '../i18n/messages/index.ts';
 
 const formatDate = (isoDate: string, language: string): string =>
-  isFilled(isoDate) ? new Intl.DateTimeFormat(language, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(isoDate)) : isoDate;
+  new Intl.DateTimeFormat(language, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(isoDate));
 
 const formatMonthDay = (monthDay: string, language: string): string => {
-  if (!isFilled(monthDay)) return monthDay;
   const [month = 1, day = 1] = monthDay.split('-').map(Number);
   return new Intl.DateTimeFormat(language, { month: 'long', day: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(2000, month - 1, day)));
 };
 
-export function getProfileFacts(locale: Locale, t: Messages): ProfileFact[] {
+export function getProfileFacts(locale: Locale, t: Messages): { label: string; value: string }[] {
   const language = localeInfo[locale].htmlLang;
   const { labels } = t.profile;
   return [
@@ -41,11 +19,5 @@ export function getProfileFacts(locale: Locale, t: Messages): ProfileFact[] {
     { label: labels.height, value: `${site.profile.heightCm} cm` },
     { label: labels.debut, value: formatDate(site.profile.debut, language) },
     { label: labels.fanName, value: site.fanName },
-  ].filter(({ value }) => isFilled(value));
+  ];
 }
-
-export const getOfficialProfiles = (t: Messages): OfficialProfile[] =>
-  [
-    ...site.platforms.map(({ id, label, url }) => ({ label, url, purpose: t.platforms[id].blurb })),
-    ...site.profile.socials.map(({ label, url, purpose }) => ({ label, url, purpose: t.socials[purpose] })),
-  ].filter(({ url }) => isFilled(url));
