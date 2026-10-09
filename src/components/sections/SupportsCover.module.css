@@ -1,0 +1,150 @@
+.cover {
+  padding-block: clamp(2.5rem, 7vw, 4.5rem) clamp(3rem, 7vw, 5rem);
+}
+
+.stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  text-align: center;
+}
+
+/* a stitched ribbon label */
+.ribbon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.3rem 1.5rem 0.3rem 3.3rem;
+  border: var(--outline);
+  border-radius: 8px;
+  background: var(--pastel-pink);
+  box-shadow: var(--pop-small);
+  font-family: var(--font-hand);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+  rotate: -3deg;
+}
+
+.ribbon::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 2px dashed rgb(255 255 255 / 0.9);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.ribbonBow {
+  position: absolute;
+  left: -0.6rem;
+  top: 50%;
+  z-index: 1;
+  width: 3.4rem;
+  translate: 0 -55%;
+  rotate: -12deg;
+}
+
+.title {
+  font-size: clamp(3.4rem, 13vw, 7rem);
+  color: var(--drop);
+  paint-order: stroke fill;
+  -webkit-text-stroke: 0.2em var(--white);
+  filter: drop-shadow(0.05em 0.07em 0 var(--ink));
+  rotate: -1.5deg;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.lead {
+  width: min(100%, 34rem);
+  margin-top: 0.6rem;
+  font-family: var(--font-hand);
+  font-size: clamp(1.4rem, 3.6vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.35;
+  text-wrap: pretty;
+}
+
+.ways {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.9rem 1rem;
+  margin-top: 0.9rem;
+}
+
+.deco {
+  position: absolute;
+  z-index: -1;
+  width: clamp(2.4rem, 7vw, 4.4rem);
+  rotate: var(--turn, 0deg);
+  animation: bob 4.5s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  pointer-events: none;
+}
+
+.heart {
+  --turn: -14deg;
+
+  top: 3rem;
+  left: 2%;
+}
+
+.star {
+  --turn: 12deg;
+
+  top: 1.2rem;
+  right: 3%;
+}
+
+.flower,
+.paw,
+.sparkle {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .flower,
+  .paw,
+  .sparkle {
+    display: block;
+  }
+
+  .flower {
+    --turn: 8deg;
+
+    bottom: 3.5rem;
+    left: 4%;
+  }
+
+  .paw {
+    --turn: -10deg;
+
+    bottom: 2rem;
+    right: 6%;
+    width: clamp(2rem, 5vw, 3.2rem);
+  }
+
+  .sparkle {
+    top: 38%;
+    right: 12%;
+    width: 2.2rem;
+  }
+}
+
+@keyframes bob {
+  50% {
+    translate: 0 -10px;
+    scale: 1.06;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deco {
+    animation: none;
+  }
+}
