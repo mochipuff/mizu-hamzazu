@@ -1,7 +1,7 @@
 import type { PlatformId } from '../config/site.ts';
 import type { Localized } from '../i18n/locales.ts';
 
-export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface StreamSlot {
   id: string;
@@ -21,9 +21,9 @@ export interface StreamOccurrence {
   end: number;
 }
 
-export type OccurrenceStatus = 'done' | 'live' | 'upcoming';
+type OccurrenceStatus = 'done' | 'live' | 'upcoming';
 
-export interface DayColumn {
+interface DayColumn {
   key: string;
   weekday: string;
   date: string;
