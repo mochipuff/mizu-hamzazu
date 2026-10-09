@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-export interface ToastApi {
+interface ToastApi {
   notify: (message: string) => void;
 }
 

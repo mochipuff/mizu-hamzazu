@@ -1,7 +1,6 @@
 import { useMemo, type ReactNode } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage.ts';
-import { playSfx, unlockAudio, type SfxName } from '../lib/audio.ts';
-import { SoundContext } from './sound.ts';
+import { playSfx, SoundContext, unlockAudio, type SfxName } from './sound.ts';
 
 export function SoundProvider({ children }: { children: ReactNode }) {
   const [enabled, setEnabled] = useLocalStorage('mizu:sound', false);
