@@ -1,6 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { useGsap } from '../../hooks/useGsap.ts';
-import { useOutsidePointerDown } from '../../hooks/useOutsidePointerDown.ts';
 import { gsap, POP } from '../../lib/motion.ts';
 import { Icon, type IconName } from './Icon.tsx';
 import styles from './Dropdown.module.css';
@@ -73,7 +72,14 @@ export function Dropdown({ value, options, onChange, label, icon, variant = 'pil
     list.scrollTop = option.offsetTop - (list.clientHeight - option.offsetHeight) / 2;
   }, [open, active]);
 
-  useOutsidePointerDown(rootRef, open, () => setOpen(false));
+  useEffect(() => {
+    if (!open) return undefined;
+    const handlePointerDown = (event: PointerEvent) => {
+      if (event.target instanceof Node && !rootRef.current?.contains(event.target)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [open]);
 
   useEffect(() => () => window.clearTimeout(typed.current.timer), []);
 

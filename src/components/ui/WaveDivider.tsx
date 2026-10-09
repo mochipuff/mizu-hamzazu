@@ -8,7 +8,6 @@ const PATH = 'M0 34 Q150 4 300 34 T600 34 T900 34 T1200 34 T1500 34 T1800 34 T21
 export function WaveDivider({ color }: { color: string }) {
   const ref = useRef<HTMLDivElement>(null);
 
-  // Each wave is twice as wide as the strip, so sliding it by half its width loops seamlessly.
   useGsap(ref, () => {
     gsap.to(`.${styles.front}`, { xPercent: -50, duration: 16, ease: 'none', repeat: -1 });
     gsap.fromTo(`.${styles.back}`, { xPercent: -50 }, { xPercent: 0, duration: 24, ease: 'none', repeat: -1 });

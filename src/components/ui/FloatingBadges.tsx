@@ -1,5 +1,4 @@
 import { useRef, type CSSProperties, type SyntheticEvent } from 'react';
-import type { MembershipTier } from '../../data/membership.ts';
 import { useGsap } from '../../hooks/useGsap.ts';
 import { useI18n } from '../../i18n/i18n.ts';
 import { gsap, IDLE } from '../../lib/motion.ts';
@@ -15,13 +14,16 @@ const SPARKLES = [
   { top: '100%', left: '78%', size: '1rem' },
 ] as const;
 
+/** Badge files are `public/membership/tier-<level>.webp`, square. */
+const TIER_LEVELS = [1, 2, 3, 4, 5, 6] as const;
+
 // A missing badge file hides that slot instead of leaving a broken image icon.
 const handleImageError = (event: SyntheticEvent<HTMLImageElement>) => {
   event.currentTarget.parentElement?.setAttribute('hidden', '');
 };
 
 /** Square tier badges that pop in on scroll, then hover and sparkle behind the card's content. */
-export function FloatingBadges({ tiers }: { tiers: readonly MembershipTier[] }) {
+export function FloatingBadges() {
   const { t } = useI18n();
   const ref = useRef<HTMLDivElement>(null);
 
@@ -65,10 +67,10 @@ export function FloatingBadges({ tiers }: { tiers: readonly MembershipTier[] }) 
   });
 
   return (
-    <div ref={ref} className={styles.cluster} role="img" aria-label={t.join.badgesLabel(tiers.map((tier) => t.join.tier(tier.level)).join(', '))}>
-      {tiers.map((tier) => (
-        <span key={tier.id} className={styles.slot}>
-          <img className={styles.badge} src={tier.badge} alt="" width={256} height={256} loading="lazy" decoding="async" draggable={false} onError={handleImageError} />
+    <div ref={ref} className={styles.cluster} role="img" aria-label={t.join.badgesLabel(TIER_LEVELS.map(t.join.tier).join(', '))}>
+      {TIER_LEVELS.map((level) => (
+        <span key={level} className={styles.slot}>
+          <img className={styles.badge} src={`/membership/tier-${level}.webp`} alt="" width={256} height={256} loading="lazy" decoding="async" draggable={false} onError={handleImageError} />
         </span>
       ))}
       {SPARKLES.map(({ top, left, size }) => (

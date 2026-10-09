@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useGsap } from '../../hooks/useGsap.ts';
 import { onSplash } from '../../lib/events.ts';
-import { between, createRandom } from '../../lib/math.ts';
 import { gsap } from '../../lib/motion.ts';
 import styles from './AmbientSeeds.module.css';
 
@@ -18,6 +17,20 @@ interface SeedSpec {
 type SeedKind = 'ambient' | 'burst';
 
 const STORM_MS = 4200;
+
+// A small seeded generator (mulberry32), so a given seed always produces the same pattern.
+function createRandom(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const between = (random: () => number, min: number, max: number): number => min + random() * (max - min);
 
 function createSeeds(count: number, seed: number, burst: boolean): SeedSpec[] {
   const random = createRandom(seed);
