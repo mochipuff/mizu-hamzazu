@@ -4,6 +4,9 @@ import { createRoot } from 'react-dom/client';
 import '@fontsource/mochiy-pop-one/latin-400.css';
 import '@fontsource/zen-maru-gothic/latin-500.css';
 import '@fontsource/zen-maru-gothic/latin-700.css';
+// The handwriting of the supports page. Only downloaded once a page uses it.
+import '@fontsource/gaegu/latin-400.css';
+import '@fontsource/gaegu/latin-700.css';
 import './styles/global.css';
 import { App } from './App.tsx';
 import { resolveInitialLocale } from './i18n/initial.ts';
