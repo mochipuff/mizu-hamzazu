@@ -1,6 +1,6 @@
 import { site } from '../../config/site.ts';
-import { perks } from '../../data/content.ts';
 import { useI18n } from '../../i18n/i18n.ts';
+import type { Messages } from '../../i18n/messages/index.ts';
 import { ButtonLink } from '../ui/Button.tsx';
 import { FloatingBadges } from '../ui/FloatingBadges.tsx';
 import { Icon, type IconName } from '../ui/Icon.tsx';
@@ -10,8 +10,12 @@ import { Reveal } from '../ui/Reveal.tsx';
 import { SectionHeading } from '../ui/SectionHeading.tsx';
 import styles from './Join.module.css';
 
-const perkIcons: readonly IconName[] = ['star', 'lock', 'discord', 'calendar'];
-const perkTones: readonly PanelTone[] = ['sun', 'lilac', 'mint', 'pink'];
+const perks = [
+  { id: 'membership', icon: 'star', tone: 'sun' },
+  { id: 'vod', icon: 'lock', tone: 'lilac' },
+  { id: 'discord', icon: 'discord', tone: 'mint' },
+  { id: 'info', icon: 'calendar', tone: 'pink' },
+] as const satisfies readonly { id: keyof Messages['join']['perks']; icon: IconName; tone: PanelTone }[];
 
 export function Join() {
   const { t } = useI18n();
@@ -29,10 +33,10 @@ export function Join() {
             return (
               <li key={perk.id}>
                 <Reveal variant={index % 2 === 0 ? 'swing' : 'pop'} delay={index * 90} className={styles.reveal}>
-                  <Panel tone={perkTones[index % perkTones.length] ?? 'white'} shape={index % 2 === 0 ? 'leaf' : 'soft'} className={perk.tiers ? `${styles.perk} ${styles.hasBadges}` : styles.perk}>
-                    {perk.tiers && <FloatingBadges tiers={perk.tiers} />}
+                  <Panel tone={perk.tone} shape={index % 2 === 0 ? 'leaf' : 'soft'} className={perk.id === 'membership' ? `${styles.perk} ${styles.hasBadges}` : styles.perk}>
+                    {perk.id === 'membership' && <FloatingBadges />}
                     <span className={styles.perkIcon}>
-                      <Icon name={perkIcons[index % perkIcons.length] ?? 'star'} size={26} />
+                      <Icon name={perk.icon} size={26} />
                     </span>
                     <h3 className={styles.perkTitle}>{title}</h3>
                     <p>{description}</p>

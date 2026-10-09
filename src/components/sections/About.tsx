@@ -1,7 +1,7 @@
 import { getProfileFacts } from '../../data/content.ts';
-import { streamTypes } from '../../data/streams.ts';
+import { emoteUrl, type EmoteName } from '../../data/images.ts';
 import { useI18n } from '../../i18n/i18n.ts';
-import { emoteUrl } from '../../lib/assets.ts';
+import type { Messages } from '../../i18n/messages/index.ts';
 import { Paw } from '../ui/Doodles.tsx';
 import { Panel } from '../ui/Panel.tsx';
 import { Reveal } from '../ui/Reveal.tsx';
@@ -9,6 +9,12 @@ import { SectionHeading } from '../ui/SectionHeading.tsx';
 import styles from './About.module.css';
 
 const STREAM_TILTS = [-1.2, 0, 1.2] as const;
+
+const streamTypes = [
+  { id: 'games', emote: 'mizuHappyLove' },
+  { id: 'karaoke', emote: 'mizuHype' },
+  { id: 'freetalk', emote: 'mizuLove' },
+] as const satisfies readonly { id: keyof Messages['about']['streamTypes']; emote: EmoteName }[];
 
 export function About() {
   const { locale, t } = useI18n();

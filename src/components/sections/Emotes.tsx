@@ -1,10 +1,8 @@
 import type { CSSProperties } from 'react';
 import { useSound } from '../../context/sound.ts';
 import { useToast } from '../../context/toast.ts';
-import { emoteNames, type EmoteName } from '../../data/emotes.ts';
+import { emoteNames, emoteUrl, type EmoteName } from '../../data/images.ts';
 import { useI18n } from '../../i18n/i18n.ts';
-import { emoteUrl } from '../../lib/assets.ts';
-import { copyText } from '../../lib/clipboard.ts';
 import { Garland } from '../ui/Garland.tsx';
 import { Icon } from '../ui/Icon.tsx';
 import { Reveal } from '../ui/Reveal.tsx';
@@ -20,9 +18,13 @@ export function Emotes() {
 
   const handleCopy = async (name: EmoteName) => {
     const code = `:${name}:`;
-    const ok = await copyText(code);
-    if (ok) sound.play('copy');
-    toast.notify(ok ? t.emotes.copied(code) : t.common.copyBlocked);
+    try {
+      await navigator.clipboard.writeText(code);
+      sound.play('copy');
+      toast.notify(t.emotes.copied(code));
+    } catch {
+      toast.notify(t.common.copyBlocked);
+    }
   };
 
   return (
