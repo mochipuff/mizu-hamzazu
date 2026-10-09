@@ -1,29 +1,50 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSound } from '../../context/sound.ts';
 import { site } from '../../config/site.ts';
-import { navIds } from '../../data/content.ts';
-import { useScrollSpy } from '../../hooks/useScrollSpy.ts';
 import { useI18n } from '../../i18n/i18n.ts';
 import { usePage } from '../../i18n/navigation.ts';
 import { pagePath } from '../../i18n/pages.ts';
-import { Icon } from '../ui/Icon.tsx';
 import { Paw } from '../ui/Doodles.tsx';
+import { Icon } from '../ui/Icon.tsx';
 import { Link } from '../ui/Link.tsx';
 import { LanguageSelect } from './LanguageSelect.tsx';
 import styles from './Header.module.css';
+
+const navIds = ['about', 'schedule', 'emotes', 'join', 'faq'] as const;
 
 export function Header() {
   const { t, locale } = useI18n();
   const page = usePage();
   const isHome = page === 'home';
   const homePath = pagePath(locale, 'home');
-  // The sections only exist on the home page, so the spy is quiet elsewhere.
-  const activeId = useScrollSpy(navIds, page);
   const sound = useSound();
+  const [activeId, setActiveId] = useState('');
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
+
+  // Highlights the section being read. The sections only exist on the home page, so `page` re-attaches the observer when another page brings its own.
+  useEffect(() => {
+    const visible = new Set<string>();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) visible.add(entry.target.id);
+          else visible.delete(entry.target.id);
+        }
+        setActiveId(navIds.find((id) => visible.has(id)) ?? '');
+      },
+      { rootMargin: '-35% 0px -55% 0px' },
+    );
+
+    for (const id of navIds) {
+      const element = document.getElementById(id);
+      if (element) observer.observe(element);
+    }
+
+    return () => observer.disconnect();
+  }, [page]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 12);
