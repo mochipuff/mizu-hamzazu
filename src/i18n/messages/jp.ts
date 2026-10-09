@@ -16,6 +16,7 @@ export const jp: Messages = {
 
   header: {
     brandLabel: (name) => `${name}、ページの先頭へ戻る`,
+    brandHomeLabel: (name) => `${name}、ホームページへ`,
     primaryNav: 'メイン',
     mobileNav: 'モバイル',
     soundOn: '効果音をオンにする',
@@ -31,6 +32,7 @@ export const jp: Messages = {
     emotes: 'エモート',
     join: '参加',
     faq: 'FAQ',
+    supports: 'サポート',
   },
 
   seo: {
@@ -38,6 +40,36 @@ export const jp: Messages = {
     description: 'インドネシア出身のハムスターVTuber「Mizu Hamzazu」の公式サイト。フリートーク・まったりゲーム・歌枠の配信スケジュール、エモート、Zutopianコミュニティをご案内。',
     imageAlt: 'Mizu Hamzazu、インドネシアのバーチャルYouTuber',
     keywords: ['Mizu Hamzazu', 'インドネシア VTuber', 'バーチャルYouTuber', 'ハムスター VTuber', 'Zutopian', 'まったりゲーム', '歌枠'],
+  },
+
+  supports: {
+    seo: {
+      title: 'サポート | Mizu Hamzazu',
+      description: 'Mizu Hamzazuへの支援TOP10と、視聴者からのやさしいメッセージ。ありがとう、Zutopian！',
+    },
+    marquee: ['ありがとう、Zutopian！', 'ひとつひとつの差し入れが車輪を回してくれる', 'Mizu Hamzazu', 'メッセージは愛を込めて貼り出し中'],
+    cover: {
+      sticker: 'ありがとう！',
+      title: 'サポート',
+      lead: 'Mizuの車輪を回し続けてくれる、差し入れとメッセージのスクラップブック。ありがとう、Zutopian！',
+      waysLabel: '応援する方法',
+    },
+    donations: {
+      title: '支援 TOP10',
+      lead: 'これまでにMizuへ贈られた、いちばん大きな差し入れ。',
+      listLabel: '支援 TOP10',
+      rank: (rank) => `${rank}位`,
+      via: (platform) => `${platform}経由`,
+    },
+    notes: {
+      title: '視聴者のメッセージ',
+      lead: '視聴者から届いた小さなメッセージを、Mizuのために貼り出しました。',
+      listLabel: '視聴者からのメッセージ',
+      from: (name) => `${name}より`,
+      inviteTitle: 'あなたのメッセージもここに',
+      inviteLead: '差し入れにメッセージを添えて送ると、この壁に貼られるかもしれません。',
+      inviteCta: '差し入れを送る',
+    },
   },
 
   profile: {

@@ -20,6 +20,7 @@ export const en = {
 
   header: {
     brandLabel: (name: string) => `${name}, back to top`,
+    brandHomeLabel: (name: string) => `${name}, go to the home page`,
     primaryNav: 'Primary',
     mobileNav: 'Mobile',
     soundOn: 'Turn sound effects on',
@@ -35,6 +36,7 @@ export const en = {
     emotes: 'Emotes',
     join: 'Join',
     faq: 'FAQ',
+    supports: 'Supports',
   },
 
   // Search engines, link previews and AI crawlers.
@@ -43,6 +45,36 @@ export const en = {
     description: 'Official site of Mizu Hamzazu, an Indonesian hamster VTuber. Weekly stream schedule for freetalk, cozy games and karaoke, emotes, and the Zutopian community.',
     imageAlt: 'Mizu Hamzazu, an Indonesian virtual youtuber',
     keywords: ['Mizu Hamzazu', 'VTuber Indonesia', 'Indonesian virtual youtuber', 'hamster VTuber', 'Zutopian', 'cozy gaming', 'karaoke stream'],
+  },
+
+  supports: {
+    seo: {
+      title: 'Supports | Mizu Hamzazu',
+      description: 'The top 10 donations and the sweetest viewer notes for Mizu Hamzazu. Thank you, Zutopian!',
+    },
+    marquee: ['Thank you, Zutopian!', 'Every treat keeps the wheel spinning', 'Mizu Hamzazu', 'Notes pinned up with love'],
+    cover: {
+      sticker: 'thank you!',
+      title: 'Supports',
+      lead: 'A scrapbook of the treats and notes that keep Mizu’s wheel spinning. Thank you, Zutopian!',
+      waysLabel: 'Ways to support',
+    },
+    donations: {
+      title: 'Top 10 donations',
+      lead: 'The biggest treats shared with Mizu so far.',
+      listLabel: 'Top 10 donations',
+      rank: (rank: number) => `Rank ${rank}`,
+      via: (platform: string) => `via ${platform}`,
+    },
+    notes: {
+      title: 'Viewer notes',
+      lead: 'Little messages from viewers, pinned up for Mizu.',
+      listLabel: 'Notes from viewers',
+      from: (name: string) => `from ${name}`,
+      inviteTitle: 'Your note could be here',
+      inviteLead: 'Send a treat with a message and it might get pinned to this wall.',
+      inviteCta: 'Send a treat',
+    },
   },
 
   profile: {

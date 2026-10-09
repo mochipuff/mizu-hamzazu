@@ -16,6 +16,7 @@ export const kr: Messages = {
 
   header: {
     brandLabel: (name) => `${name}, 맨 위로 이동`,
+    brandHomeLabel: (name) => `${name}, 홈페이지로`,
     primaryNav: '주요',
     mobileNav: '모바일',
     soundOn: '효과음 켜기',
@@ -31,6 +32,7 @@ export const kr: Messages = {
     emotes: '이모티콘',
     join: '참여',
     faq: 'FAQ',
+    supports: '후원',
   },
 
   seo: {
@@ -38,6 +40,36 @@ export const kr: Messages = {
     description: '인도네시아 햄스터 버튜버 Mizu Hamzazu의 공식 웹사이트. 프리토크·힐링 게임·노래 방송 주간 스케줄, 이모티콘 팩, Zutopian 커뮤니티를 확인하세요.',
     imageAlt: 'Mizu Hamzazu, 인도네시아 버추얼 유튜버',
     keywords: ['Mizu Hamzazu', '인도네시아 버튜버', '버추얼 유튜버', '햄스터 버튜버', 'Zutopian', '힐링 게임', '노래 방송'],
+  },
+
+  supports: {
+    seo: {
+      title: '후원 | Mizu Hamzazu',
+      description: 'Mizu Hamzazu를 향한 후원 TOP 10과 시청자들의 따뜻한 메모. 고마워요, Zutopian!',
+    },
+    marquee: ['고마워요, Zutopian!', '작은 후원 하나하나가 쳇바퀴를 돌려요', 'Mizu Hamzazu', '메모는 사랑을 담아 붙여 두었어요'],
+    cover: {
+      sticker: '고마워요!',
+      title: '후원',
+      lead: 'Mizu의 쳇바퀴를 계속 돌려 주는 선물과 메모를 모은 스크랩북. 고마워요, Zutopian!',
+      waysLabel: '후원하는 방법',
+    },
+    donations: {
+      title: '후원 TOP 10',
+      lead: '지금까지 Mizu에게 전해진 가장 큰 선물들이에요.',
+      listLabel: '후원 TOP 10',
+      rank: (rank) => `${rank}위`,
+      via: (platform) => `${platform}로 후원`,
+    },
+    notes: {
+      title: '시청자 메모',
+      lead: '시청자들이 남긴 작은 메시지를 Mizu를 위해 붙여 두었어요.',
+      listLabel: '시청자 메모',
+      from: (name) => `${name}님이`,
+      inviteTitle: '당신의 메모도 여기에',
+      inviteLead: '선물과 함께 메시지를 보내면 이 벽에 붙을지도 몰라요.',
+      inviteCta: '선물 보내기',
+    },
   },
 
   profile: {
