@@ -1,5 +1,5 @@
 /**
- * English is the source of truth. `Messages` (see ../types.ts) is derived from this object, so adding or renaming
+ * English is the source of truth. `Messages` (see ./index.ts) is derived from this object, so adding or renaming
  * a key here makes the compiler list every other language that has to follow.
  * Strings that need a value are functions, so each language can place the value where its grammar wants it.
  */

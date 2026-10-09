@@ -1,4 +1,4 @@
-import type { Messages } from '../types.ts';
+import type { Messages } from './index.ts';
 
 export const jp: Messages = {
   skipLink: 'コンテンツへスキップ',

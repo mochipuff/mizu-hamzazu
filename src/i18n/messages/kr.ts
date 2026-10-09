@@ -1,4 +1,4 @@
-import type { Messages } from '../types.ts';
+import type { Messages } from './index.ts';
 
 export const kr: Messages = {
   skipLink: '본문으로 건너뛰기',
