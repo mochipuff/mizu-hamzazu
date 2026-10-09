@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
-export function useScrollSpy(ids: readonly string[]): string {
+/** `page` re-attaches the observer when another page brings its own sections. */
+export function useScrollSpy(ids: readonly string[], page: string): string {
   const [activeId, setActiveId] = useState('');
 
   useEffect(() => {
@@ -22,7 +23,7 @@ export function useScrollSpy(ids: readonly string[]): string {
     }
 
     return () => observer.disconnect();
-  }, [ids]);
+  }, [ids, page]);
 
   return activeId;
 }
