@@ -64,7 +64,7 @@ export const site: SiteConfig = {
   themeColor: '#daa047',
   scheduleTimeZone: 'Asia/Jakarta',
   seo: {
-    image: { path: '/og-image.png', width: 1200, height: 630 },
+    image: { path: '/og-image.webp', width: 1200, height: 630 },
     allowAiCrawlers: true,
   },
   profile: {

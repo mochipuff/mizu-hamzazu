@@ -13,17 +13,16 @@
     "preview": "vite preview",
     "serve": "uvicorn server.app:app --port 8000",
     "lint": "oxlint",
-    "typecheck": "tsc -b",
-    "images": "node scripts/optimize-images.mjs"
+    "typecheck": "tsc -b"
   },
   "dependencies": {
     "@fontsource/gaegu": "^5.0.0",
     "@fontsource/mochiy-pop-one": "^5.3.0",
     "@fontsource/zen-maru-gothic": "^5.3.0",
-    "@img/sharp-wasm32": "^0.35.5",
     "gsap": "^3.15.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "react-router": "^7.9.0"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
@@ -31,11 +30,7 @@
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
     "oxlint": "^1.81.0",
-    "sharp": "^0.35.5",
     "typescript": "~6.0.2",
     "vite": "^8.3.0"
-  },
-  "allowScripts": {
-    "sharp@0.34.5": true
   }
 }

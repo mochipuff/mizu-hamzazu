@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, type ReactNode } from 'react';
+import { useNavigate } from 'react-router';
 import { I18nContext } from './i18n.ts';
-import { DEFAULT_LOCALE, localeFromPath, localeInfo, type Locale } from './locales.ts';
+import { localeInfo, type Locale } from './locales.ts';
 import { messages } from './messages/index.ts';
-import { navigate, storeLocale, usePage, usePathname } from './navigation.ts';
+import { storeLocale, usePage } from './navigation.ts';
 import { pagePath, pageSeo } from './pages.ts';
 
-export function I18nProvider({ children }: { children: ReactNode }) {
-  // The URL decides the language, so a switch, a shared link and the back button all go through the same path.
-  // `ensureLocaleInUrl` has already put a language in the address by the time this renders.
-  const locale = localeFromPath(usePathname()) ?? DEFAULT_LOCALE;
+export function I18nProvider({ locale, children }: { locale: Locale; children: ReactNode }) {
+  // The route decides the language, so a switch, a shared link and the back button all go through the same path.
+  const navigate = useNavigate();
   const page = usePage();
 
   const setLocale = useCallback(
@@ -16,9 +16,9 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       if (next === locale) return;
       storeLocale(next);
       // Switching language keeps the visitor on the page they are reading.
-      navigate(`${pagePath(next, page)}${window.location.search}${window.location.hash}`);
+      void navigate(`${pagePath(next, page)}${window.location.search}${window.location.hash}`);
     },
-    [locale, page],
+    [locale, page, navigate],
   );
 
   // The static HTML already carries the right values for the URL it was served from; this keeps them right after a switch.

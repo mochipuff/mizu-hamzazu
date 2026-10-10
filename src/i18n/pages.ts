@@ -2,7 +2,7 @@ import { isLocale, type Locale } from './locales.ts';
 import type { Messages } from './messages/index.ts';
 
 /** Every page of the site. Each one exists once per language: /<locale>/<slug>. */
-const PAGES = ['home', 'supports'] as const;
+export const PAGES = ['home', 'supports'] as const;
 
 export type PageId = (typeof PAGES)[number];
 
