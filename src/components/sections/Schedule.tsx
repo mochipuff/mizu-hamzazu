@@ -2,13 +2,13 @@ import { useMemo, useState, type CSSProperties } from 'react';
 import { getPlatform, site } from '../../config/site.ts';
 import { useSound } from '../../context/sound.ts';
 import { useToast } from '../../context/toast.ts';
-import { streamSlots } from '../../data/schedule.ts';
+import { useStreamSlots } from '../../data/schedule.ts';
 import { useLocalStorage } from '../../hooks/useLocalStorage.ts';
 import { useNow } from '../../hooks/useNow.ts';
 import { useI18n } from '../../i18n/i18n.ts';
 import { localeInfo, type Locale } from '../../i18n/locales.ts';
 import type { Messages } from '../../i18n/messages/index.ts';
-import { getBrowserTimeZone, getOccurrence, getTimeZoneLabel, getWeekColumns, isValidTimeZone, listTimeZones, type StreamOccurrence } from '../../lib/schedule.ts';
+import { getBrowserTimeZone, getOccurrence, getStatus, getTimeZoneLabel, getWeekColumns, isValidTimeZone, listTimeZones, type StreamOccurrence } from '../../lib/schedule.ts';
 import { Button } from '../ui/Button.tsx';
 import { Dropdown } from '../ui/Dropdown.tsx';
 import { Icon } from '../ui/Icon.tsx';
@@ -57,7 +57,7 @@ function fold(line: string): string {
   return chunks.join(CRLF);
 }
 
-/** One weekly repeating event per stream, each with a reminder 15 minutes before it starts. */
+/** One event per stream, each with a reminder 15 minutes before it starts. */
 function buildCalendar(occurrences: StreamOccurrence[], locale: Locale, t: Messages): string {
   const stamp = toIcsDate(Date.now());
   const lines = [
@@ -78,7 +78,6 @@ function buildCalendar(occurrences: StreamOccurrence[], locale: Locale, t: Messa
       `DTSTAMP:${stamp}`,
       `DTSTART:${toIcsDate(start)}`,
       `DTEND:${toIcsDate(end)}`,
-      'RRULE:FREQ=WEEKLY',
       `SUMMARY:${escapeText(title)}`,
       `DESCRIPTION:${escapeText(`${slot.description[locale]}${slot.membersOnly ? t.schedule.membersOnlySuffix : ''}`)}`,
       `LOCATION:${escapeText(platform?.label ?? '')}`,
@@ -100,6 +99,7 @@ export function Schedule() {
   const { locale, t } = useI18n();
   const language = localeInfo[locale].htmlLang;
   const now = useNow();
+  const { slots, status } = useStreamSlots();
   const toast = useToast();
   const sound = useSound();
   const [storedZone, setStoredZone] = useLocalStorage<string>('mizu:timezone', '');
@@ -107,9 +107,10 @@ export function Schedule() {
 
   const zone = storedZone && isValidTimeZone(storedZone) ? storedZone : detectedZone;
   const zoneOptions = useMemo(() => listTimeZones(zone).map((name) => ({ value: name, label: name.replaceAll('_', ' ') })), [zone]);
-  const columns = getWeekColumns(streamSlots, now, zone, BASE_ZONE, language);
+  const columns = getWeekColumns(slots, now, zone, language);
   const zoneLabel = getTimeZoneLabel(zone, now);
   const isBaseZone = zone === BASE_ZONE;
+  const upcoming = slots.map(getOccurrence).filter((occurrence) => getStatus(occurrence, now) !== 'done');
 
   const downloadCalendar = (occurrences: StreamOccurrence[], filename: string) => {
     const url = URL.createObjectURL(new Blob([buildCalendar(occurrences, locale, t)], { type: 'text/calendar;charset=utf-8' }));
@@ -125,10 +126,7 @@ export function Schedule() {
   };
 
   const handleDownloadAll = () => {
-    downloadCalendar(
-      streamSlots.map((slot) => getOccurrence(slot, now, BASE_ZONE)),
-      'mizu-hamzazu-streams.ics',
-    );
+    downloadCalendar(upcoming, 'mizu-hamzazu-streams.ics');
   };
 
   const handleDownloadOne = (occurrence: StreamOccurrence) => {
@@ -164,9 +162,11 @@ export function Schedule() {
                   {t.schedule.useMyTimeZone}
                 </Button>
               )}
-              <Button variant="sun" size="sm" icon="calendar" onClick={handleDownloadAll}>
-                {t.schedule.addAll}
-              </Button>
+              {upcoming.length > 0 && (
+                <Button variant="sun" size="sm" icon="calendar" onClick={handleDownloadAll}>
+                  {t.schedule.addAll}
+                </Button>
+              )}
             </div>
           </Panel>
         </Reveal>
@@ -187,7 +187,7 @@ export function Schedule() {
                 </div>
 
                 {column.items.length === 0 ? (
-                  <p className={styles.rest}>{t.schedule.restDay}</p>
+                  status === 'ready' && <p className={styles.rest}>{t.schedule.restDay}</p>
                 ) : (
                   <ul className={styles.events}>
                     {column.items.map((occurrence) => (
@@ -200,6 +200,11 @@ export function Schedule() {
           ))}
         </ol>
 
+        {status === 'error' && (
+          <p className={styles.note} role="alert">
+            {t.schedule.loadFailed}
+          </p>
+        )}
         <p className={styles.note}>{t.schedule.note(getTimeZoneLabel(BASE_ZONE, now), BASE_CITY)}</p>
       </div>
     </section>

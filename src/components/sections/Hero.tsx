@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { getPlatform, site } from '../../config/site.ts';
-import { streamSlots } from '../../data/schedule.ts';
+import { useStreamSlots } from '../../data/schedule.ts';
 import { useGsap } from '../../hooks/useGsap.ts';
 import { useNow } from '../../hooks/useNow.ts';
 import { useI18n } from '../../i18n/i18n.ts';
@@ -17,8 +17,9 @@ const pad = (value: number): string => String(value).padStart(2, '0');
 function NextStream() {
   const { t } = useI18n();
   const now = useNow();
+  const { slots } = useStreamSlots();
   const dotRef = useRef<HTMLSpanElement>(null);
-  const occurrence = getNextOccurrence(streamSlots, now, site.scheduleTimeZone);
+  const occurrence = getNextOccurrence(slots, now);
   const live = occurrence ? getStatus(occurrence, now) === 'live' : false;
 
   useGsap(
