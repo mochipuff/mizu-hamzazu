@@ -180,6 +180,7 @@ export const kr: Messages = {
     today: '오늘',
     tomorrow: '내일',
     restDay: '휴방',
+    loadFailed: '일정을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
     liveNow: '라이브 중',
     members: '멤버 전용',
     membersOnlySuffix: ' (멤버 전용)',

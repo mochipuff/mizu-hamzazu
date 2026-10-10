@@ -180,6 +180,7 @@ export const id: Messages = {
     today: 'Hari ini',
     tomorrow: 'Besok',
     restDay: 'Hari libur',
+    loadFailed: 'Jadwal belum bisa dimuat. Coba lagi nanti ya.',
     liveNow: 'Live sekarang',
     members: 'Member',
     membersOnlySuffix: ' (Khusus member)',
