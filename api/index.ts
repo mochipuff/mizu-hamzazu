@@ -52,7 +52,10 @@ interface TrakteerSupport {
 
 const DAY_MS = 86_400_000;
 const TOP_COUNT = 10;
-const PUBLIC_CACHE = 'public, s-maxage=60, stale-while-revalidate=300';
+const cacheControl = (sMaxAge: number, staleWhileRevalidate: number): string => `public, s-maxage=${sMaxAge}, stale-while-revalidate=${staleWhileRevalidate}`;
+// The schedule has to follow a stream going live. The other lists only change when the owner edits them or the daily sync runs, so the edge answers them without waking the function or the database.
+const SCHEDULE_CACHE = cacheControl(60, 300);
+const SLOW_CACHE = cacheControl(3_600, 86_400);
 
 // Trakteer pages are fetched until one comes back empty, so the API's own page-size cap does not matter.
 const TRAKTEER_PAGE_SIZE = 50;
@@ -80,7 +83,7 @@ app.get('/api/schedule', async (c) => {
       .overrideTypes<StreamSlotRow[], { merge: false }>(),
   );
 
-  c.header('Cache-Control', PUBLIC_CACHE);
+  c.header('Cache-Control', SCHEDULE_CACHE);
   return c.json(slots);
 });
 
@@ -89,7 +92,7 @@ app.get('/api/preferences', async (c) => {
     await supabase.from('likes_dislikes').select('id,kind,label').order('sort_order').order('id').overrideTypes<PreferenceRow[], { merge: false }>(),
   );
 
-  c.header('Cache-Control', PUBLIC_CACHE);
+  c.header('Cache-Control', SLOW_CACHE);
   return c.json(preferences);
 });
 
@@ -98,7 +101,7 @@ app.get('/api/notes', async (c) => {
     await supabase.from('viewers_notes').select('id,name,text:note').order('created_at', { ascending: false }).limit(60).overrideTypes<NoteRow[], { merge: false }>(),
   );
 
-  c.header('Cache-Control', PUBLIC_CACHE);
+  c.header('Cache-Control', SLOW_CACHE);
   return c.json(notes);
 });
 
@@ -114,7 +117,7 @@ app.get('/api/donations', async (c) => {
       .overrideTypes<DonationRow[], { merge: false }>(),
   );
 
-  c.header('Cache-Control', PUBLIC_CACHE);
+  c.header('Cache-Control', SLOW_CACHE);
   return c.json(donations);
 });
 

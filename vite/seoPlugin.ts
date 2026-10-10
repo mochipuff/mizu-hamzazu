@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { HtmlTagDescriptor, IndexHtmlTransformContext, Plugin } from 'vite';
@@ -31,6 +32,15 @@ const MAX_IMAGE_BYTES = 600 * 1024;
 const SITE_UTC_OFFSET = '+07:00';
 const toDateTime = (isoDate: string): string => `${isoDate}T00:00:00${SITE_UTC_OFFSET}`;
 
+// Google ignores `lastmod` from sites that set it to the build date on every URL. The date of the last commit only moves when the site does. Without git (a zip download) it is left out.
+const lastModified = ((): string | undefined => {
+  try {
+    return execFileSync('git', ['log', '-1', '--format=%cs'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() || undefined;
+  } catch {
+    return undefined;
+  }
+})();
+
 // index.html carries these markers; every page of every language is that file with the markers filled in.
 const HEAD_MARKER = '<!--locale-head-->';
 const NOSCRIPT_MARKER = '<!--locale-noscript-->';
@@ -45,6 +55,9 @@ const compact = (entries: Record<string, unknown>): Record<string, unknown> =>
     }),
   );
 
+/** `<` is escaped so a value can never close the script tag. */
+const toJsonLd = (data: unknown): string => JSON.stringify(data).replace(/</g, '\\u003c');
+
 const profileUrls = [...site.platforms.map(({ url }) => url), ...site.profile.socials.map(({ url }) => url)];
 
 /** Every official link with what it is for, in the language of `t`. */
@@ -55,6 +68,13 @@ const officialProfiles = (t: (typeof messages)[Locale]): { label: string; url: s
 
 const meta = (attrs: Record<string, string>): HtmlTagDescriptor => ({ tag: 'meta', attrs });
 const link = (attrs: Record<string, string>): HtmlTagDescriptor => ({ tag: 'link', attrs });
+
+/** One list for every page and the language redirect. Google shows a favicon only if it is an SVG or a multiple of 48 px, so the ICO has to hold a 48x48 image (see `checkIcons`). */
+const iconTags = (): HtmlTagDescriptor[] => [
+  link({ rel: 'icon', href: '/favicon.ico', sizes: '48x48' }),
+  link({ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }),
+  link({ rel: 'manifest', href: '/manifest.webmanifest' }),
+];
 
 const VOID_TAGS = new Set(['meta', 'link']);
 
@@ -81,11 +101,13 @@ function buildJsonLd(siteUrl: string, locale: Locale): string {
   const t = messages[locale];
   const url = localeUrl(siteUrl, locale);
   const id = (fragment: string) => `${url}#${fragment}`;
+  // The same person in every language, so search engines merge the four pages into one entity.
+  const personId = `${siteUrl}/#person`;
   const image = siteUrl ? `${siteUrl}${seo.image.path}` : undefined;
 
   const person = compact({
     '@type': 'Person',
-    '@id': id('person'),
+    '@id': personId,
     name: site.name,
     alternateName: profile.alternateNames,
     description: t.profile.bio,
@@ -108,7 +130,7 @@ function buildJsonLd(siteUrl: string, locale: Locale): string {
       description: t.seo.description,
       inLanguage: localeInfo[locale].htmlLang,
       url: siteUrl ? url : undefined,
-      publisher: { '@id': id('person') },
+      publisher: { '@id': personId },
     }),
     compact({
       '@type': 'ProfilePage',
@@ -117,8 +139,9 @@ function buildJsonLd(siteUrl: string, locale: Locale): string {
       description: t.seo.description,
       inLanguage: localeInfo[locale].htmlLang,
       dateCreated: toDateTime(profile.debut),
+      dateModified: lastModified && toDateTime(lastModified),
       isPartOf: { '@id': id('website') },
-      mainEntity: { '@id': id('person') },
+      mainEntity: { '@id': personId },
       primaryImageOfPage: image ? { '@type': 'ImageObject', url: image, width: seo.image.width, height: seo.image.height } : undefined,
     }),
     person,
@@ -133,7 +156,21 @@ function buildJsonLd(siteUrl: string, locale: Locale): string {
     },
   ];
 
-  return JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }).replace(/</g, '\\u003c');
+  return toJsonLd({ '@context': 'https://schema.org', '@graph': graph });
+}
+
+/** Home > this page, so results show the path instead of the bare URL. */
+function buildBreadcrumbJsonLd(siteUrl: string, locale: Locale, page: Exclude<PageId, 'home'>): string {
+  const t = messages[locale];
+  const trail = [
+    { name: site.name, url: pageUrl(siteUrl, locale, 'home') },
+    { name: t.nav[page], url: pageUrl(siteUrl, locale, page) },
+  ];
+  return toJsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: trail.map(({ name, url }, index) => ({ '@type': 'ListItem', position: index + 1, name, item: url })),
+  });
 }
 
 function buildHead(siteUrl: string, locale: Locale, page: PageId): HtmlTagDescriptor[] {
@@ -160,8 +197,13 @@ function buildHead(siteUrl: string, locale: Locale, page: PageId): HtmlTagDescri
     meta({ name: 'twitter:card', content: 'summary_large_image' }),
     meta({ name: 'twitter:title', content: title }),
     meta({ name: 'twitter:description', content: description }),
+    ...iconTags(),
     link({ rel: 'alternate', type: 'text/plain', href: `${localePath(locale)}llms.txt`, title: 'Summary for AI assistants' }),
-    ...(isHome ? [{ tag: 'script', attrs: { type: 'application/ld+json' }, children: buildJsonLd(siteUrl, locale) }] : []),
+    ...(page === 'home'
+      ? [{ tag: 'script', attrs: { type: 'application/ld+json' }, children: buildJsonLd(siteUrl, locale) }]
+      : siteUrl
+        ? [{ tag: 'script', attrs: { type: 'application/ld+json' }, children: buildBreadcrumbJsonLd(siteUrl, locale, page) }]
+        : []),
     ...criticalImages.map((href) => link({ rel: 'preload', as: 'image', type: 'image/webp', href, fetchpriority: 'high' })),
   ];
 
@@ -269,7 +311,21 @@ function buildRootPage(siteUrl: string): string {
   location.replace('/'+(locale||${JSON.stringify(DEFAULT_LOCALE)})+'/'+location.search+location.hash);
 })();`;
 
-  const alternates = siteUrl ? languageAlternates(siteUrl, 'home').map(renderTag) : [];
+  // The homepage is where Google reads the site name, so `/` says it too, and names itself as the page the language versions point to.
+  const rootTags: HtmlTagDescriptor[] = [
+    ...iconTags(),
+    ...(siteUrl
+      ? [
+          link({ rel: 'canonical', href: `${siteUrl}/` }),
+          ...languageAlternates(siteUrl, 'home'),
+          {
+            tag: 'script',
+            attrs: { type: 'application/ld+json' },
+            children: toJsonLd({ '@context': 'https://schema.org', '@type': 'WebSite', name: site.name, alternateName: profile.alternateNames, url: `${siteUrl}/` }),
+          },
+        ]
+      : []),
+  ];
 
   const languageLinks = LOCALES.map(
     (locale) => `<li><a href="${localePath(locale)}" hreflang="${localeInfo[locale].htmlLang}" lang="${localeInfo[locale].htmlLang}">${escapeHtml(localeInfo[locale].label)}</a></li>`,
@@ -283,9 +339,7 @@ function buildRootPage(siteUrl: string): string {
     <title>${escapeHtml(title)}</title>
     <meta name="description" content="${escapeHtml(description)}">
     <meta name="robots" content="index, follow">
-    <link rel="icon" href="/favicon.ico" sizes="32x32">
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    ${alternates.join('\n    ')}
+    ${rootTags.map(renderTag).join('\n    ')}
     <script>${redirect}</script>
     <noscript><meta http-equiv="refresh" content="0;url=${localePath(DEFAULT_LOCALE)}"></noscript>
   </head>
@@ -340,7 +394,6 @@ const sitemapImage = (siteUrl: string, path: string): string => `    <image:imag
 const sitemapImagePaths = [seo.image.path, ...Object.values(heroImages), ...emoteNames.map((name) => emoteUrl(name))];
 
 function buildSitemap(siteUrl: string): string {
-  const today = new Date().toISOString().slice(0, 10);
   const alternates = (page: PageId): string[] => [
     ...LOCALES.map((locale) => `    <xhtml:link rel="alternate" hreflang="${localeInfo[locale].htmlLang}" href="${pageUrl(siteUrl, locale, page)}"/>`),
     `    <xhtml:link rel="alternate" hreflang="x-default" href="${page === 'home' ? `${siteUrl}/` : pageUrl(siteUrl, DEFAULT_LOCALE, page)}"/>`,
@@ -353,9 +406,7 @@ function buildSitemap(siteUrl: string): string {
       LOCALES.flatMap((locale) => [
         '  <url>',
         `    <loc>${pageUrl(siteUrl, locale, page)}</loc>`,
-        `    <lastmod>${today}</lastmod>`,
-        '    <changefreq>weekly</changefreq>',
-        `    <priority>${page !== 'home' ? '0.6' : locale === DEFAULT_LOCALE ? '1.0' : '0.9'}</priority>`,
+        ...(lastModified ? [`    <lastmod>${lastModified}</lastmod>`] : []),
         ...alternates(page),
         ...(page === 'home' ? sitemapImagePaths.map((path) => sitemapImage(siteUrl, path)) : []),
         '  </url>',
@@ -382,6 +433,22 @@ function checkShareImage(warn: (message: string) => void): void {
   }
 }
 
+/** An ICO lists each image it holds in a 16-byte entry after a 6-byte header; the first byte of an entry is the width, 0 meaning 256. */
+function checkIcons(warn: (message: string) => void): void {
+  for (const name of ['favicon.svg', 'manifest.webmanifest']) {
+    if (!existsSync(join(process.cwd(), 'public', name))) warn(`${name} is missing from public/, but every page links to it.`);
+  }
+
+  const file = join(process.cwd(), 'public', 'favicon.ico');
+  if (!existsSync(file)) return warn('favicon.ico is missing from public/, so Google has no favicon to show for the site.');
+
+  const bytes = readFileSync(file);
+  if (bytes.readUInt16LE(2) !== 1) return warn('public/favicon.ico is not a real ICO file (a renamed PNG does not count).');
+
+  const sizes = Array.from({ length: bytes.readUInt16LE(4) }, (_, index) => bytes[6 + index * 16] || 256);
+  if (!sizes.some((size) => size % 48 === 0)) warn(`public/favicon.ico only holds ${sizes.join(', ')} px images. Google skips favicons that are not a multiple of 48 px, so add a 48x48 image to it.`);
+}
+
 export function seoPlugin(rawSiteUrl: string): Plugin {
   const siteUrl = rawSiteUrl.trim().replace(/\/+$/, '');
   let isBuild = false;
@@ -406,6 +473,7 @@ export function seoPlugin(rawSiteUrl: string): Plugin {
       const emit = (fileName: string, source: string) => this.emitFile({ type: 'asset', fileName, source });
 
       checkShareImage((message) => this.warn(message));
+      checkIcons((message) => this.warn(message));
       emit('robots.txt', buildRobots(siteUrl));
       emit('llms.txt', buildLlmsTxt(siteUrl, DEFAULT_LOCALE));
       LOCALES.forEach((locale) => emit(`${locale}/llms.txt`, buildLlmsTxt(siteUrl, locale)));
