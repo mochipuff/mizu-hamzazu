@@ -1,18 +1,16 @@
 import type { PlatformId } from '../config/site.ts';
 import type { Localized } from '../i18n/locales.ts';
 
-type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
-
 export interface StreamSlot {
   id: string;
   title: string;
   description: Localized;
-  weekday: Weekday;
-  time: string;
+  /** ISO 8601 with a UTC offset, as the API sends it. */
+  datetime: string;
   durationMinutes: number;
   platform: PlatformId;
-  membersOnly?: boolean;
-  thumbnailUrl?: string;
+  membersOnly: boolean;
+  thumbnailUrl: string | null;
 }
 
 export interface StreamOccurrence {
@@ -39,7 +37,6 @@ interface ZonedParts {
   hour: number;
   minute: number;
   second: number;
-  weekday: Weekday;
 }
 
 interface WallDate {
@@ -50,7 +47,6 @@ interface WallDate {
 
 const MINUTE = 60_000;
 const RELATIVE_DAYS = ['today', 'tomorrow'] as const;
-const WEEKDAYS: Record<string, Weekday> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 
 const partsFormatters = new Map<string, Intl.DateTimeFormat>();
 
@@ -60,7 +56,6 @@ function getPartsFormatter(timeZone: string): Intl.DateTimeFormat {
     formatter = new Intl.DateTimeFormat('en-US', {
       timeZone,
       hourCycle: 'h23',
-      weekday: 'short',
       year: 'numeric',
       month: 'numeric',
       day: 'numeric',
@@ -93,7 +88,6 @@ function getZonedParts(epoch: number, timeZone: string): ZonedParts {
     hour: Number(read('hour')) % 24,
     minute: Number(read('minute')),
     second: Number(read('second')),
-    weekday: WEEKDAYS[read('weekday')] ?? 0,
   };
 }
 
@@ -116,30 +110,15 @@ function addWallDays(date: WallDate, days: number): WallDate {
 
 const dayKey = (date: WallDate): string => `${date.year}-${date.month}-${date.day}`;
 
-function parseTime(time: string): [number, number] {
-  const [hour = '0', minute = '0'] = time.split(':');
-  return [Number(hour), Number(minute)];
+export function getOccurrence(slot: StreamSlot): StreamOccurrence {
+  const start = Date.parse(slot.datetime);
+  return { slot, start, end: start + slot.durationMinutes * MINUTE };
 }
 
-function firstStartAtOrAfter(slot: StreamSlot, from: number, baseTimeZone: string): number {
-  const [hour, minute] = parseTime(slot.time);
-  const today = getZonedParts(from, baseTimeZone);
-  const startOn = (daysAhead: number): number => wallTimeToEpoch(addWallDays(today, daysAhead), hour, minute, baseTimeZone);
-
-  const daysAhead = (slot.weekday - today.weekday + 7) % 7;
-  const thisWeek = startOn(daysAhead);
-  return thisWeek >= from ? thisWeek : startOn(daysAhead + 7);
-}
-
-export function getOccurrence(slot: StreamSlot, now: number, baseTimeZone: string): StreamOccurrence {
-  const duration = slot.durationMinutes * MINUTE;
-  const start = firstStartAtOrAfter(slot, now - duration + 1, baseTimeZone);
-  return { slot, start, end: start + duration };
-}
-
-export function getNextOccurrence(slots: StreamSlot[], now: number, baseTimeZone: string): StreamOccurrence | null {
-  const sorted = slots.map((slot) => getOccurrence(slot, now, baseTimeZone)).sort((a, b) => a.start - b.start);
-  return sorted[0] ?? null;
+/** The stream that is live now, or else the next one to start. */
+export function getNextOccurrence(slots: StreamSlot[], now: number): StreamOccurrence | null {
+  const upcoming = slots.map(getOccurrence).filter((occurrence) => occurrence.end > now);
+  return upcoming.sort((a, b) => a.start - b.start)[0] ?? null;
 }
 
 export function getStatus(occurrence: StreamOccurrence, now: number): OccurrenceStatus {
@@ -147,13 +126,7 @@ export function getStatus(occurrence: StreamOccurrence, now: number): Occurrence
   return now >= occurrence.start ? 'live' : 'upcoming';
 }
 
-export function getWeekColumns(
-  slots: StreamSlot[],
-  now: number,
-  viewerTimeZone: string,
-  baseTimeZone: string,
-  language: string,
-): DayColumn[] {
+export function getWeekColumns(slots: StreamSlot[], now: number, viewerTimeZone: string, language: string): DayColumn[] {
   const today = getZonedParts(now, viewerTimeZone);
   const todayDate: WallDate = { year: today.year, month: today.month, day: today.day };
   const rangeStart = wallTimeToEpoch(todayDate, 0, 0, viewerTimeZone);
@@ -175,11 +148,9 @@ export function getWeekColumns(
   });
 
   for (const slot of slots) {
-    const duration = slot.durationMinutes * MINUTE;
-    const start = firstStartAtOrAfter(slot, rangeStart - duration + 1, baseTimeZone);
-    const occurrence: StreamOccurrence = { slot, start, end: start + duration };
-    const parts = getZonedParts(start, viewerTimeZone);
-    const column = columns.find((candidate) => candidate.key === dayKey(parts)) ?? (start < rangeStart ? columns[0] : undefined);
+    const occurrence = getOccurrence(slot);
+    if (occurrence.end <= rangeStart) continue;
+    const column = columns.find((candidate) => candidate.key === dayKey(getZonedParts(occurrence.start, viewerTimeZone))) ?? (occurrence.start < rangeStart ? columns[0] : undefined);
     column?.items.push(occurrence);
   }
 
