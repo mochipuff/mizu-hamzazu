@@ -1,12 +1,20 @@
+import { useApi } from '../../data/api.ts';
 import { getProfileFacts } from '../../data/content.ts';
 import { emoteUrl, type EmoteName } from '../../data/images.ts';
 import { useI18n } from '../../i18n/i18n.ts';
+import type { Localized } from '../../i18n/locales.ts';
 import type { Messages } from '../../i18n/messages/index.ts';
 import { Paw } from '../ui/Doodles.tsx';
 import { Panel } from '../ui/Panel.tsx';
 import { Reveal } from '../ui/Reveal.tsx';
 import { SectionHeading } from '../ui/SectionHeading.tsx';
 import styles from './About.module.css';
+
+interface Preference {
+  id: number;
+  kind: 'like' | 'dislike';
+  label: Localized;
+}
 
 const STREAM_TILTS = [-1.2, 0, 1.2] as const;
 
@@ -19,6 +27,13 @@ const streamTypes = [
 export function About() {
   const { locale, t } = useI18n();
   const { about } = t;
+  const { status, data: preferences = [] } = useApi<Preference[]>('/api/preferences/');
+  const labelsOf = (kind: Preference['kind']) => preferences.filter((preference) => preference.kind === kind);
+  const loadError = status === 'error' && (
+    <p className="load-error" role="alert">
+      {t.common.loadFailed}
+    </p>
+  );
 
   return (
     <section id="about" className={styles.section} aria-labelledby="about-title">
@@ -60,10 +75,11 @@ export function About() {
                 {about.likesTitle}
               </h3>
               <ul className={styles.list}>
-                {about.likes.map((item) => (
-                  <li key={item}>{item}</li>
+                {labelsOf('like').map(({ id, label }) => (
+                  <li key={id}>{label[locale]}</li>
                 ))}
               </ul>
+              {loadError}
             </Panel>
           </Reveal>
 
@@ -74,10 +90,11 @@ export function About() {
                 {about.dislikesTitle}
               </h3>
               <ul className={styles.list}>
-                {about.dislikes.map((item) => (
-                  <li key={item}>{item}</li>
+                {labelsOf('dislike').map(({ id, label }) => (
+                  <li key={id}>{label[locale]}</li>
                 ))}
               </ul>
+              {loadError}
             </Panel>
           </Reveal>
         </div>

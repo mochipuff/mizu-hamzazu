@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
-import { supportLinks, viewerNotes } from '../../data/supports.ts';
+import { useApi } from '../../data/api.ts';
+import { supportLinks, type ViewerNote } from '../../data/supports.ts';
 import { useI18n } from '../../i18n/i18n.ts';
 import { ButtonLink } from '../ui/Button.tsx';
 import { Paper } from '../ui/Paper.tsx';
@@ -17,6 +18,7 @@ export function ViewerNotes() {
   const { t } = useI18n();
   const { notes } = t.supports;
   const invite = supportLinks[0];
+  const { status, data: viewerNotes = [] } = useApi<ViewerNote[]>('/api/notes/');
 
   return (
     <section id="notes" className={styles.section} aria-labelledby="notes-title">
@@ -26,8 +28,8 @@ export function ViewerNotes() {
         </SectionHeading>
 
         <ul className={styles.wall} aria-label={notes.listLabel}>
-          {viewerNotes.map(({ name, text }, index) => (
-            <li key={`${name}-${text}`} className={styles.slot}>
+          {viewerNotes.map(({ id, name, text }, index) => (
+            <li key={id} className={styles.slot}>
               <Reveal variant="pop" delay={Math.min(index, 3) * 70}>
                 <figure
                   className={styles.note}
@@ -57,6 +59,11 @@ export function ViewerNotes() {
             </li>
           )}
         </ul>
+        {status === 'error' && (
+          <p className="load-error" role="alert">
+            {t.common.loadFailed}
+          </p>
+        )}
       </div>
     </section>
   );
