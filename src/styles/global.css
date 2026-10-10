@@ -185,3 +185,10 @@ a {
     scroll-behavior: auto;
   }
 }
+
+.load-error {
+  margin-top: 1rem;
+  color: var(--ink-soft);
+  font-weight: 700;
+  text-align: center;
+}
