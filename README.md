@@ -43,7 +43,7 @@ Without it the canonical URL, Open Graph image, `sitemap.xml` and JSON-LD URLs a
 | Emotes, hero art, first-paint images | `src/data/images.ts` |
 | Stream schedule, supports data (structure only; the words are in `src/i18n/messages`) | `src/data/schedule.ts`, `src/data/supports.ts` |
 | Loading screen markup + styles / logic | `index.html` (inline critical CSS; keep the `<!--locale-head-->` and `<!--locale-noscript-->` markers, the build fails without them) / `src/main.tsx` |
-| Images (you supply them, they are not in git), all `.webp` | `public/emotes/<name>.webp`, `public/hero/<name>.webp`, `public/membership/tier-<n>.webp`, `public/og-image.webp` (1200x630), `public/favicon.ico`, `public/favicon.svg` |
+| Images `.webp` | `public/emotes/<name>.webp`, `public/hero/<name>.webp`, `public/membership/tier-<n>.webp`, `public/og-image.webp` (1200x630), `public/favicon.ico`, `public/favicon.svg` |
 
 When you add an emote or hero image, add its `.webp` file to `public/` and list it in `src/data/images.ts`.
 The loading screen only waits for fonts and the hero images, downloaded and decoded (`src/main.tsx`, list in `src/data/images.ts`); everything else loads lazily.
