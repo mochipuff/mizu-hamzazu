@@ -1,4 +1,5 @@
-import { formatAmount, getTopDonations, platformLabel, type Donation } from '../../data/supports.ts';
+import { useApi } from '../../data/api.ts';
+import { formatAmount, platformLabel, type Donation } from '../../data/supports.ts';
 import { useI18n } from '../../i18n/i18n.ts';
 import { localeInfo } from '../../i18n/locales.ts';
 import { Paper } from '../ui/Paper.tsx';
@@ -18,6 +19,7 @@ export function TopDonations() {
   const { t, locale } = useI18n();
   const { donations } = t.supports;
   const language = localeInfo[locale].htmlLang;
+  const { status, data: top = [] } = useApi<Donation[]>('/api/donations/');
 
   const renderPodium = (donation: Donation, index: number) => {
     const rank = index + 1;
@@ -59,8 +61,6 @@ export function TopDonations() {
     </li>
   );
 
-  const top = getTopDonations();
-
   return (
     <section id="donations" className={styles.section} aria-labelledby="donations-title">
       <div className="container">
@@ -75,6 +75,11 @@ export function TopDonations() {
           <ol className={styles.list} aria-label={donations.listLabel}>
             {top.map((donation, index) => (index < PODIUM_SIZE ? renderPodium(donation, index) : renderRow(donation, index + 1)))}
           </ol>
+          {status === 'error' && (
+            <p className="load-error" role="alert">
+              {t.common.loadFailed}
+            </p>
+          )}
         </Paper>
       </div>
     </section>

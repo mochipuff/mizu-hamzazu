@@ -6,7 +6,8 @@
   "cleanUrls": true,
   "trailingSlash": true,
   "rewrites": [{ "source": "/api/(.*)", "destination": "/api" }],
-  "functions": { "api/index.ts": { "maxDuration": 10 } },
+  "functions": { "api/index.ts": { "maxDuration": 30 } },
+  "crons": [{ "path": "/api/donations/sync/", "schedule": "0 18 * * *" }],
   "redirects": [
     { "source": "/milestones/:path*", "destination": "/", "permanent": true },
     { "source": "/:locale(en|jp|id|kr)/milestones/:path*", "destination": "/:locale/", "permanent": true }

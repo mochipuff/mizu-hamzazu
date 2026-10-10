@@ -1,5 +1,7 @@
 .wave {
   position: relative;
+  /* The footer starts under the last pixel row of the wave, so a fractional height or device-pixel ratio can never leave a hairline between them. */
+  margin-bottom: -1px;
   height: clamp(2.5rem, 6vw, 4.5rem);
   overflow: hidden;
   pointer-events: none;

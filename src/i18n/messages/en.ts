@@ -7,6 +7,7 @@ export const en = {
   skipLink: 'Skip to content',
 
   common: {
+    loadFailed: 'This could not be loaded. Please try again later.',
     copyBlocked: 'Copy is blocked in this browser.',
     secretCode: 'Secret code found! Confetti storm unlocked.',
   },
@@ -164,8 +165,6 @@ export const en = {
     dislikesTitle: 'Not so much',
     streamsTitle: 'What she streams',
     lore: ['Whose dad is that, Mizu?', 'The goat.'],
-    likes: ['Fikk', 'Valorant', 'Minecraft', 'Tomodachi Life', 'Sushi', 'Cimol', 'Spicy food', 'Matcha', 'Coffee', 'Teazzi'],
-    dislikes: ['Insects', 'Horror games', 'Thunderstorms', 'Mint-flavored food'],
     streamTypes: {
       games: { title: 'Games', description: 'Cozy games, puzzles and story games.' },
       karaoke: { title: 'Karaoke', description: 'Singing any song that can be sung.' },
@@ -258,6 +257,7 @@ export const en = {
     openInNewTab: (label: string, handle: string) => `${label}, ${handle} (opens in a new tab)`,
     hashtags: 'Hashtags',
     backToTop: 'Back to top',
+    builtWith: 'Built with',
     legal: (year: number, owner: string) => `© ${year} ${owner}. Fan art and clips are welcome, please credit and link back.`,
   },
 

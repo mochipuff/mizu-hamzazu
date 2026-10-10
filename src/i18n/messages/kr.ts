@@ -4,6 +4,7 @@ export const kr: Messages = {
   skipLink: '본문으로 건너뛰기',
 
   common: {
+    loadFailed: '불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
     copyBlocked: '이 브라우저에서는 복사가 차단되어 있어요.',
     secretCode: '비밀 코드 발견! 색종이 폭풍이 열렸어요.',
   },
@@ -159,8 +160,6 @@ export const kr: Messages = {
     dislikesTitle: '별로인 것',
     streamsTitle: '방송 콘텐츠',
     lore: ['그거 누구 아빠야, Mizu?', '더 GOAT.'],
-    likes: ['Fikk', 'Valorant', 'Minecraft', 'Tomodachi Life', '스시', 'Cimol(튀긴 타피오카 간식)', '매운 음식', '말차', '커피', 'Teazzi'],
-    dislikes: ['벌레', '공포 게임', '천둥번개', '민트 맛 음식'],
     streamTypes: {
       games: { title: '게임', description: '힐링 게임, 퍼즐, 스토리 게임 등.' },
       karaoke: { title: '노래 방송', description: '부를 수 있는 노래라면 뭐든 불러요.' },
@@ -253,6 +252,7 @@ export const kr: Messages = {
     openInNewTab: (label, handle) => `${label}, ${handle} (새 탭에서 열림)`,
     hashtags: '해시태그',
     backToTop: '맨 위로',
+    builtWith: '사용 기술',
     legal: (year, owner) => `© ${year} ${owner}. 팬아트와 클립은 언제나 환영이에요. 출처 표기와 링크를 남겨 주세요.`,
   },
 

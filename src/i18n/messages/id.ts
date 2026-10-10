@@ -4,6 +4,7 @@ export const id: Messages = {
   skipLink: 'Lewati ke konten',
 
   common: {
+    loadFailed: 'Belum bisa dimuat. Coba lagi nanti ya.',
     copyBlocked: 'Penyalinan diblokir di browser ini.',
     secretCode: 'Kode rahasia ditemukan! Badai konfeti terbuka.',
   },
@@ -159,8 +160,6 @@ export const id: Messages = {
     dislikesTitle: 'Kurang suka',
     streamsTitle: 'Konten stream',
     lore: ['Ayah siapa itu mizu?', 'The goat.'],
-    likes: ['Fikk', 'Valorant', 'Minecraft', 'Tomodachi Life', 'Sushi', 'Cimol', 'Makanan pedas', 'Matcha', 'Kopi', 'Teazzi'],
-    dislikes: ['Serangga', 'Game horor', 'Badai petir', 'Makanan mint'],
     streamTypes: {
       games: { title: 'Game', description: 'Cozy game, puzzle, dan game cerita.' },
       karaoke: { title: 'Karaoke', description: 'Nyanyiin lagu yang bisa dinyanyiin.' },
@@ -253,6 +252,7 @@ export const id: Messages = {
     openInNewTab: (label, handle) => `${label}, ${handle} (dibuka di tab baru)`,
     hashtags: 'Hashtag',
     backToTop: 'Kembali ke atas',
+    builtWith: 'Dibuat dengan',
     legal: (year, owner) => `© ${year} ${owner}. Fan art dan klip sangat disambut, mohon cantumkan kredit dan tautan kembali.`,
   },
 

@@ -4,6 +4,7 @@ export const jp: Messages = {
   skipLink: 'コンテンツへスキップ',
 
   common: {
+    loadFailed: '読み込めませんでした。しばらくしてからもう一度お試しください。',
     copyBlocked: 'このブラウザではコピーがブロックされています。',
     secretCode: '隠しコード発見！紙吹雪の嵐が解放されました。',
   },
@@ -159,8 +160,6 @@ export const jp: Messages = {
     dislikesTitle: '苦手なもの',
     streamsTitle: '配信内容',
     lore: ['それ、誰のお父さん？Mizu', 'ザ・GOAT。'],
-    likes: ['Fikk', 'Valorant', 'Minecraft', 'トモダチコレクション', 'お寿司', 'Cimol（揚げタピオカ団子）', '辛いもの', '抹茶', 'コーヒー', 'Teazzi'],
-    dislikes: ['虫', 'ホラーゲーム', '雷', 'ミント味の食べ物'],
     streamTypes: {
       games: { title: 'ゲーム', description: 'まったり系ゲーム、パズル、ストーリーゲームなど。' },
       karaoke: { title: '歌枠', description: '歌える曲なら何でも歌っちゃう。' },
@@ -253,6 +252,7 @@ export const jp: Messages = {
     openInNewTab: (label, handle) => `${label}、${handle}（新しいタブで開きます）`,
     hashtags: 'ハッシュタグ',
     backToTop: 'ページの先頭へ',
+    builtWith: '使用技術',
     legal: (year, owner) => `© ${year} ${owner}. ファンアートや切り抜きは大歓迎です。クレジット表記とリンクをお願いします。`,
   },
 
