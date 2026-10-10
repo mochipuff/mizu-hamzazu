@@ -55,7 +55,8 @@
 }
 
 .social:focus-visible,
-.top:focus-visible {
+.top:focus-visible,
+.stackLink:focus-visible {
   outline-color: var(--sun);
 }
 
@@ -66,6 +67,35 @@
   gap: 0.5rem 1rem;
   color: var(--lilac);
   font-weight: 700;
+}
+
+.stack {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 1rem;
+  color: var(--shallows);
+  font-weight: 700;
+}
+
+.stack ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1rem;
+}
+
+.stackLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--white);
+  text-decoration: none;
+}
+
+.stackLink:hover {
+  color: var(--sun);
 }
 
 .top {
@@ -116,6 +146,12 @@
     grid-column: 3;
     grid-row: 1;
     justify-self: end;
+  }
+
+  .stack {
+    grid-column: 3;
+    grid-row: 2;
+    justify-content: flex-end;
   }
 }
 
