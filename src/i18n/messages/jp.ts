@@ -180,6 +180,7 @@ export const jp: Messages = {
     today: '今日',
     tomorrow: '明日',
     restDay: 'お休み',
+    loadFailed: 'スケジュールを読み込めませんでした。しばらくしてからもう一度お試しください。',
     liveNow: '配信中',
     members: 'メンバー限定',
     membersOnlySuffix: '（メンバー限定）',

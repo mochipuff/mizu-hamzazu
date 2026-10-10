@@ -6,7 +6,8 @@ Landing page for the virtual streamer Mizu Hamzazu. React 19 + React Router + Vi
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
+npm run dev        # http://localhost:5173 (static site only, /api/schedule is not served)
+npx vercel dev     # http://localhost:3000, site + /api/schedule (needs .env.local, see Schedule backend)
 npm run build      # typecheck + production build into dist/
 npm run preview    # serve dist/ locally
 npm run lint
@@ -26,6 +27,38 @@ curl -sI -H 'Accept-Encoding: gzip' localhost:8000/en/   # shows content-encodin
 Import the repo (`vercel.json` sets the Vite preset and adds cache and security headers; `.vercelignore` keeps the Python test server out). Vercel compresses responses itself (Brotli or gzip, whichever the browser asks for), so the `.gz` files are skipped there.
 Set `VITE_SITE_URL` (for example `https://mizu.id`) in Project Settings, Environment Variables.
 Without it the canonical URL, Open Graph image, `sitemap.xml` and JSON-LD URLs are skipped.
+Also set `SUPABASE_URL` and `SUPABASE_SECRET_KEY` there (next section).
+
+## Schedule backend
+
+`GET /api/schedule/` is a Hono function (`api/index.ts`, Vercel Node.js runtime) that reads the `stream_slots` table in Supabase and returns the streams from 1 day ago to 8 days ahead. The browser never talks to Supabase.
+
+1. Create the table in the Supabase SQL editor. RLS is on with no policy, so only the secret key can read it:
+
+```sql
+create table public.stream_slots (
+  id text primary key,
+  title text not null,
+  description jsonb not null,
+  datetime timestamptz not null,
+  duration_minutes integer not null check (duration_minutes > 0),
+  platform text not null check (platform in ('youtube', 'twitch', 'x', 'discord')),
+  members_only boolean not null default false,
+  thumbnail_url text
+);
+
+create index stream_slots_datetime_idx on public.stream_slots (datetime);
+
+alter table public.stream_slots enable row level security;
+
+insert into public.stream_slots (id, title, description, datetime, duration_minutes, platform, thumbnail_url) values
+  ('untilthen', '🔴『UNTIL THEN』kelanjutan setelah ketemu anak baru', '{"en": "Game Stream", "jp": "ゲーム生配信スケジュール", "id": "Stream main game", "kr": "게임 생방송 일정"}', '2026-10-15 08:00+07', 180, 'youtube', 'https://i.ytimg.com/vi/S6PD4T8H4Cw/maxresdefault.jpg'),
+  ('thuriview', '#THUREVIEW vtuber fav', '{"en": "Reviewing YOUR Favorite VTubers!", "jp": "みんなの推しV紹介！", "id": "Review VTuber Favorit Kamu!", "kr": "시청자 최애 버튜버 리뷰!"}', '2026-10-15 15:30+07', 180, 'youtube', null);
+```
+
+2. Add or edit streams in Supabase, Table Editor. Every stream is one real date and time: write `datetime` with its offset (`2026-10-22 08:00+07`). Streams do not repeat on their own. The page updates within about a minute (CDN cache).
+3. In Vercel, Project Settings, Environment Variables, add `SUPABASE_URL` and `SUPABASE_SECRET_KEY` (the `sb_secret_...` key from Supabase, Settings, API Keys) for Production and Preview, and mark the key **Sensitive**. Never prefix them with `VITE_`, that would put them in the browser bundle. If the key ever leaks, create a new one in Supabase and delete the old one.
+4. Locally: copy `.env.example` to `.env.local`, fill it in, run `npx vercel dev`. `.env.local` and `.vercel/` are git-ignored.
 
 ## Where things live
 
@@ -41,7 +74,7 @@ Without it the canonical URL, Open Graph image, `sitemap.xml` and JSON-LD URLs a
 | Membership tier badges | `TIER_LEVELS` in `FloatingBadges.tsx`, `public/membership/tier-1.webp` to `tier-6.webp` (1:1, replace the placeholders) |
 | Clover and branch decorations | `Clover` / `Branch` in `Doodles.tsx`, `Garland.tsx`, `SectionHeading.tsx` |
 | Emotes, hero art, first-paint images | `src/data/images.ts` |
-| Stream schedule, supports data (structure only; the words are in `src/i18n/messages`) | `src/data/schedule.ts`, `src/data/supports.ts` |
+| Stream schedule: table in Supabase, API in `api/index.ts`, client request in `src/data/schedule.ts`, date maths in `src/lib/schedule.ts`. Supports data: `src/data/supports.ts`. The words are in `src/i18n/messages` | `api/index.ts`, `src/data/schedule.ts`, `src/data/supports.ts` |
 | Loading screen markup + styles / logic | `index.html` (inline critical CSS; keep the `<!--locale-head-->` and `<!--locale-noscript-->` markers, the build fails without them) / `src/main.tsx` |
 | Images `.webp` | `public/emotes/<name>.webp`, `public/hero/<name>.webp`, `public/membership/tier-<n>.webp`, `public/og-image.webp` (1200x630), `public/favicon.ico`, `public/favicon.svg` |
 
@@ -58,7 +91,7 @@ The header menu switches language without a reload and remembers the choice.
 - To add a language: add its code to `LOCALES` and `localeInfo` in `src/i18n/locales.ts`, a `src/i18n/messages/<code>.ts` file, register it in `messages/index.ts`, and add its language subtag to `browserLanguageMap` in `src/i18n/locales.ts`.
 - `npm run build` writes one file per language and page (`dist/<code>/index.html`, `dist/<code>/supports/index.html`) with its own title, meta tags and hreflang links (JSON-LD on the home page), so search engines see each language and a direct visit or refresh of any page finds a real file.
 - To add a page: add it to `PAGES` and `SLUGS` in `src/i18n/pages.ts`, a `<Route>` in `src/App.tsx`, and its `seo` text in the messages.
-- Stream titles in `src/data/schedule.ts` are the real YouTube titles and are not translated; their descriptions are.
+- Stream titles in the `stream_slots` table are the real YouTube titles and are not translated; their descriptions are (`description` holds `en`, `jp`, `id`, `kr`).
 
 ## Conventions
 

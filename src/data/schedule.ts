@@ -1,33 +1,37 @@
+import { useEffect, useState } from 'react';
 import type { StreamSlot } from '../lib/schedule.ts';
 
-export const streamSlots: StreamSlot[] = [
-  {
-    id: 'untilthen',
-    title: '🔴『UNTIL THEN』kelanjutan setelah ketemu anak baru',
-    description: {
-      en: 'Game Stream',
-      jp: 'ゲーム生配信スケジュール',
-      id: 'Stream main game',
-      kr: '게임 생방송 일정',
-    },
-    weekday: 4,
-    time: '08:00',
-    durationMinutes: 180,
-    platform: 'youtube',
-    thumbnailUrl: 'https://i.ytimg.com/vi/S6PD4T8H4Cw/maxresdefault.jpg',
-  },
-  {
-    id: 'thuriview',
-    title: '#THUREVIEW vtuber fav',
-    description: {
-      en: 'Reviewing YOUR Favorite VTubers!',
-      jp: 'みんなの推しV紹介！',
-      id: 'Review VTuber Favorit Kamu!',
-      kr: '시청자 최애 버튜버 리뷰!',
-    },
-    weekday: 4,
-    time: '15:30',
-    durationMinutes: 180,
-    platform: 'youtube',
-  },
-];
+// Hero and Schedule both need the list; they share one request. A failed request is forgotten so the next mount tries again.
+let request: Promise<StreamSlot[]> | undefined;
+
+function loadStreamSlots(): Promise<StreamSlot[]> {
+  request ??= fetch('/api/schedule/')
+    .then((response) => {
+      if (!response.ok) throw new Error(`Schedule request failed: ${response.status}`);
+      return response.json() as Promise<StreamSlot[]>;
+    })
+    .catch((error: unknown) => {
+      request = undefined;
+      throw error;
+    });
+  return request;
+}
+
+type StreamSlotsState = { status: 'loading'; slots: [] } | { status: 'error'; slots: [] } | { status: 'ready'; slots: StreamSlot[] };
+
+export function useStreamSlots(): StreamSlotsState {
+  const [state, setState] = useState<StreamSlotsState>({ status: 'loading', slots: [] });
+
+  useEffect(() => {
+    let active = true;
+    loadStreamSlots().then(
+      (slots) => active && setState({ status: 'ready', slots }),
+      () => active && setState({ status: 'error', slots: [] }),
+    );
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return state;
+}

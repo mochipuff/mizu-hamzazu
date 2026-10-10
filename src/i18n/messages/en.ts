@@ -185,6 +185,7 @@ export const en = {
     today: 'Today',
     tomorrow: 'Tomorrow',
     restDay: 'Rest day',
+    loadFailed: 'The schedule could not be loaded. Please try again later.',
     liveNow: 'Live now',
     members: 'Members',
     membersOnlySuffix: ' (Members only)',
