@@ -19,7 +19,7 @@
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=2592000, stale-while-revalidate=31536000" }]
     },
     {
-      "source": "/(favicon.svg|favicon-32.png|apple-touch-icon.png|og-image.png)",
+      "source": "/(favicon.ico|favicon.svg|og-image.webp)",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=2592000, stale-while-revalidate=31536000" }]
     },
     {

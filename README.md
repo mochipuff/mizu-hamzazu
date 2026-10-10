@@ -1,6 +1,6 @@
 # Mizu Hamzazu
 
-Landing page for the virtual streamer Mizu Hamzazu. React 19 + Vite + TypeScript.
+Landing page for the virtual streamer Mizu Hamzazu. React 19 + React Router + Vite + TypeScript.
 
 ## Commands
 
@@ -35,18 +35,17 @@ Without it the canonical URL, Open Graph image, `sitemap.xml` and JSON-LD URLs a
 | Profile facts that are the same in every language (height, debut, birthday, fan name, socials, aliases). Empty values (like `illustrator` until it is known) are never published | `src/config/site.ts` (`profile`, `fanName`) |
 | **All text**, in English, Japanese, Indonesian and Korean: UI labels, SEO title/description, bio, FAQ, emote names, form messages | `src/i18n/messages/{en,jp,id,kr}.ts` |
 | Language list, URL codes (`/en/`, `/jp/`, `/id/`, `/kr/`), device-language detection, saved choice | `src/i18n/locales.ts`, `src/i18n/navigation.ts` |
-| The page and its URL (`/<locale>/`), reading and changing the URL without a reload | `src/pages/HomePage.tsx` (the sections), `src/i18n/navigation.ts` |
-| Per-language pages, meta tags, hreflang, JSON-LD, robots.txt (AI crawler rules), llms.txt, sitemap.xml, no-JS fallback HTML, the `/` language redirect | `vite/seoPlugin.ts` |
+| Routes (`/<locale>/`, `/<locale>/supports/`), redirect for URLs without a language | `src/App.tsx`, page slugs in `src/i18n/pages.ts`, sections in `src/pages/` |
+| Per-language, per-page HTML files, meta tags, hreflang, JSON-LD, robots.txt (AI crawler rules), llms.txt, sitemap.xml, no-JS fallback HTML, the `/` language redirect | `vite/seoPlugin.ts` |
 | Animations (GSAP + ScrollTrigger, reduced-motion aware: with reduced motion nothing animates and CSS shows the final look) | `src/lib/motion.ts`, `src/hooks/useGsap.ts`, `Reveal.tsx` |
 | Membership tier badges | `TIER_LEVELS` in `FloatingBadges.tsx`, `public/membership/tier-1.webp` to `tier-6.webp` (1:1, replace the placeholders) |
 | Clover and branch decorations | `Clover` / `Branch` in `Doodles.tsx`, `Garland.tsx`, `SectionHeading.tsx` |
 | Emotes, hero art, first-paint images | `src/data/images.ts` |
 | Stream schedule, supports data (structure only; the words are in `src/i18n/messages`) | `src/data/schedule.ts`, `src/data/supports.ts` |
-| Loading screen markup + styles / logic | `index.html` (inline critical CSS) / `src/main.tsx` |
-| Images (you supply them, they are not in git) | `public/emotes/<name>.png`, `public/hero/<name>.png`, `public/membership/tier-<n>.png` (source PNGs, converted to `.webp` by `npm run images`), `public/og-image.png`, favicons |
+| Loading screen markup + styles / logic | `index.html` (inline critical CSS; keep the `<!--locale-head-->` and `<!--locale-noscript-->` markers, the build fails without them) / `src/main.tsx` |
+| Images (you supply them, they are not in git), all `.webp` | `public/emotes/<name>.webp`, `public/hero/<name>.webp`, `public/membership/tier-<n>.webp`, `public/og-image.webp` (1200x630), `public/favicon.ico`, `public/favicon.svg` |
 
-When you add an emote or hero image, add it to `src/data/images.ts`.
-Then run `npm run images` to generate the `.webp` files the site actually loads.
+When you add an emote or hero image, add its `.webp` file to `public/` and list it in `src/data/images.ts`.
 The loading screen only waits for fonts and the hero images, downloaded and decoded (`src/main.tsx`, list in `src/data/images.ts`); everything else loads lazily.
 
 ## Languages
@@ -57,7 +56,8 @@ The header menu switches language without a reload and remembers the choice.
 - `src/i18n/messages/en.ts` is the source of truth. Add a key there and `npm run typecheck` lists every language that still needs it.
 - Text with a value in it is a function, for example `iAm: (name) => ...`, so each language can put the value where its grammar wants it.
 - To add a language: add its code to `LOCALES` and `localeInfo` in `src/i18n/locales.ts`, a `src/i18n/messages/<code>.ts` file, register it in `messages/index.ts`, and add its language subtag to `browserLanguageMap` in `src/i18n/locales.ts`.
-- `npm run build` writes one file per language (`dist/<code>/index.html`) with its own title, meta tags, hreflang links and JSON-LD, so search engines see each language.
+- `npm run build` writes one file per language and page (`dist/<code>/index.html`, `dist/<code>/supports/index.html`) with its own title, meta tags and hreflang links (JSON-LD on the home page), so search engines see each language and a direct visit or refresh of any page finds a real file.
+- To add a page: add it to `PAGES` and `SLUGS` in `src/i18n/pages.ts`, a `<Route>` in `src/App.tsx`, and its `seo` text in the messages.
 - Stream titles in `src/data/schedule.ts` are the real YouTube titles and are not translated; their descriptions are.
 
 ## Conventions
