@@ -10,7 +10,6 @@ import '@fontsource/gaegu/latin-700.css';
 import './styles/global.css';
 import { App } from './App.tsx';
 import { criticalImages } from './data/images.ts';
-import { ensureLocaleInUrl } from './i18n/navigation.ts';
 import { gsap, prefersReducedMotion } from './lib/motion.ts';
 
 const FONTS = ['400 1em "Mochiy Pop One"', '500 1em "Zen Maru Gothic"', '700 1em "Zen Maru Gothic"'];
@@ -19,8 +18,6 @@ const FADE_SECONDS = 0.45;
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Root element #root was not found.');
-
-ensureLocaleInUrl();
 
 // React mounts right away behind the loading screen; the screen only decides when it is revealed.
 createRoot(container).render(
