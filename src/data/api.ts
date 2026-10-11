@@ -5,7 +5,7 @@ type ApiState<T> = { status: 'loading' | 'error'; data: undefined } | { status: 
 // Components that need the same list share one request. A failed request is forgotten so the next mount tries again.
 const requests = new Map<string, Promise<unknown>>();
 
-function load<T>(path: string): Promise<T> {
+export function load<T>(path: string): Promise<T> {
   let request = requests.get(path) as Promise<T> | undefined;
   if (!request) {
     request = fetch(path)
