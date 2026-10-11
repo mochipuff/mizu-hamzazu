@@ -51,7 +51,7 @@ export const en = {
   supports: {
     seo: {
       title: 'Supports | Mizu Hamzazu',
-      description: 'The top 10 donations and the sweetest viewer notes for Mizu Hamzazu. Thank you, Zutopian!',
+      description: 'The sweetest fan art and viewer notes for Mizu Hamzazu. Thank you, Zutopian!',
     },
     marquee: ['Thank you, Zutopian!', 'Every treat keeps the wheel spinning', 'Mizu Hamzazu', 'Notes pinned up with love'],
     cover: {
@@ -60,12 +60,12 @@ export const en = {
       lead: 'A scrapbook of the treats and notes that keep Mizu’s wheel spinning. Thank you, Zutopian!',
       waysLabel: 'Ways to support',
     },
-    donations: {
-      title: 'Top 10 donations',
-      lead: 'The biggest treats shared with Mizu so far.',
-      listLabel: 'Top 10 donations',
-      rank: (rank: number) => `Rank ${rank}`,
-      via: (platform: string) => `via ${platform}`,
+    fanart: {
+      title: 'Fan art',
+      lead: 'Drawings made for Mizu by the Zutopian. Every one of them is a treat!',
+      listLabel: 'Fan art',
+      alt: (username: string) => `Fan art by @${username}`,
+      loadMore: 'Load more',
     },
     notes: {
       title: 'Viewer notes',
