@@ -27,7 +27,7 @@ curl -sI -H 'Accept-Encoding: gzip' localhost:8000/en/   # shows content-encodin
 Import the repo (`vercel.json` sets the Vite preset and adds cache and security headers; `.vercelignore` keeps the Python test server out). Vercel compresses responses itself (Brotli or gzip, whichever the browser asks for), so the `.gz` files are skipped there.
 Set `VITE_SITE_URL` (for example `https://mizu.id`) in Project Settings, Environment Variables.
 Without it the canonical URL, Open Graph image, `sitemap.xml` and JSON-LD URLs are skipped.
-Also set `SUPABASE_URL` and `SUPABASE_SECRET_KEY` there (next section), and `TRAKTEER_API_KEY` and `CRON_SECRET` for the donations sync.
+Also set `SUPABASE_URL` and `SUPABASE_SECRET_KEY` there (next section).
 
 ## Schedule backend
 
@@ -62,14 +62,13 @@ insert into public.stream_slots (id, title, description, datetime, duration_minu
 
 ## Supports, likes and notes backend
 
-Four more routes of `api/index.ts` read Supabase through the same secret key (RLS on, no policy, the browser never talks to Supabase):
+Three more routes of `api/index.ts` read Supabase through the same secret key (RLS on, no policy, the browser never talks to Supabase):
 
 | Route | Table / view | Feeds |
 | --- | --- | --- |
 | `GET /api/preferences/` | `likes_dislikes` | "Likes" and "Not so much" (About) |
 | `GET /api/notes/` | `viewers_notes` | Viewer notes (Supports) |
-| `GET /api/donations/` | `supporter_totals` (view over `donations`) | Top 10 donations (Supports) |
-| `GET` or `POST /api/donations/sync/` | writes `donations` | Pulls the Trakteer support history. `GET` is what Vercel Cron sends, `POST` is for running it by hand. Both need `Authorization: Bearer $CRON_SECRET` |
+| `GET /api/fanart/<page>/` | `fanarts` | Fan art, 6 per page, newest post first (Supports). `<page>` starts at 1 (up to 100), the answer is `{ posts, hasMore }`. The page loads page 1 and asks for the next one only when "Load more" is clicked |
 
 The four public routes accept no query string (`/api/notes/?x=1` answers `400`), because every distinct URL would miss the CDN cache and hit the database. Each IP may also reach the function 30 times a minute (`429` after that); the counter lives in one function instance, so for a hard limit add a rate-limit rule in the Vercel Firewall.
 
@@ -110,30 +109,16 @@ create table public.viewers_notes (
 
 create index viewers_notes_approved_idx on public.viewers_notes (is_approved, created_at desc);
 
--- One row per donation, never per supporter. Trakteer rows are written by /api/donations/sync (order_id is Trakteer's own),
--- Tako and YouTube Membership rows are added by hand because those platforms have no API here.
-create table public.donations (
-  order_id text primary key,
-  supporter_name text not null check (btrim(supporter_name) <> ''),
-  amount bigint not null check (amount >= 0),
-  quantity integer not null default 1 check (quantity > 0),
-  platform text not null default 'trakteer' check (platform in ('trakteer', 'tako', 'membership')),
-  status text not null default 'success',
-  paid_at timestamptz not null default now(),
-  created_at timestamptz not null default now()
+-- The fan art on the Supports page, newest post first. `username` is the poster's handle on social media, without the @.
+-- `media_url` is a direct https link to the image; its host must be listed in `img-src` of the Content-Security-Policy in vercel.json.
+create table public.fanarts (
+  id bigint generated always as identity primary key,
+  username text not null check (btrim(username) <> '' and username !~ '^@'),
+  media_url text not null check (media_url ~ '^https://'),
+  posted_at timestamptz not null
 );
 
--- The leaderboard: every successful donation of the same supporter name (ignoring case and surrounding spaces) summed into one row.
--- `name` is the spelling of the latest donation, `platform` the one the supporter gave the most through.
-create view public.supporter_totals with (security_invoker = true) as
-select
-  (array_agg(btrim(supporter_name) order by paid_at desc))[1] as name,
-  sum(amount)::bigint as amount,
-  sum(quantity)::integer as quantity,
-  (array_agg(platform order by amount desc))[1] as platform
-from public.donations
-where status = 'success'
-group by lower(btrim(supporter_name));
+create index fanarts_posted_at_idx on public.fanarts (posted_at desc, id desc);
 
 create trigger likes_dislikes_updated_at before update on public.likes_dislikes for each row execute function public.set_updated_at();
 create trigger viewers_notes_updated_at before update on public.viewers_notes for each row execute function public.set_updated_at();
@@ -141,8 +126,7 @@ create trigger viewers_notes_updated_at before update on public.viewers_notes fo
 -- RLS on with no policy: only the secret key (the API) can read or write. The browser never talks to Supabase.
 alter table public.likes_dislikes enable row level security;
 alter table public.viewers_notes enable row level security;
-alter table public.donations enable row level security;
-revoke all on public.supporter_totals from anon, authenticated;
+alter table public.fanarts enable row level security;
 ```
 
 2. Load the starting data (the lists that used to live in `messages/*.ts` and `data/supports.ts`):
@@ -167,26 +151,7 @@ insert into public.likes_dislikes (kind, label, sort_order) values
 
 insert into public.viewers_notes (name, note) values
   ('Fikk', 'Semangat streaming dan bikin kontennya, btw mizu kangen.');
-
--- Only the Tako and Membership entries are seeded. The Trakteer ones come from the API (see "First sync"); seeding them too would count them twice.
-insert into public.donations (order_id, supporter_name, amount, platform) values
-  ('seed-cupa-tako', 'Cupa', 1000000, 'tako'),
-  ('seed-avety-membership', 'Avety', 500000, 'membership'),
-  ('seed-willy-tako', 'Willy', 300000, 'tako'),
-  ('seed-redd-membership', 'Redd', 200000, 'membership'),
-  ('seed-marc-tako', 'Marc', 150000, 'tako');
 ```
-
-3. In Vercel, Project Settings, Environment Variables (Production and Preview, all **Sensitive**), add `TRAKTEER_API_KEY` (Trakteer, Manage, API) and `CRON_SECRET` (any long random string; Vercel Cron sends it as the bearer token). Locally they go in `.env.local` as well.
-4. **First sync.** After the first deploy, call it once so the Trakteer supporters appear. From a terminal: `curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://your-domain.tld/api/donations/sync/` answers `{"synced": <number>}`. After that `vercel.json` runs it once a day with `GET` (Hobby plans allow one run a day; on Pro change the schedule in `crons`). The cron path ends with a slash on purpose: a cron job does not follow redirects and `trailingSlash` is on. Every answer of the sync, including `401` and `500`, carries `Cache-Control: no-store`.
-5. Check `select * from supporter_totals order by amount desc limit 10;` against Trakteer's own dashboard.
-
-How the leaderboard adds up:
-
-- Every donation is a row in `donations`. `supporter_totals` groups the rows with `status = 'success'` by supporter name (case and surrounding spaces ignored) and sums `amount` (rupiah) and `quantity`. The Top 10 page shows `amount`.
-- `name` is the spelling of that supporter's latest donation. `platform` ("via ...") is the platform they gave the most through.
-- Trakteer names every anonymous donor "Seseorang", so all of them add up into one entry. If that is not what you want, add `and lower(btrim(supporter_name)) <> 'seseorang'` to the view's `where`.
-- Trakteer is the source of truth for Trakteer rows: the sync upserts by Trakteer's `order_id`, so running it twice changes nothing, and a hand edit of a Trakteer row is overwritten by the next run.
 
 ## Maintaining the data
 
@@ -194,17 +159,32 @@ How the leaderboard adds up:
 | --- | --- |
 | Add or remove a like / "not so much" | Insert or delete a row of `likes_dislikes`. `kind` is `like` or `dislike`, `label` is JSON with all four languages (`{"en": "...", "jp": "...", "id": "...", "kr": "..."}`, the table refuses a row that misses one), `sort_order` sets the order |
 | Pin or take down a viewer note | Insert a row of `viewers_notes`, or set its `is_approved` to `false` (or delete it) to take it down. The 60 newest approved notes are shown |
-| Record a Tako or YouTube Membership donation | Insert a row of `donations` with a unique `order_id` of your own (for example `tako-2026-10-12-cupa`), `platform` `tako` or `membership`, `amount` in rupiah |
-| Correct a Trakteer amount or name | Fix it in Trakteer. A manual edit is overwritten by the next sync |
-| Take a Tako or Membership donation off the board | Delete the row (or set its `status` to anything but `success`). Trakteer rows are reset by the sync |
+| Add or remove a fan art | Insert a row of `fanarts`: `username` (the poster's handle, no @), `media_url` (direct https link to the image) and `posted_at` (when the post was made, with its offset). Delete the row to take it down. The newest 6 show first, the rest sit behind "Load more" |
 
 - Changes show on the site within about 1 to 6 minutes (the CDN keeps each answer 60 seconds and may serve a stale one for 5 more).
-- If the leaderboard stops moving, look at the Vercel function logs for `/api/donations/sync` (a wrong `TRAKTEER_API_KEY`, or Trakteer's Cloudflare blocking the server, show up there) and at `select max(paid_at) from donations where platform = 'trakteer'`.
 - **Existing database** (tables created before `is_approved` existed): run this once, and do it before deploying the API, which now filters on the column. Existing notes stay visible.
 
 ```sql
 alter table public.viewers_notes add column if not exists is_approved boolean not null default true;
 create index if not exists viewers_notes_approved_idx on public.viewers_notes (is_approved, created_at desc);
+```
+
+- **Existing database** (Top 10 donations removed, fan art added): run the first block before deploying the API, which now reads `fanarts`. Run the second one after the deploy, once nothing reads the donation tables any more.
+
+```sql
+create table public.fanarts (
+  id bigint generated always as identity primary key,
+  username text not null check (btrim(username) <> '' and username !~ '^@'),
+  media_url text not null check (media_url ~ '^https://'),
+  posted_at timestamptz not null
+);
+create index fanarts_posted_at_idx on public.fanarts (posted_at desc, id desc);
+alter table public.fanarts enable row level security;
+```
+
+```sql
+drop view if exists public.supporter_totals;
+drop table if exists public.donations;
 ```
 
 - Changing the schema: write the change as a migration (`supabase migration new <name>`), add a column before the API reads it and drop one only after the API stopped selecting it.
@@ -214,19 +194,19 @@ create index if not exists viewers_notes_approved_idx on public.viewers_notes (i
 
 - **Reading:** call the public routes above. They are cached at the edge, need no key and are the contract: the columns behind them may change, the JSON they return should not.
 - **Writing:** only from a server, with a Supabase secret key (`sb_secret_...`) kept in that service's secret store, never in a browser, an app or a repository. Create one secret key per service in Supabase, Settings, API Keys, so a leaked one can be revoked on its own.
-- **Querying Supabase directly** (another microservice, a script): select only the columns you need, filter and `limit`, and page with `range()` instead of loading a table. Read the leaderboard from the view instead of summing donations yourself:
+- **Querying Supabase directly** (another microservice, a script): select only the columns you need, filter and `limit`, and page with `range()` instead of loading a table.
 
 ```ts
-const { data } = await supabase.from('supporter_totals').select('name,amount').order('amount', { ascending: false }).limit(10);
+const { data } = await supabase.from('fanarts').select('id,username,media_url').order('posted_at', { ascending: false }).range(0, 5);
 ```
 
 ```bash
-curl "$SUPABASE_URL/rest/v1/supporter_totals?select=name,amount&order=amount.desc&limit=10" -H "apikey: $SUPABASE_SECRET_KEY"
+curl "$SUPABASE_URL/rest/v1/fanarts?select=id,username,media_url&order=posted_at.desc&limit=6" -H "apikey: $SUPABASE_SECRET_KEY"
 ```
 
-- **Make writes repeatable:** upsert donations on `order_id` (`.upsert(rows, { onConflict: 'order_id' })`) and send rows in batches in one call. A service that pushes notes has no natural key, so give it one (a `source_id` column with a unique index) before it retries anything.
-- **Money and time:** amounts are whole rupiah in `bigint`, never floats. Times are `timestamptz`, send them as ISO 8601 with the offset (`2026-10-12T20:15:00+07:00`).
-- **Never** expose the `donations` table or `supporter_totals` to the `anon` role: they hold supporter names, and RLS with no policy is what keeps them private.
+- **Make writes repeatable:** send rows in batches in one call. A service that pushes notes or fan art has no natural key, so give it one (a `source_id` column with a unique index) before it retries anything.
+- **Time:** times are `timestamptz`, send them as ISO 8601 with the offset (`2026-10-12T20:15:00+07:00`).
+- **Never** expose these tables to the `anon` role: RLS with no policy is what keeps them private.
 
 ## Where things live
 
@@ -242,7 +222,7 @@ curl "$SUPABASE_URL/rest/v1/supporter_totals?select=name,amount&order=amount.des
 | Membership tier badges | `TIER_LEVELS` in `FloatingBadges.tsx`, `public/membership/tier-1.webp` to `tier-6.webp` (1:1, replace the placeholders) |
 | Clover and branch decorations | `Clover` / `Branch` in `Doodles.tsx`, `Garland.tsx`, `SectionHeading.tsx` |
 | Emotes, hero art, first-paint images | `src/data/images.ts` |
-| Stream schedule: table in Supabase, API in `api/index.ts`, client request in `src/data/schedule.ts`, date maths in `src/lib/schedule.ts`. Likes, viewer notes and the donation leaderboard: tables in Supabase, same API file, shared client hook `src/data/api.ts`, types and money format in `src/data/supports.ts`. The words are in `src/i18n/messages` | `api/index.ts`, `src/data/api.ts`, `src/data/schedule.ts`, `src/data/supports.ts` |
+| Stream schedule: table in Supabase, API in `api/index.ts`, client request in `src/data/schedule.ts`, date maths in `src/lib/schedule.ts`. Likes, viewer notes and fan art: tables in Supabase, same API file, shared client hook `src/data/api.ts`, support links and note type in `src/data/supports.ts`, the fan art section in `src/components/sections/Fanart.tsx`. The words are in `src/i18n/messages` | `api/index.ts`, `src/data/api.ts`, `src/data/schedule.ts`, `src/data/supports.ts` |
 | Loading screen markup + styles / logic | `index.html` (inline critical CSS; keep the `<!--locale-head-->` and `<!--locale-noscript-->` markers, the build fails without them) / `src/main.tsx` |
 | Images `.webp` | `public/emotes/<name>.webp`, `public/hero/<name>.webp`, `public/membership/tier-<n>.webp`, `public/og-image.webp` (1200x630), `public/favicon.ico` (must hold a 48x48 image, Google ignores favicons that are not a multiple of 48 px; the build warns), `public/favicon.svg` |
 
