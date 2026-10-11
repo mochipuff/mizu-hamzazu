@@ -46,7 +46,7 @@ export const jp: Messages = {
   supports: {
     seo: {
       title: 'サポート | Mizu Hamzazu',
-      description: 'Mizu Hamzazuへの支援TOP10と、視聴者からのやさしいメッセージ。ありがとう、Zutopian！',
+      description: 'Mizu Hamzazuへのファンアートと、視聴者からのやさしいメッセージ。ありがとう、Zutopian！',
     },
     marquee: ['ありがとう、Zutopian！', 'ひとつひとつの差し入れが車輪を回してくれる', 'Mizu Hamzazu', 'メッセージは愛を込めて貼り出し中'],
     cover: {
@@ -55,12 +55,12 @@ export const jp: Messages = {
       lead: 'Mizuの車輪を回し続けてくれる、差し入れとメッセージのスクラップブック。ありがとう、Zutopian！',
       waysLabel: '応援する方法',
     },
-    donations: {
-      title: '支援 TOP10',
-      lead: 'これまでにMizuへ贈られた、いちばん大きな差し入れ。',
-      listLabel: '支援 TOP10',
-      rank: (rank) => `${rank}位`,
-      via: (platform) => `${platform}経由`,
+    fanart: {
+      title: 'ファンアート',
+      lead: 'ZutopianがMizuのために描いてくれたイラストたち。ひとつひとつが宝物です！',
+      listLabel: 'ファンアート',
+      alt: (username) => `@${username}さんのファンアート`,
+      loadMore: 'もっと見る',
     },
     notes: {
       title: '視聴者のメッセージ',

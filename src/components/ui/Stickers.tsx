@@ -26,17 +26,6 @@ export function Star({ color = 'var(--pastel-butter)', outline = INK, className,
   );
 }
 
-export function Crown({ color = 'var(--sun)', outline = INK, className, ...rest }: StickerProps) {
-  return (
-    <svg viewBox="0 0 40 32" className={stickerClass(className)} {...svgProps} {...rest}>
-      <path d="M4 26 7 8l8 9 5-12 5 12 8-9 3 18z" fill={color} stroke={outline} strokeWidth="2.4" strokeLinejoin="round" />
-      <circle cx="7" cy="7" r="2.6" fill="var(--pastel-pink)" stroke={outline} strokeWidth="2" />
-      <circle cx="20" cy="4" r="2.6" fill="var(--pastel-mint)" stroke={outline} strokeWidth="2" />
-      <circle cx="33" cy="7" r="2.6" fill="var(--pastel-sky)" stroke={outline} strokeWidth="2" />
-    </svg>
-  );
-}
-
 export function Bow({ color = 'var(--pastel-pink)', outline = INK, className, ...rest }: StickerProps) {
   return (
     <svg viewBox="0 0 48 32" className={stickerClass(className)} {...svgProps} {...rest}>
@@ -56,21 +45,6 @@ export function Flower({ color = 'var(--pastel-lilac)', outline = INK, className
         <ellipse key={angle} cx="20" cy="10" rx="5.5" ry="8" transform={`rotate(${angle} 20 20)`} fill={color} stroke={outline} strokeWidth="2.2" />
       ))}
       <circle cx="20" cy="20" r="5" fill="var(--sun)" stroke={outline} strokeWidth="2.2" />
-    </svg>
-  );
-}
-
-// A twelve-point starburst, the Y2K "new!" badge shape. Computed once, drawn as a single path.
-const BURST_PATH = `${Array.from({ length: 24 }, (_, index) => {
-  const radius = index % 2 === 0 ? 22 : 17;
-  const angle = (Math.PI * index) / 12;
-  return `${index === 0 ? 'M' : 'L'}${(24 + radius * Math.sin(angle)).toFixed(2)} ${(24 - radius * Math.cos(angle)).toFixed(2)}`;
-}).join('')}Z`;
-
-export function Burst({ color = 'var(--sun)', outline = INK, className, ...rest }: StickerProps) {
-  return (
-    <svg viewBox="0 0 48 48" className={className} {...svgProps} {...rest}>
-      <path d={BURST_PATH} fill={color} stroke={outline} strokeWidth="2.4" strokeLinejoin="round" />
     </svg>
   );
 }

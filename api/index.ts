@@ -1,8 +1,7 @@
-import { timingSafeEqual } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
-import { Hono } from 'hono';
+import { Hono, type MiddlewareHandler } from 'hono';
 
-const { SUPABASE_URL, SUPABASE_SECRET_KEY, TRAKTEER_API_KEY, CRON_SECRET } = process.env;
+const { SUPABASE_URL, SUPABASE_SECRET_KEY } = process.env;
 if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) throw new Error('SUPABASE_URL and SUPABASE_SECRET_KEY must be set');
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
@@ -34,34 +33,26 @@ interface NoteRow {
   text: string;
 }
 
-interface DonationRow {
-  name: string;
-  amount: number;
-  platform: 'trakteer' | 'tako' | 'membership';
-}
-
-/** One entry of `result.data` of GET /v1/public/supports. */
-interface TrakteerSupport {
-  order_id: string;
-  supporter_name: string;
-  quantity: number;
-  amount: number;
-  status: string;
-  updated_at: string;
+interface FanartRow {
+  id: number;
+  username: string;
+  mediaUrl: string;
+  postedAt: string;
 }
 
 const DAY_MS = 86_400_000;
-const TOP_COUNT = 10;
 const cacheControl = (sMaxAge: number, staleWhileRevalidate: number): string => `public, s-maxage=${sMaxAge}, stale-while-revalidate=${staleWhileRevalidate}`;
-// The schedule has to follow a stream going live. The other lists only change when the owner edits them or the daily sync runs, so the edge answers them without waking the function or the database.
 const SCHEDULE_CACHE = cacheControl(60, 300);
 const SLOW_CACHE = cacheControl(3_600, 86_400);
 
-// Trakteer pages are fetched until one comes back empty, so the API's own page-size cap does not matter.
-const TRAKTEER_PAGE_SIZE = 50;
-const TRAKTEER_MAX_PAGES = 20;
-// `updated_at` has no zone; Trakteer is an Indonesian service and its timestamps are read as Western Indonesia Time (WIB).
-const TRAKTEER_UTC_OFFSET = '+07:00';
+const RATE_LIMIT = 30;
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX_TRACKED = 10_000;
+const PUBLIC_FEEDS = ['/api/schedule', '/api/preferences', '/api/notes', '/api/fanart/*'];
+const hits = new Map<string, { count: number; resetAt: number }>();
+
+const FANART_PAGE_SIZE = 6;
+const FANART_MAX_PAGE = 100;
 
 const app = new Hono({ strict: false });
 
@@ -69,6 +60,35 @@ function unwrap<T>({ data, error }: { data: T | null; error: { message: string }
   if (error || data === null) throw new Error(`Supabase: ${error?.message ?? 'no data'}`, { cause: error });
   return data;
 }
+
+const guardPublicFeed: MiddlewareHandler = async (c, next) => {
+  const now = Date.now();
+  
+  const ip = c.req.header('x-real-ip') ?? c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+
+  if (hits.size >= RATE_MAX_TRACKED) {
+    for (const [key, entry] of hits) if (entry.resetAt <= now) hits.delete(key);
+    if (hits.size >= RATE_MAX_TRACKED) hits.clear();
+  }
+  let entry = hits.get(ip);
+  if (!entry || entry.resetAt <= now) {
+    entry = { count: 0, resetAt: now + RATE_WINDOW_MS };
+    hits.set(ip, entry);
+  }
+  if (++entry.count > RATE_LIMIT) {
+    c.header('Retry-After', String(Math.ceil((entry.resetAt - now) / 1000)));
+    c.header('Cache-Control', 'no-store');
+    return c.json({ error: 'Too Many Requests' }, 429);
+  }
+
+  if (c.req.url.includes('?')) {
+    c.header('Cache-Control', 'no-store');
+    return c.json({ error: 'Query parameters are not accepted' }, 400);
+  }
+  await next();
+};
+
+for (const path of PUBLIC_FEEDS) app.use(path, guardPublicFeed);
 
 app.get('/api/schedule', async (c) => {
   const now = Date.now();
@@ -98,78 +118,45 @@ app.get('/api/preferences', async (c) => {
 
 app.get('/api/notes', async (c) => {
   const notes = unwrap(
-    await supabase.from('viewers_notes').select('id,name,text:note').order('created_at', { ascending: false }).limit(60).overrideTypes<NoteRow[], { merge: false }>(),
+    await supabase
+      .from('viewers_notes')
+      .select('id,name,text:note')
+      .eq('is_approved', true)
+      .order('created_at', { ascending: false })
+      .limit(60)
+      .overrideTypes<NoteRow[], { merge: false }>(),
   );
 
   c.header('Cache-Control', SLOW_CACHE);
   return c.json(notes);
 });
 
-// `supporter_totals` already sums every entry of the same supporter name; this only ranks it.
-app.get('/api/donations', async (c) => {
-  const donations = unwrap(
-    await supabase
-      .from('supporter_totals')
-      .select('name,amount,platform')
-      .order('amount', { ascending: false })
-      .order('name')
-      .limit(TOP_COUNT)
-      .overrideTypes<DonationRow[], { merge: false }>(),
-  );
-
-  c.header('Cache-Control', SLOW_CACHE);
-  return c.json(donations);
-});
-
-const isSameSecret = (given: string | undefined, expected: string): boolean =>
-  given !== undefined && given.length === expected.length && timingSafeEqual(Buffer.from(given), Buffer.from(expected));
-
-async function fetchTrakteerPage(page: number): Promise<TrakteerSupport[]> {
-  const response = await fetch(`https://api.trakteer.id/v1/public/supports?limit=${TRAKTEER_PAGE_SIZE}&page=${page}`, {
-    headers: { key: TRAKTEER_API_KEY ?? '', Accept: 'application/json' },
-    signal: AbortSignal.timeout(8_000),
-  });
-  if (!response.ok) throw new Error(`Trakteer: HTTP ${response.status}`);
-
-  const body = (await response.json()) as { result: { data: TrakteerSupport[] } };
-  return body.result.data;
-}
-
-// Vercel Cron calls this with `Authorization: Bearer $CRON_SECRET`. Safe to run any number of times: rows are keyed by Trakteer's order_id.
-app.get('/api/donations/sync', async (c) => {
-  if (!CRON_SECRET || !TRAKTEER_API_KEY) throw new Error('CRON_SECRET and TRAKTEER_API_KEY must be set');
-  if (!isSameSecret(c.req.header('authorization'), `Bearer ${CRON_SECRET}`)) return c.json({ error: 'Unauthorized' }, 401);
-
-  let synced = 0;
-  for (let page = 1; page <= TRAKTEER_MAX_PAGES; page++) {
-    const supports = await fetchTrakteerPage(page);
-    if (supports.length === 0) break;
-
-    const rows = supports.map((support) => {
-      // Fail loudly: without the donor's name every supporter would collapse into one leaderboard entry.
-      if (typeof support.supporter_name !== 'string') throw new Error('Trakteer: a support entry has no supporter_name');
-      return {
-        order_id: support.order_id,
-        supporter_name: support.supporter_name.trim(),
-        amount: support.amount,
-        quantity: support.quantity,
-        platform: 'trakteer',
-        status: support.status,
-        paid_at: `${support.updated_at.replace(' ', 'T')}${TRAKTEER_UTC_OFFSET}`,
-      };
-    });
-
-    const { error } = await supabase.from('donations').upsert(rows, { onConflict: 'order_id' });
-    if (error) throw new Error(`Supabase: ${error.message}`, { cause: error });
-    synced += rows.length;
+app.get('/api/fanart/:page', async (c) => {
+  const page = Number(c.req.param('page'));
+  if (!Number.isInteger(page) || page < 1 || page > FANART_MAX_PAGE) {
+    c.header('Cache-Control', 'no-store');
+    return c.json({ error: 'Not Found' }, 404);
   }
 
-  c.header('Cache-Control', 'no-store');
-  return c.json({ synced });
+  // One row more than the page, only to know whether a next page exists.
+  const from = (page - 1) * FANART_PAGE_SIZE;
+  const rows = unwrap(
+    await supabase
+      .from('fanarts')
+      .select('id,username,mediaUrl:media_url,postedAt:posted_at')
+      .order('posted_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(from, from + FANART_PAGE_SIZE)
+      .overrideTypes<FanartRow[], { merge: false }>(),
+  );
+
+  c.header('Cache-Control', SCHEDULE_CACHE);
+  return c.json({ posts: rows.slice(0, FANART_PAGE_SIZE), hasMore: rows.length > FANART_PAGE_SIZE && page < FANART_MAX_PAGE });
 });
 
 app.onError((error, c) => {
   console.error(error);
+  c.header('Cache-Control', 'no-store');
   return c.json({ error: 'Internal Server Error' }, 500);
 });
 

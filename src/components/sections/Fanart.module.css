@@ -1,0 +1,121 @@
+.section {
+  padding-block: clamp(3rem, 8vw, 5.5rem);
+}
+
+.grid {
+  display: grid;
+  gap: 1.5rem;
+  width: min(100%, 64rem);
+  margin-inline: auto;
+}
+
+.slot {
+  padding: 0.9rem 0.6rem 0.4rem;
+}
+
+/* A polaroid taped onto the page. */
+.card {
+  position: relative;
+  padding: 0.8rem 0.8rem 1rem;
+  border: var(--outline);
+  border-radius: 6px;
+  background: var(--white);
+  box-shadow: var(--pop-small);
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  z-index: 1;
+  width: 78px;
+  height: 24px;
+  translate: -50% 0;
+  rotate: -4deg;
+  border: 2px solid color-mix(in srgb, var(--ink) 20%, transparent);
+  background: repeating-linear-gradient(135deg, var(--pastel-mint) 0 8px, rgb(255 255 255 / 0.65) 8px 16px);
+  opacity: 0.92;
+}
+
+.slot:nth-child(3n + 1) .card {
+  rotate: -1.2deg;
+}
+
+.slot:nth-child(3n + 2) .card {
+  rotate: 1deg;
+}
+
+.slot:nth-child(3n + 3) .card {
+  rotate: -0.5deg;
+}
+
+.slot:nth-child(3n + 1) .card::before {
+  background: repeating-linear-gradient(135deg, var(--pastel-pink) 0 8px, rgb(255 255 255 / 0.65) 8px 16px);
+}
+
+.slot:nth-child(3n + 3) .card::before {
+  background: repeating-linear-gradient(135deg, var(--pastel-sky) 0 8px, rgb(255 255 255 / 0.65) 8px 16px);
+}
+
+.photo {
+  display: block;
+  aspect-ratio: 1;
+  border: 2px solid var(--ink);
+  background: var(--pastel-sky);
+  overflow: hidden;
+}
+
+.photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.caption {
+  display: grid;
+  margin-top: 0.7rem;
+  padding-right: 2rem;
+}
+
+.username {
+  font-family: var(--font-hand);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.date {
+  font-family: var(--font-hand);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.heart {
+  position: absolute;
+  right: 0.7rem;
+  bottom: 0.6rem;
+  width: 1.9rem;
+  rotate: 12deg;
+}
+
+.more {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 480px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 760px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

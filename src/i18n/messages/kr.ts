@@ -46,7 +46,7 @@ export const kr: Messages = {
   supports: {
     seo: {
       title: '후원 | Mizu Hamzazu',
-      description: 'Mizu Hamzazu를 향한 후원 TOP 10과 시청자들의 따뜻한 메모. 고마워요, Zutopian!',
+      description: 'Mizu Hamzazu를 향한 팬아트와 시청자들의 따뜻한 메모. 고마워요, Zutopian!',
     },
     marquee: ['고마워요, Zutopian!', '작은 후원 하나하나가 쳇바퀴를 돌려요', 'Mizu Hamzazu', '메모는 사랑을 담아 붙여 두었어요'],
     cover: {
@@ -55,12 +55,12 @@ export const kr: Messages = {
       lead: 'Mizu의 쳇바퀴를 계속 돌려 주는 선물과 메모를 모은 스크랩북. 고마워요, Zutopian!',
       waysLabel: '후원하는 방법',
     },
-    donations: {
-      title: '후원 TOP 10',
-      lead: '지금까지 Mizu에게 전해진 가장 큰 선물들이에요.',
-      listLabel: '후원 TOP 10',
-      rank: (rank) => `${rank}위`,
-      via: (platform) => `${platform}로 후원`,
+    fanart: {
+      title: '팬아트',
+      lead: 'Zutopian이 Mizu를 위해 그려 준 그림들이에요. 하나하나가 선물이에요!',
+      listLabel: '팬아트',
+      alt: (username) => `@${username}님의 팬아트`,
+      loadMore: '더 보기',
     },
     notes: {
       title: '시청자 메모',

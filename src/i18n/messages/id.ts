@@ -46,7 +46,7 @@ export const id: Messages = {
   supports: {
     seo: {
       title: 'Dukungan | Mizu Hamzazu',
-      description: 'Top 10 donasi dan catatan manis dari penonton untuk Mizu Hamzazu. Terima kasih, Zutopian!',
+      description: 'Fan art dan catatan manis dari penonton untuk Mizu Hamzazu. Terima kasih, Zutopian!',
     },
     marquee: ['Terima kasih, Zutopian!', 'Setiap traktiran bikin kincir terus berputar', 'Mizu Hamzazu', 'Catatan ditempel penuh cinta'],
     cover: {
@@ -55,12 +55,12 @@ export const id: Messages = {
       lead: 'Buku tempel berisi traktiran dan catatan yang bikin kincir Mizu terus berputar. Terima kasih, Zutopian!',
       waysLabel: 'Cara mendukung',
     },
-    donations: {
-      title: 'Top 10 donasi',
-      lead: 'Traktiran terbesar untuk Mizu sejauh ini.',
-      listLabel: 'Top 10 donasi',
-      rank: (rank) => `Peringkat ${rank}`,
-      via: (platform) => `lewat ${platform}`,
+    fanart: {
+      title: 'Fan art',
+      lead: 'Gambar-gambar untuk Mizu dari para Zutopian. Setiap gambar adalah traktiran!',
+      listLabel: 'Fan art',
+      alt: (username) => `Fan art oleh @${username}`,
+      loadMore: 'Muat lebih banyak',
     },
     notes: {
       title: 'Catatan penonton',
