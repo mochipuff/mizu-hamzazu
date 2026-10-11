@@ -69,7 +69,9 @@ Four more routes of `api/index.ts` read Supabase through the same secret key (RL
 | `GET /api/preferences/` | `likes_dislikes` | "Likes" and "Not so much" (About) |
 | `GET /api/notes/` | `viewers_notes` | Viewer notes (Supports) |
 | `GET /api/donations/` | `supporter_totals` (view over `donations`) | Top 10 donations (Supports) |
-| `GET /api/donations/sync/` | writes `donations` | Pulls the Trakteer support history (needs `Authorization: Bearer $CRON_SECRET`) |
+| `GET` or `POST /api/donations/sync/` | writes `donations` | Pulls the Trakteer support history. `GET` is what Vercel Cron sends, `POST` is for running it by hand. Both need `Authorization: Bearer $CRON_SECRET` |
+
+The four public routes accept no query string (`/api/notes/?x=1` answers `400`), because every distinct URL would miss the CDN cache and hit the database. Each IP may also reach the function 30 times a minute (`429` after that); the counter lives in one function instance, so for a hard limit add a rate-limit rule in the Vercel Firewall.
 
 1. Run this in the Supabase SQL editor (tables, view, RLS):
 
@@ -95,16 +97,20 @@ create table public.likes_dislikes (
   updated_at timestamptz not null default now()
 );
 
--- The notes pinned on the Supports page, newest first.
+-- The notes pinned on the Supports page, newest first. Only rows with is_approved = true are served.
+-- Default true suits notes you insert yourself; use `default false` if notes ever arrive from a public form, then approve them by hand.
 create table public.viewers_notes (
   id bigint generated always as identity primary key,
   name text not null check (btrim(name) <> ''),
   note text not null check (btrim(note) <> ''),
+  is_approved boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
--- One row per donation, never per supporter. Trakteer rows are written by GET /api/donations/sync (order_id is Trakteer's own),
+create index viewers_notes_approved_idx on public.viewers_notes (is_approved, created_at desc);
+
+-- One row per donation, never per supporter. Trakteer rows are written by /api/donations/sync (order_id is Trakteer's own),
 -- Tako and YouTube Membership rows are added by hand because those platforms have no API here.
 create table public.donations (
   order_id text primary key,
@@ -172,7 +178,7 @@ insert into public.donations (order_id, supporter_name, amount, platform) values
 ```
 
 3. In Vercel, Project Settings, Environment Variables (Production and Preview, all **Sensitive**), add `TRAKTEER_API_KEY` (Trakteer, Manage, API) and `CRON_SECRET` (any long random string; Vercel Cron sends it as the bearer token). Locally they go in `.env.local` as well.
-4. **First sync.** After the first deploy, call it once so the Trakteer supporters appear. From a terminal: `curl -H "Authorization: Bearer $CRON_SECRET" https://your-domain.tld/api/donations/sync/` answers `{"synced": <number>}`. After that `vercel.json` runs it once a day (Hobby plans allow one run a day; on Pro change the schedule in `crons`). The cron path ends with a slash on purpose: a cron job does not follow redirects and `trailingSlash` is on.
+4. **First sync.** After the first deploy, call it once so the Trakteer supporters appear. From a terminal: `curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://your-domain.tld/api/donations/sync/` answers `{"synced": <number>}`. After that `vercel.json` runs it once a day with `GET` (Hobby plans allow one run a day; on Pro change the schedule in `crons`). The cron path ends with a slash on purpose: a cron job does not follow redirects and `trailingSlash` is on. Every answer of the sync, including `401` and `500`, carries `Cache-Control: no-store`.
 5. Check `select * from supporter_totals order by amount desc limit 10;` against Trakteer's own dashboard.
 
 How the leaderboard adds up:
@@ -187,13 +193,20 @@ How the leaderboard adds up:
 | To | Do this in the Table Editor |
 | --- | --- |
 | Add or remove a like / "not so much" | Insert or delete a row of `likes_dislikes`. `kind` is `like` or `dislike`, `label` is JSON with all four languages (`{"en": "...", "jp": "...", "id": "...", "kr": "..."}`, the table refuses a row that misses one), `sort_order` sets the order |
-| Pin or take down a viewer note | Insert or delete a row of `viewers_notes`. The 60 newest are shown |
+| Pin or take down a viewer note | Insert a row of `viewers_notes`, or set its `is_approved` to `false` (or delete it) to take it down. The 60 newest approved notes are shown |
 | Record a Tako or YouTube Membership donation | Insert a row of `donations` with a unique `order_id` of your own (for example `tako-2026-10-12-cupa`), `platform` `tako` or `membership`, `amount` in rupiah |
 | Correct a Trakteer amount or name | Fix it in Trakteer. A manual edit is overwritten by the next sync |
 | Take a Tako or Membership donation off the board | Delete the row (or set its `status` to anything but `success`). Trakteer rows are reset by the sync |
 
 - Changes show on the site within about 1 to 6 minutes (the CDN keeps each answer 60 seconds and may serve a stale one for 5 more).
 - If the leaderboard stops moving, look at the Vercel function logs for `/api/donations/sync` (a wrong `TRAKTEER_API_KEY`, or Trakteer's Cloudflare blocking the server, show up there) and at `select max(paid_at) from donations where platform = 'trakteer'`.
+- **Existing database** (tables created before `is_approved` existed): run this once, and do it before deploying the API, which now filters on the column. Existing notes stay visible.
+
+```sql
+alter table public.viewers_notes add column if not exists is_approved boolean not null default true;
+create index if not exists viewers_notes_approved_idx on public.viewers_notes (is_approved, created_at desc);
+```
+
 - Changing the schema: write the change as a migration (`supabase migration new <name>`), add a column before the API reads it and drop one only after the API stopped selecting it.
 - Back-ups: Supabase Pro keeps daily ones. On the free plan run `supabase db dump` now and then.
 
@@ -231,7 +244,7 @@ curl "$SUPABASE_URL/rest/v1/supporter_totals?select=name,amount&order=amount.des
 | Emotes, hero art, first-paint images | `src/data/images.ts` |
 | Stream schedule: table in Supabase, API in `api/index.ts`, client request in `src/data/schedule.ts`, date maths in `src/lib/schedule.ts`. Likes, viewer notes and the donation leaderboard: tables in Supabase, same API file, shared client hook `src/data/api.ts`, types and money format in `src/data/supports.ts`. The words are in `src/i18n/messages` | `api/index.ts`, `src/data/api.ts`, `src/data/schedule.ts`, `src/data/supports.ts` |
 | Loading screen markup + styles / logic | `index.html` (inline critical CSS; keep the `<!--locale-head-->` and `<!--locale-noscript-->` markers, the build fails without them) / `src/main.tsx` |
-| Images `.webp` | `public/emotes/<name>.webp`, `public/hero/<name>.webp`, `public/membership/tier-<n>.webp`, `public/og-image.webp` (1200x630), `public/favicon.ico`, `public/favicon.svg` |
+| Images `.webp` | `public/emotes/<name>.webp`, `public/hero/<name>.webp`, `public/membership/tier-<n>.webp`, `public/og-image.webp` (1200x630), `public/favicon.ico` (must hold a 48x48 image, Google ignores favicons that are not a multiple of 48 px; the build warns), `public/favicon.svg` |
 
 When you add an emote or hero image, add its `.webp` file to `public/` and list it in `src/data/images.ts`.
 The loading screen only waits for fonts and the hero images, downloaded and decoded (`src/main.tsx`, list in `src/data/images.ts`); everything else loads lazily.
