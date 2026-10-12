@@ -64,6 +64,41 @@
   overflow-wrap: anywhere;
 }
 
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 0.6rem;
+}
+
+/* A small pill that says what kind of upload the card is, so a plain video never passes for a song. */
+.tag {
+  padding: 0 0.7rem;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--pastel-sky);
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.tag[data-tag='live'] {
+  background: var(--pastel-mint);
+}
+
+.tag[data-tag='short'] {
+  background: var(--pastel-butter);
+}
+
+.tag[data-tag='original'] {
+  background: var(--pastel-pink);
+}
+
+.tag[data-tag='cover'] {
+  background: var(--pastel-lilac);
+}
+
 .date {
   font-family: var(--font-hand);
   font-size: 1.1rem;
