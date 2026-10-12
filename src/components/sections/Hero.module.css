@@ -126,7 +126,7 @@
 .stage {
   position: relative;
   order: -1;
-  width: min(100%, 320px);
+  width: min(100%, 20rem);
   margin-inline: auto;
 }
 

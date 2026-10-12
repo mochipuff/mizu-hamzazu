@@ -38,9 +38,9 @@ export function About() {
     );
 
   return (
-    <section id="about" className={styles.section} aria-labelledby="about-title">
+    <section id="lore" className={styles.section} aria-labelledby="lore-title">
       <div className="container">
-        <SectionHeading headingId="about-title" title={about.title}>
+        <SectionHeading headingId="lore-title" title={about.title}>
           {about.lead}
         </SectionHeading>
 

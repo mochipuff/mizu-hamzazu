@@ -28,38 +28,32 @@ interface Decoration {
   id: number;
   Shape: (props: { className?: string }) => ReactNode;
   top: number;
-  left: string;
+  side: 'left' | 'right';
   size: number;
   tilt: number;
 }
 
 const COLUMNS = 3;
 const SHAPES = [Flower, Cloud, Pin, Paw, Heart] as const;
+const SIZES = [44, 36, 40, 32] as const;
+const TILTS = [-14, 10, -6, 16, -18, 8] as const;
 const DECORATION_COUNT = 14;
 
-const between = (min: number, max: number): number => min + Math.random() * (max - min);
-
-// Scattered along the two edges of the section, behind the grid, so they frame the art without ever covering it.
-const createDecorations = (): Decoration[] =>
-  Array.from({ length: DECORATION_COUNT }, (_, id) => {
-    const size = between(28, 56);
-    const edge = between(0, 4);
-    return {
-      id,
-      Shape: SHAPES[Math.floor(Math.random() * SHAPES.length)] ?? Heart,
-      top: between(1, 95),
-      left: Math.random() < 0.5 ? `${edge}%` : `calc(${100 - edge}% - ${size}px)`,
-      size,
-      tilt: between(-25, 25),
-    };
-  });
+// A fixed zigzag down the two edges of the section, behind the grid: same spot on every visit, never two stickers side by side, never covering the art.
+const decorations: Decoration[] = Array.from({ length: DECORATION_COUNT }, (_, id) => ({
+  id,
+  Shape: SHAPES[id % SHAPES.length] ?? Heart,
+  top: 3 + id * (92 / DECORATION_COUNT),
+  side: id % 2 === 0 ? 'left' : 'right',
+  size: SIZES[id % SIZES.length] ?? 36,
+  tilt: TILTS[id % TILTS.length] ?? 0,
+}));
 
 export function Fanart() {
   const { t, locale } = useI18n();
   const { fanart } = t.supports;
   const language = localeInfo[locale].htmlLang;
   const [feed, setFeed] = useState<Feed>({ posts: [], page: 0, hasMore: true, status: 'loading' });
-  const [decorations] = useState(createDecorations);
 
   // Page 1 loads with the section, every older page only when "Load more" is clicked.
   const loadPage = (page: number) => {
@@ -90,8 +84,8 @@ export function Fanart() {
   return (
     <section id="fanart" className={styles.section} aria-labelledby="fanart-title">
       <div className={styles.decor} aria-hidden="true">
-        {decorations.map(({ id, Shape, top, left, size, tilt }) => (
-          <span key={id} className={styles.deco} style={{ top: `${top}%`, left, width: size, rotate: `${tilt}deg` }}>
+        {decorations.map(({ id, Shape, top, side, size, tilt }) => (
+          <span key={id} className={styles.deco} style={{ top: `${top}%`, [side]: 0, width: size, rotate: `${tilt}deg` }}>
             <Shape />
           </span>
         ))}
