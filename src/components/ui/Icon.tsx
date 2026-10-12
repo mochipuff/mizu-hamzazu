@@ -15,6 +15,7 @@ export type IconName =
   | 'star'
   | 'arrow-up'
   | 'plus'
+  | 'home'
   | 'clock'
   | 'lock'
   | 'globe'
@@ -72,6 +73,7 @@ const glyphs: Record<IconName, ReactNode> = {
   star: <path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9l-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z" />,
   'arrow-up': <path d="M12 19V6M6.5 11.5 12 6l5.5 5.5" />,
   plus: <path d="M12 5v14M5 12h14" />,
+  home: <path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4v-5H9v5H5a1 1 0 0 1-1-1z" />,
   clock: (
     <>
       <circle cx="12" cy="12" r="8" />

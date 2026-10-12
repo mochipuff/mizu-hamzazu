@@ -48,3 +48,20 @@ export function Flower({ color = 'var(--pastel-lilac)', outline = INK, className
     </svg>
   );
 }
+
+export function Cloud({ color = 'var(--pastel-sky)', outline = INK, className, ...rest }: StickerProps) {
+  return (
+    <svg viewBox="0 0 48 32" className={stickerClass(className)} {...svgProps} {...rest}>
+      <path d="M12 27a8 8 0 0 1-1-15.9A10 10 0 0 1 30 8a8.5 8.5 0 0 1 7.5 12.5A6.5 6.5 0 0 1 36 27z" fill={color} stroke={outline} strokeWidth="2.4" strokeLinejoin="round" />
+      <path d="M14 14.5c1-1.8 2.6-2.8 4.6-3" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function Pin({ color = 'var(--pastel-pink)', outline = INK, className, ...rest }: StickerProps) {
+  return (
+    <svg viewBox="0 0 32 32" className={stickerClass(className)} {...svgProps} {...rest}>
+      <path d="m20 3 9 9-3.2.8-4.6 4.6.8 5.2-2.4 2.4-5-5L7 28l-3-3 8.4-8.6-5-5L9.8 9l5.2.8 4.6-4.6z" fill={color} stroke={outline} strokeWidth="2.4" strokeLinejoin="round" />
+    </svg>
+  );
+}
