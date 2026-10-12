@@ -27,6 +27,7 @@ const twitterHandle = site.platforms.find(({ id }) => id === 'x')?.handle;
 
 const IMAGE_MIME = { webp: 'image/webp', jpg: 'image/jpeg', jpeg: 'image/jpeg' }[seo.image.path.split('.').pop()?.toLowerCase() ?? ''];
 const MAX_IMAGE_BYTES = 600 * 1024;
+const EMOTE_SIZE_PX = 512;
 
 // Google requires a full ISO 8601 datetime with a UTC offset. site.scheduleTimeZone (Asia/Jakarta) has no DST, so the offset is fixed.
 const SITE_UTC_OFFSET = '+07:00';
@@ -122,6 +123,34 @@ function buildJsonLd(siteUrl: string, locale: Locale): string {
     image,
   });
 
+  // The emotes are the images of the home page that carry a description (the hero layers are decoration). Image URLs must be absolute.
+  const emoteGallery = siteUrl
+    ? [
+        compact({
+          '@type': 'ImageGallery',
+          '@id': id('emotes'),
+          name: t.emotes.title,
+          inLanguage: localeInfo[locale].htmlLang,
+          isPartOf: { '@id': id('website') },
+          hasPart: emoteNames.map((name) => {
+            const { label, usage } = t.emotes.items[name];
+            return compact({
+              '@type': 'ImageObject',
+              contentUrl: `${siteUrl}${emoteUrl(name)}`,
+              name: label,
+              description: t.emotes.imageAlt(label, usage),
+              encodingFormat: 'image/webp',
+              width: EMOTE_SIZE_PX,
+              height: EMOTE_SIZE_PX,
+              creator: profile.illustrator ? { '@type': 'Person', name: profile.illustrator } : undefined,
+              copyrightHolder: { '@id': personId },
+              creditText: site.name,
+            });
+          }),
+        }),
+      ]
+    : [];
+
   const graph = [
     compact({
       '@type': 'WebSite',
@@ -142,7 +171,7 @@ function buildJsonLd(siteUrl: string, locale: Locale): string {
       dateModified: lastModified && toDateTime(lastModified),
       isPartOf: { '@id': id('website') },
       mainEntity: { '@id': personId },
-      primaryImageOfPage: image ? { '@type': 'ImageObject', url: image, width: seo.image.width, height: seo.image.height } : undefined,
+      primaryImageOfPage: image ? { '@type': 'ImageObject', url: image, width: seo.image.width, height: seo.image.height, caption: t.seo.imageAlt } : undefined,
     }),
     person,
     {
@@ -154,6 +183,7 @@ function buildJsonLd(siteUrl: string, locale: Locale): string {
         acceptedAnswer: { '@type': 'Answer', text: answer },
       })),
     },
+    ...emoteGallery,
   ];
 
   return toJsonLd({ '@context': 'https://schema.org', '@graph': graph });
@@ -360,7 +390,7 @@ function buildRobots(siteUrl: string): string {
     'Allow: /',
     '',
     ...AI_CRAWLERS.flatMap((bot) => [`User-agent: ${bot}`, crawlerRule, '']),
-    ...(siteUrl ? [`Sitemap: ${siteUrl}/sitemap.xml`] : []),
+    ...(siteUrl ? [`Sitemap: ${siteUrl}/sitemap.xml`, `Sitemap: ${siteUrl}/sitemap-images.xml`] : []),
     '',
   ].join('\n');
 }
@@ -391,7 +421,24 @@ function buildLlmsTxt(siteUrl: string, locale: Locale): string {
 
 const sitemapImage = (siteUrl: string, path: string): string => `    <image:image><image:loc>${siteUrl}${path}</image:loc></image:image>`;
 
+// Images this site hosts. Fan art is left out on purpose: it lives on other hosts and belongs to its artists.
 const sitemapImagePaths = [seo.image.path, ...Object.values(heroImages), ...emoteNames.map((name) => emoteUrl(name))];
+
+/** Google's image sitemap: each page that shows images, with the images on it. Only the home page does, once per language. */
+function buildImageSitemap(siteUrl: string): string {
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">',
+    ...LOCALES.flatMap((locale) => [
+      '  <url>',
+      `    <loc>${pageUrl(siteUrl, locale, 'home')}</loc>`,
+      ...sitemapImagePaths.map((path) => sitemapImage(siteUrl, path)),
+      '  </url>',
+    ]),
+    '</urlset>',
+    '',
+  ].join('\n');
+}
 
 function buildSitemap(siteUrl: string): string {
   const alternates = (page: PageId): string[] => [
@@ -401,14 +448,13 @@ function buildSitemap(siteUrl: string): string {
 
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
     ...PAGES.flatMap((page) =>
       LOCALES.flatMap((locale) => [
         '  <url>',
         `    <loc>${pageUrl(siteUrl, locale, page)}</loc>`,
         ...(lastModified ? [`    <lastmod>${lastModified}</lastmod>`] : []),
         ...alternates(page),
-        ...(page === 'home' ? sitemapImagePaths.map((path) => sitemapImage(siteUrl, path)) : []),
         '  </url>',
       ]),
     ),
@@ -483,6 +529,7 @@ export function seoPlugin(rawSiteUrl: string): Plugin {
         return;
       }
       emit('sitemap.xml', buildSitemap(siteUrl));
+      emit('sitemap-images.xml', buildImageSitemap(siteUrl));
     },
     // Runs after the files are written: index.html becomes every page of every language (/en/, /en/supports/, /jp/ ...), so a direct visit or a refresh finds a real file. The root page becomes the language redirect.
     closeBundle() {
