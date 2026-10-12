@@ -5,6 +5,7 @@ export const id: Messages = {
 
   common: {
     loadFailed: 'Belum bisa dimuat. Coba lagi nanti ya.',
+    empty: 'Belum ada apa-apa di sini.',
     copyBlocked: 'Penyalinan diblokir di browser ini.',
     secretCode: 'Kode rahasia ditemukan! Badai konfeti terbuka.',
   },
@@ -16,19 +17,20 @@ export const id: Messages = {
   },
 
   header: {
-    brandLabel: (name) => `${name}, kembali ke atas`,
-    brandHomeLabel: (name) => `${name}, ke halaman utama`,
+    brandMenuLabel: (name) => `${name}, buka menu cepat`,
     primaryNav: 'Utama',
     mobileNav: 'Seluler',
-    soundOn: 'Nyalakan efek suara',
-    soundOff: 'Matikan efek suara',
+    soundOn: 'Sfx: nyala',
+    soundOff: 'Sfx: mati',
     openMenu: 'Buka menu',
     closeMenu: 'Tutup menu',
     language: 'Bahasa',
   },
 
   nav: {
+    home: 'Beranda',
     about: 'Tentang',
+    lore: 'Lore',
     schedule: 'Jadwal',
     emotes: 'Emote',
     join: 'Gabung',
@@ -82,8 +84,8 @@ export const id: Messages = {
     title: 'Konten',
     lead: 'Live stream, Shorts, dan video dari kanal YouTube Mizu.',
     tabsLabel: 'Jenis konten',
-    kinds: { live: 'Live stream', short: 'Shorts', vod: 'Video' },
-    empty: 'Belum ada apa-apa di sini.',
+    kinds: { live: 'Live stream', short: 'Shorts', vod: 'Video', song: 'Lagu' },
+    tags: { live: 'Live stream', short: 'Shorts', vod: 'Video', original: 'Lagu original', cover: 'Lagu cover' },
   },
 
   profile: {
@@ -167,7 +169,7 @@ export const id: Messages = {
   about: {
     title: 'Kenalan sama Mizu',
     lead: 'Kenali aku lebih dekat...',
-    storyTitle: 'Tentang',
+    storyTitle: 'Lore',
     profileTitle: 'Profil',
     likesTitle: 'Suka',
     dislikesTitle: 'Kurang suka',
