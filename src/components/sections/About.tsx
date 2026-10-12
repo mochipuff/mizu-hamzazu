@@ -5,6 +5,7 @@ import { useI18n } from '../../i18n/i18n.ts';
 import type { Localized } from '../../i18n/locales.ts';
 import type { Messages } from '../../i18n/messages/index.ts';
 import { Paw } from '../ui/Doodles.tsx';
+import { Notice } from '../ui/Notice.tsx';
 import { Panel } from '../ui/Panel.tsx';
 import { Reveal } from '../ui/Reveal.tsx';
 import { SectionHeading } from '../ui/SectionHeading.tsx';
@@ -29,11 +30,12 @@ export function About() {
   const { about } = t;
   const { status, data: preferences = [] } = useApi<Preference[]>('/api/preferences/');
   const labelsOf = (kind: Preference['kind']) => preferences.filter((preference) => preference.kind === kind);
-  const loadError = status === 'error' && (
-    <p className="load-error" role="alert">
-      {t.common.loadFailed}
-    </p>
-  );
+  const listNotice = (kind: Preference['kind']) =>
+    status === 'error' ? (
+      <Notice kind="error">{t.common.loadFailed}</Notice>
+    ) : (
+      status === 'ready' && labelsOf(kind).length === 0 && <Notice kind="empty">{t.common.empty}</Notice>
+    );
 
   return (
     <section id="about" className={styles.section} aria-labelledby="about-title">
@@ -79,7 +81,7 @@ export function About() {
                   <li key={id}>{label[locale]}</li>
                 ))}
               </ul>
-              {loadError}
+              {listNotice('like')}
             </Panel>
           </Reveal>
 
@@ -94,7 +96,7 @@ export function About() {
                   <li key={id}>{label[locale]}</li>
                 ))}
               </ul>
-              {loadError}
+              {listNotice('dislike')}
             </Panel>
           </Reveal>
         </div>
