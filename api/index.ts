@@ -1,5 +1,6 @@
+import { timingSafeEqual } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
-import { Hono, type MiddlewareHandler } from 'hono';
+import { Hono } from 'hono';
 
 const { SUPABASE_URL, SUPABASE_SECRET_KEY } = process.env;
 if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) throw new Error('SUPABASE_URL and SUPABASE_SECRET_KEY must be set');
@@ -40,19 +41,32 @@ interface FanartRow {
   postedAt: string;
 }
 
+interface VideoRow {
+  id: string;
+  title: string;
+  publishedAt: string;
+}
+
+interface YouTubePlaylistPage {
+  nextPageToken?: string;
+  items: { snippet: { title: string }; contentDetails: { videoId: string; videoPublishedAt?: string } }[];
+}
+
 const DAY_MS = 86_400_000;
 const cacheControl = (sMaxAge: number, staleWhileRevalidate: number): string => `public, s-maxage=${sMaxAge}, stale-while-revalidate=${staleWhileRevalidate}`;
 const SCHEDULE_CACHE = cacheControl(60, 300);
 const SLOW_CACHE = cacheControl(3_600, 86_400);
 
-const RATE_LIMIT = 30;
-const RATE_WINDOW_MS = 60_000;
-const RATE_MAX_TRACKED = 10_000;
-const PUBLIC_FEEDS = ['/api/schedule', '/api/preferences', '/api/notes', '/api/fanart/*'];
-const hits = new Map<string, { count: number; resetAt: number }>();
-
-const FANART_PAGE_SIZE = 6;
+const FANART_PAGE_SIZE = 12;
 const FANART_MAX_PAGE = 100;
+
+const YOUTUBE_API = 'https://www.googleapis.com/youtube/v3';
+const YOUTUBE_HANDLE = '@MizuHamzazu';
+// A channel id `UCxxx` has one auto-made playlist per kind of upload: `UULVxxx` live streams, `UUSHxxx` Shorts, `UULFxxx` regular videos.
+const VIDEO_PLAYLIST_PREFIX = { live: 'UULV', short: 'UUSH', vod: 'UULF' } as const;
+type VideoKind = keyof typeof VIDEO_PLAYLIST_PREFIX;
+const VIDEO_PAGE_SIZE = 30;
+const VIDEO_SYNC_MAX_PAGES = 20;
 
 const app = new Hono({ strict: false });
 
@@ -61,34 +75,65 @@ function unwrap<T>({ data, error }: { data: T | null; error: { message: string }
   return data;
 }
 
-const guardPublicFeed: MiddlewareHandler = async (c, next) => {
-  const now = Date.now();
-  
-  const ip = c.req.header('x-real-ip') ?? c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+const isVideoKind = (value: string): value is VideoKind => value in VIDEO_PLAYLIST_PREFIX;
 
-  if (hits.size >= RATE_MAX_TRACKED) {
-    for (const [key, entry] of hits) if (entry.resetAt <= now) hits.delete(key);
-    if (hits.size >= RATE_MAX_TRACKED) hits.clear();
-  }
-  let entry = hits.get(ip);
-  if (!entry || entry.resetAt <= now) {
-    entry = { count: 0, resetAt: now + RATE_WINDOW_MS };
-    hits.set(ip, entry);
-  }
-  if (++entry.count > RATE_LIMIT) {
-    c.header('Retry-After', String(Math.ceil((entry.resetAt - now) / 1000)));
-    c.header('Cache-Control', 'no-store');
-    return c.json({ error: 'Too Many Requests' }, 429);
-  }
+async function youtube<T>(path: string, params: Record<string, string>): Promise<T | null> {
+  const { YOUTUBE_API_KEY } = process.env;
+  if (!YOUTUBE_API_KEY) throw new Error('YOUTUBE_API_KEY must be set');
 
-  if (c.req.url.includes('?')) {
-    c.header('Cache-Control', 'no-store');
-    return c.json({ error: 'Query parameters are not accepted' }, 400);
-  }
-  await next();
-};
+  const response = await fetch(`${YOUTUBE_API}/${path}?${new URLSearchParams(params)}`, { headers: { 'x-goog-api-key': YOUTUBE_API_KEY } });
+  // A channel with no Shorts (or no streams) has no such playlist.
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error(`YouTube ${path} failed: ${response.status}`);
+  return (await response.json()) as T;
+}
 
-for (const path of PUBLIC_FEEDS) app.use(path, guardPublicFeed);
+async function fetchChannelVideos(channelId: string, kind: VideoKind) {
+  const playlistId = VIDEO_PLAYLIST_PREFIX[kind] + channelId.slice(2);
+  const rows: { id: string; kind: VideoKind; title: string; published_at: string }[] = [];
+  let pageToken: string | undefined;
+
+  for (let page = 0; page < VIDEO_SYNC_MAX_PAGES; page++) {
+    const result = await youtube<YouTubePlaylistPage>('playlistItems', { part: 'snippet,contentDetails', playlistId, maxResults: '50', ...(pageToken && { pageToken }) });
+    if (!result) break;
+    // Private and deleted videos stay in a playlist but have no publish date.
+    for (const { snippet, contentDetails } of result.items) {
+      if (contentDetails.videoPublishedAt) rows.push({ id: contentDetails.videoId, kind, title: snippet.title, published_at: contentDetails.videoPublishedAt });
+    }
+    if (!result.nextPageToken) break;
+    pageToken = result.nextPageToken;
+  }
+  return rows;
+}
+
+/** Called by the daily cron: copies the whole channel from YouTube into Supabase. */
+async function syncVideos(): Promise<void> {
+  const channel = await youtube<{ items?: { id: string }[] }>('channels', { part: 'id', forHandle: YOUTUBE_HANDLE });
+  const channelId = channel?.items?.[0]?.id;
+  if (!channelId) throw new Error(`YouTube channel ${YOUTUBE_HANDLE} not found`);
+
+  const rows = (await Promise.all((Object.keys(VIDEO_PLAYLIST_PREFIX) as VideoKind[]).map((kind) => fetchChannelVideos(channelId, kind)))).flat();
+  const { error } = await supabase.from('videos').upsert(rows);
+  if (error) throw new Error(`Supabase: ${error.message}`, { cause: error });
+}
+
+const readVideos = async (kind: VideoKind): Promise<VideoRow[]> =>
+  unwrap(
+    await supabase
+      .from('videos')
+      .select('id,title,publishedAt:published_at')
+      .eq('kind', kind)
+      .order('published_at', { ascending: false })
+      .limit(VIDEO_PAGE_SIZE)
+      .overrideTypes<VideoRow[], { merge: false }>(),
+  );
+
+// Every distinct URL is its own CDN cache key, so a query string would bypass the cache and reach the database.
+app.use('/api/*', async (c, next) => {
+  if (!c.req.url.includes('?')) return next();
+  c.header('Cache-Control', 'no-store');
+  return c.json({ error: 'Query parameters are not accepted' }, 400);
+});
 
 app.get('/api/schedule', async (c) => {
   const now = Date.now();
@@ -132,8 +177,10 @@ app.get('/api/notes', async (c) => {
 });
 
 app.get('/api/fanart/:page', async (c) => {
-  const page = Number(c.req.param('page'));
-  if (!Number.isInteger(page) || page < 1 || page > FANART_MAX_PAGE) {
+  // Digits only: `Number()` would also accept `0x10`, `1e1` or `+5`, each a separate cache key for the same page.
+  const raw = c.req.param('page');
+  const page = Number(raw);
+  if (!/^[1-9]\d{0,2}$/.test(raw) || page > FANART_MAX_PAGE) {
     c.header('Cache-Control', 'no-store');
     return c.json({ error: 'Not Found' }, 404);
   }
@@ -152,6 +199,29 @@ app.get('/api/fanart/:page', async (c) => {
 
   c.header('Cache-Control', SCHEDULE_CACHE);
   return c.json({ posts: rows.slice(0, FANART_PAGE_SIZE), hasMore: rows.length > FANART_PAGE_SIZE && page < FANART_MAX_PAGE });
+});
+
+app.get('/api/content/:kind', async (c) => {
+  const kind = c.req.param('kind');
+  if (!isVideoKind(kind)) {
+    c.header('Cache-Control', 'no-store');
+    return c.json({ error: 'Not Found' }, 404);
+  }
+
+  c.header('Cache-Control', SLOW_CACHE);
+  return c.json(await readVideos(kind));
+});
+
+// Vercel Cron calls this daily with `Authorization: Bearer $CRON_SECRET`.
+app.get('/api/videos/sync', async (c) => {
+  c.header('Cache-Control', 'no-store');
+  const { CRON_SECRET } = process.env;
+  const given = Buffer.from(c.req.header('authorization') ?? '');
+  const expected = Buffer.from(`Bearer ${CRON_SECRET}`);
+  if (!CRON_SECRET || given.length !== expected.length || !timingSafeEqual(given, expected)) return c.json({ error: 'Unauthorized' }, 401);
+
+  await syncVideos();
+  return c.json({ ok: true });
 });
 
 app.onError((error, c) => {

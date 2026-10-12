@@ -11,6 +11,7 @@ import { useI18n } from './i18n/i18n.ts';
 import { isLocale, localeFromPath } from './i18n/locales.ts';
 import { preferredLocale, usePage } from './i18n/navigation.ts';
 import { pageFromPath, pagePath } from './i18n/pages.ts';
+import { ContentPage } from './pages/ContentPage.tsx';
 import { HomePage } from './pages/HomePage.tsx';
 import { SupportsPage } from './pages/SupportsPage.tsx';
 
@@ -106,6 +107,7 @@ export function App() {
         <Route path="/:locale" element={<LocaleShell />}>
           <Route index element={<HomePage />} />
           <Route path="supports" element={<SupportsPage />} />
+          <Route path="content" element={<ContentPage />} />
         </Route>
         <Route path="*" element={<RedirectToLocale />} />
       </Routes>

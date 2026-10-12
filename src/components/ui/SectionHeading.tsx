@@ -7,10 +7,12 @@ import styles from './SectionHeading.module.css';
 interface SectionHeadingProps {
   headingId: string;
   title: string;
+  /** The heading level: `h1` for a page that has no other title, `h2` for a section. */
+  as?: 'h1' | 'h2';
   children?: ReactNode;
 }
 
-export function SectionHeading({ headingId, title, children }: SectionHeadingProps) {
+export function SectionHeading({ headingId, title, as: Heading = 'h2', children }: SectionHeadingProps) {
   const ref = useRef<HTMLElement>(null);
 
   useGsap(ref, () => {
@@ -23,9 +25,9 @@ export function SectionHeading({ headingId, title, children }: SectionHeadingPro
     <header ref={ref} className={styles.head}>
       <div className={styles.titleWrap}>
         <Sparkle className={styles.sparkleLeft} color="var(--sun)" />
-        <h2 id={headingId} className={styles.title}>
+        <Heading id={headingId} className={styles.title}>
           {title}
-        </h2>
+        </Heading>
         <Sparkle className={styles.sparkleRight} color="var(--rust)" />
       </div>
       <div className={styles.ornament} aria-hidden="true">

@@ -34,6 +34,7 @@ export const jp: Messages = {
     join: '参加',
     faq: 'FAQ',
     supports: 'サポート',
+    content: 'コンテンツ',
   },
 
   seo: {
@@ -71,6 +72,18 @@ export const jp: Messages = {
       inviteLead: '差し入れにメッセージを添えて送ると、この壁に貼られるかもしれません。',
       inviteCta: '差し入れを送る',
     },
+  },
+
+  content: {
+    seo: {
+      title: 'コンテンツ | Mizu Hamzazu',
+      description: 'Mizu Hamzazuの配信、ショート、動画をYouTubeからまとめてチェック。',
+    },
+    title: 'コンテンツ',
+    lead: 'MizuのYouTubeチャンネルの配信、ショート、動画。',
+    tabsLabel: 'コンテンツの種類',
+    kinds: { live: '配信', short: 'ショート', vod: '動画' },
+    empty: 'まだ何もありません。',
   },
 
   profile: {

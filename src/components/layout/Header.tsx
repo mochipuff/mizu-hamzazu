@@ -92,6 +92,11 @@ export function Header() {
   ));
   const links = [
     ...sectionLinks,
+    <li key="content">
+      <Link to={pagePath(locale, 'content')} className={styles.link} aria-current={page === 'content' ? 'page' : undefined} onClick={handleCloseMenu}>
+        {t.nav.content}
+      </Link>
+    </li>,
     <li key="supports">
       <Link to={pagePath(locale, 'supports')} className={styles.link} aria-current={page === 'supports' ? 'page' : undefined} onClick={handleCloseMenu}>
         {t.nav.supports}
