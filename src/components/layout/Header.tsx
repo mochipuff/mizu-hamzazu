@@ -10,9 +10,9 @@ import { Link } from '../ui/Link.tsx';
 import { LanguageSelect } from './LanguageSelect.tsx';
 import styles from './Header.module.css';
 
-const navIds = ['about', 'schedule', 'emotes', 'join', 'faq'] as const;
+const navIds = ['lore', 'schedule', 'emotes', 'join', 'faq'] as const;
 // The sections that live under the About menu. The others stay in the bar.
-const aboutMenuIds = ['about', 'schedule', 'emotes', 'faq'] as const;
+const aboutMenuIds = ['lore', 'schedule', 'emotes', 'faq'] as const;
 
 interface NavProps {
   isHome: boolean;
@@ -47,7 +47,7 @@ function useDismiss(open: boolean, close: () => void, root: RefObject<HTMLElemen
   }, [open, close, root, button]);
 }
 
-/** "About" opens a list of the sections of the home page that tell about Mizu. The same markup serves the desktop bar and the mobile panel. */
+/** "About" opens a list of the sections of the home page that tell about Mizu. The same markup serves the desktop bar and the mobile bubble. */
 function AboutMenu({ isHome, homePath, activeId, onNavigate }: NavProps) {
   const { t } = useI18n();
   const menuId = useId();
@@ -105,11 +105,13 @@ export function Header() {
   const [bubbleOpen, setBubbleOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
+  const menuRoot = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const brandRoot = useRef<HTMLDivElement>(null);
   const brandButton = useRef<HTMLButtonElement>(null);
 
   useDismiss(bubbleOpen, () => setBubbleOpen(false), brandRoot, brandButton);
+  useDismiss(open, () => setOpen(false), menuRoot, menuButton);
 
   // Highlights the section being read. The sections only exist on the home page, so `page` re-attaches the observer when another page brings its own.
   useEffect(() => {
@@ -143,28 +145,19 @@ export function Header() {
   useEffect(() => {
     if (!open) return undefined;
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      setOpen(false);
-      menuButton.current?.focus();
-    };
     const handleResize = () => {
       if (window.matchMedia('(min-width: 1024px)').matches) setOpen(false);
     };
 
-    document.addEventListener('keydown', handleKeyDown);
     window.addEventListener('resize', handleResize);
     panel.current?.querySelector<HTMLElement>('nav a, nav button')?.focus();
 
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('resize', handleResize);
-    };
+    return () => window.removeEventListener('resize', handleResize);
   }, [open]);
 
   const handleCloseMenu = () => setOpen(false);
 
-  // The same links fill the desktop bar and the mobile panel.
+  // The same links fill the desktop bar and the mobile bubble.
   const links = (
     <>
       <AboutMenu isHome={isHome} homePath={homePath} activeId={activeId} onNavigate={handleCloseMenu} />
@@ -208,9 +201,9 @@ export function Header() {
               <Icon name="home" size={20} />
               <span>{t.nav.home}</span>
             </Link>
-            <button type="button" className={styles.bubbleItem} data-on={sound.enabled} onClick={sound.toggle}>
+            <button type="button" className={styles.bubbleItem} data-on={sound.enabled} aria-pressed={sound.enabled} onClick={sound.toggle}>
               <Icon name={sound.enabled ? 'sound-on' : 'sound-off'} size={20} />
-              <span>{sound.enabled ? t.header.soundOff : t.header.soundOn}</span>
+              <span>{sound.enabled ? t.header.soundOn : t.header.soundOff}</span>
             </button>
           </div>
         </div>
@@ -223,27 +216,29 @@ export function Header() {
           <div className={styles.desktopLanguage}>
             <LanguageSelect />
           </div>
-          <button
-            ref={menuButton}
-            type="button"
-            className={`${styles.iconButton} ${styles.menuButton}`}
-            onClick={() => setOpen((current) => !current)}
-            aria-expanded={open}
-            aria-controls="mobile-menu"
-            aria-label={open ? t.header.closeMenu : t.header.openMenu}
-          >
-            <Icon name={open ? 'close' : 'menu'} size={22} />
-          </button>
-        </div>
-      </div>
+          <div ref={menuRoot} className={styles.menuWrap}>
+            <button
+              ref={menuButton}
+              type="button"
+              className={styles.iconButton}
+              onClick={() => setOpen((current) => !current)}
+              aria-expanded={open}
+              aria-controls="mobile-menu"
+              aria-label={open ? t.header.closeMenu : t.header.openMenu}
+            >
+              <Icon name={open ? 'close' : 'menu'} size={22} />
+            </button>
 
-      <div ref={panel} id="mobile-menu" className={styles.mobilePanel} hidden={!open}>
-        <div className={styles.mobileLanguage}>
-          <LanguageSelect />
+            <div ref={panel} id="mobile-menu" className={styles.mobilePanel} hidden={!open}>
+              <div className={styles.mobileLanguage}>
+                <LanguageSelect />
+              </div>
+              <nav aria-label={t.header.mobileNav}>
+                <ul className={styles.mobileList}>{links}</ul>
+              </nav>
+            </div>
+          </div>
         </div>
-        <nav aria-label={t.header.mobileNav}>
-          <ul className={styles.mobileList}>{links}</ul>
-        </nav>
       </div>
     </header>
   );

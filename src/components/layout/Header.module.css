@@ -61,7 +61,8 @@
   z-index: 40;
   display: grid;
   gap: 0.2rem;
-  min-width: 14rem;
+  width: max-content;
+  min-width: 11rem;
   padding: 0.4rem;
   border: var(--outline);
   border-radius: 20px;
@@ -90,14 +91,22 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.55rem 0.85rem;
+  width: 100%;
+  min-height: 2.6rem;
+  padding: 0.5rem 0.85rem;
   border: 0;
   border-radius: 14px;
   background: none;
   font-weight: 700;
+  line-height: 1.2;
   text-align: left;
   text-decoration: none;
+  white-space: nowrap;
   transition: background-color 0.2s;
+}
+
+.bubbleItem svg {
+  flex: none;
 }
 
 .bubbleItem:hover {
@@ -233,14 +242,35 @@
   background: var(--sun);
 }
 
+/* The menu button opens a speech bubble under it, like the brand bubble on the left. */
+.menuWrap {
+  position: relative;
+}
+
 .mobilePanel {
-  width: var(--container);
-  margin: 0.75rem auto 0;
-  padding: 0.75rem;
+  position: absolute;
+  top: calc(100% + 0.9rem);
+  right: 0;
+  z-index: 40;
+  width: min(17rem, calc(100vw - 2.5rem));
+  padding: 0.5rem;
   border: var(--outline);
-  border-radius: 28px;
+  border-radius: 22px;
   background: var(--white);
   box-shadow: var(--pop);
+}
+
+.mobilePanel::before {
+  content: '';
+  position: absolute;
+  top: -0.6rem;
+  right: 1.1rem;
+  width: 1rem;
+  height: 1rem;
+  border-top: var(--outline);
+  border-left: var(--outline);
+  background: var(--white);
+  rotate: 45deg;
 }
 
 .mobilePanel[hidden] {
@@ -253,8 +283,8 @@
 }
 
 .mobileList .link {
-  padding: 0.75rem 1rem;
-  font-size: 1.1rem;
+  padding: 0.6rem 0.9rem;
+  font-size: 1rem;
 }
 
 .mobileList .trigger {
@@ -282,8 +312,7 @@
     display: block;
   }
 
-  .menuButton,
-  .mobilePanel {
+  .menuWrap {
     display: none;
   }
 }
