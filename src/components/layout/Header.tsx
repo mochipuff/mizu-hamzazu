@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type RefObject } from 'react';
 import { useSound } from '../../context/sound.ts';
 import { site } from '../../config/site.ts';
 import { useI18n } from '../../i18n/i18n.ts';
@@ -11,6 +11,87 @@ import { LanguageSelect } from './LanguageSelect.tsx';
 import styles from './Header.module.css';
 
 const navIds = ['about', 'schedule', 'emotes', 'join', 'faq'] as const;
+// The sections that live under the About menu. The others stay in the bar.
+const aboutMenuIds = ['about', 'schedule', 'emotes', 'faq'] as const;
+
+interface NavProps {
+  isHome: boolean;
+  homePath: string;
+  activeId: string;
+  onNavigate: () => void;
+}
+
+/** From another page a section link goes back to the home page first. */
+const sectionTo = (isHome: boolean, homePath: string, id: string): string => (isHome ? `#${id}` : `${homePath}#${id}`);
+
+/** Closes a popup when something outside it is pressed or Escape is hit; Escape also gives the focus back to its button. */
+function useDismiss(open: boolean, close: () => void, root: RefObject<HTMLElement | null>, button: RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (event.target instanceof Node && !root.current?.contains(event.target)) close();
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      close();
+      button.current?.focus();
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open, close, root, button]);
+}
+
+/** "About" opens a list of the sections of the home page that tell about Mizu. The same markup serves the desktop bar and the mobile panel. */
+function AboutMenu({ isHome, homePath, activeId, onNavigate }: NavProps) {
+  const { t } = useI18n();
+  const menuId = useId();
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLLIElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
+  const close = () => setOpen(false);
+
+  useDismiss(open, close, root, button);
+
+  return (
+    <li ref={root} className={styles.group}>
+      <button
+        ref={button}
+        type="button"
+        className={`${styles.link} ${styles.trigger}`}
+        aria-expanded={open}
+        aria-controls={menuId}
+        aria-current={isHome && aboutMenuIds.some((id) => id === activeId) ? 'true' : undefined}
+        onClick={() => setOpen((current) => !current)}
+      >
+        {t.nav.about}
+        <Icon name="chevron-down" size={16} className={styles.chevron} />
+      </button>
+      <ul id={menuId} className={styles.submenu} hidden={!open}>
+        {aboutMenuIds.map((id) => (
+          <li key={id}>
+            <Link
+              to={sectionTo(isHome, homePath, id)}
+              className={styles.link}
+              aria-current={isHome && activeId === id ? 'true' : undefined}
+              onClick={() => {
+                close();
+                onNavigate();
+              }}
+            >
+              {t.nav[id]}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </li>
+  );
+}
 
 export function Header() {
   const { t, locale } = useI18n();
@@ -18,11 +99,17 @@ export function Header() {
   const isHome = page === 'home';
   const homePath = pagePath(locale, 'home');
   const sound = useSound();
+  const bubbleId = useId();
   const [activeId, setActiveId] = useState('');
   const [open, setOpen] = useState(false);
+  const [bubbleOpen, setBubbleOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
+  const brandRoot = useRef<HTMLDivElement>(null);
+  const brandButton = useRef<HTMLButtonElement>(null);
+
+  useDismiss(bubbleOpen, () => setBubbleOpen(false), brandRoot, brandButton);
 
   // Highlights the section being read. The sections only exist on the home page, so `page` re-attaches the observer when another page brings its own.
   useEffect(() => {
@@ -67,7 +154,7 @@ export function Header() {
 
     document.addEventListener('keydown', handleKeyDown);
     window.addEventListener('resize', handleResize);
-    panel.current?.querySelector<HTMLElement>('nav a')?.focus();
+    panel.current?.querySelector<HTMLElement>('nav a, nav button')?.focus();
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
@@ -77,44 +164,56 @@ export function Header() {
 
   const handleCloseMenu = () => setOpen(false);
 
-  // From another page a section link goes back to the home page first. The same links fill the desktop bar and the mobile panel.
-  const sectionLinks = navIds.map((id) => (
-    <li key={id}>
-      <Link
-        to={isHome ? `#${id}` : `${homePath}#${id}`}
-        className={styles.link}
-        aria-current={isHome && activeId === id ? 'true' : undefined}
-        onClick={handleCloseMenu}
-      >
-        {t.nav[id]}
-      </Link>
-    </li>
-  ));
-  const links = [
-    ...sectionLinks,
-    <li key="content">
-      <Link to={pagePath(locale, 'content')} className={styles.link} aria-current={page === 'content' ? 'page' : undefined} onClick={handleCloseMenu}>
-        {t.nav.content}
-      </Link>
-    </li>,
-    <li key="supports">
-      <Link to={pagePath(locale, 'supports')} className={styles.link} aria-current={page === 'supports' ? 'page' : undefined} onClick={handleCloseMenu}>
-        {t.nav.supports}
-      </Link>
-    </li>,
-  ];
+  // The same links fill the desktop bar and the mobile panel.
+  const links = (
+    <>
+      <AboutMenu isHome={isHome} homePath={homePath} activeId={activeId} onNavigate={handleCloseMenu} />
+      <li>
+        <Link to={sectionTo(isHome, homePath, 'join')} className={styles.link} aria-current={isHome && activeId === 'join' ? 'true' : undefined} onClick={handleCloseMenu}>
+          {t.nav.join}
+        </Link>
+      </li>
+      <li>
+        <Link to={pagePath(locale, 'content')} className={styles.link} aria-current={page === 'content' ? 'page' : undefined} onClick={handleCloseMenu}>
+          {t.nav.content}
+        </Link>
+      </li>
+      <li>
+        <Link to={pagePath(locale, 'supports')} className={styles.link} aria-current={page === 'supports' ? 'page' : undefined} onClick={handleCloseMenu}>
+          {t.nav.supports}
+        </Link>
+      </li>
+    </>
+  );
 
   return (
     <header className={styles.header} data-scrolled={scrolled}>
       <div className={`container ${styles.bar}`}>
-        <Link
-          to={isHome ? '#top' : homePath}
-          className={styles.brand}
-          aria-label={isHome ? t.header.brandLabel(site.name) : t.header.brandHomeLabel(site.name)}
-        >
-          <Paw className={styles.brandDrop} />
-          <span>{site.nickname}</span>
-        </Link>
+        <div ref={brandRoot} className={styles.brandWrap}>
+          <button
+            ref={brandButton}
+            type="button"
+            className={styles.brand}
+            aria-expanded={bubbleOpen}
+            aria-controls={bubbleId}
+            aria-label={t.header.brandMenuLabel(site.name)}
+            onClick={() => setBubbleOpen((current) => !current)}
+          >
+            <Paw className={styles.brandDrop} />
+            <span>{site.nickname}</span>
+          </button>
+
+          <div id={bubbleId} className={styles.bubble} hidden={!bubbleOpen}>
+            <Link to={isHome ? '#top' : homePath} className={styles.bubbleItem} onClick={() => setBubbleOpen(false)}>
+              <Icon name="home" size={20} />
+              <span>{t.nav.home}</span>
+            </Link>
+            <button type="button" className={styles.bubbleItem} data-on={sound.enabled} onClick={sound.toggle}>
+              <Icon name={sound.enabled ? 'sound-on' : 'sound-off'} size={20} />
+              <span>{sound.enabled ? t.header.soundOff : t.header.soundOn}</span>
+            </button>
+          </div>
+        </div>
 
         <nav className={styles.desktopNav} aria-label={t.header.primaryNav}>
           <ul className={styles.list}>{links}</ul>
@@ -124,15 +223,6 @@ export function Header() {
           <div className={styles.desktopLanguage}>
             <LanguageSelect />
           </div>
-          <button
-            type="button"
-            className={styles.iconButton}
-            onClick={sound.toggle}
-            aria-pressed={sound.enabled}
-            aria-label={sound.enabled ? t.header.soundOff : t.header.soundOn}
-          >
-            <Icon name={sound.enabled ? 'sound-on' : 'sound-off'} size={22} />
-          </button>
           <button
             ref={menuButton}
             type="button"
