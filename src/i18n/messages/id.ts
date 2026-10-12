@@ -34,6 +34,7 @@ export const id: Messages = {
     join: 'Gabung',
     faq: 'FAQ',
     supports: 'Dukungan',
+    content: 'Konten',
   },
 
   seo: {
@@ -71,6 +72,18 @@ export const id: Messages = {
       inviteLead: 'Kirim traktiran beserta pesan, dan catatanmu mungkin ikut ditempel di dinding ini.',
       inviteCta: 'Kirim traktiran',
     },
+  },
+
+  content: {
+    seo: {
+      title: 'Konten | Mizu Hamzazu',
+      description: 'Tonton live stream, Shorts, dan video Mizu Hamzazu dari YouTube di satu tempat.',
+    },
+    title: 'Konten',
+    lead: 'Live stream, Shorts, dan video dari kanal YouTube Mizu.',
+    tabsLabel: 'Jenis konten',
+    kinds: { live: 'Live stream', short: 'Shorts', vod: 'Video' },
+    empty: 'Belum ada apa-apa di sini.',
   },
 
   profile: {

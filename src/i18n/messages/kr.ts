@@ -34,6 +34,7 @@ export const kr: Messages = {
     join: '참여',
     faq: 'FAQ',
     supports: '후원',
+    content: '콘텐츠',
   },
 
   seo: {
@@ -71,6 +72,18 @@ export const kr: Messages = {
       inviteLead: '선물과 함께 메시지를 보내면 이 벽에 붙을지도 몰라요.',
       inviteCta: '선물 보내기',
     },
+  },
+
+  content: {
+    seo: {
+      title: '콘텐츠 | Mizu Hamzazu',
+      description: 'Mizu Hamzazu의 라이브 방송, 쇼츠, 영상을 YouTube에서 한자리에 모아 보세요.',
+    },
+    title: '콘텐츠',
+    lead: 'Mizu의 YouTube 채널에 올라온 방송, 쇼츠, 영상이에요.',
+    tabsLabel: '콘텐츠 종류',
+    kinds: { live: '라이브', short: '쇼츠', vod: '영상' },
+    empty: '아직 아무것도 없어요.',
   },
 
   profile: {

@@ -38,6 +38,7 @@ export const en = {
     join: 'Join',
     faq: 'FAQ',
     supports: 'Supports',
+    content: 'Content',
   },
 
   // Search engines, link previews and AI crawlers.
@@ -76,6 +77,18 @@ export const en = {
       inviteLead: 'Send a treat with a message and it might get pinned to this wall.',
       inviteCta: 'Send a treat',
     },
+  },
+
+  content: {
+    seo: {
+      title: 'Content | Mizu Hamzazu',
+      description: 'Watch Mizu Hamzazu’s streams, Shorts and videos from YouTube in one place.',
+    },
+    title: 'Content',
+    lead: 'Streams, Shorts and videos from Mizu’s YouTube channel.',
+    tabsLabel: 'Type of content',
+    kinds: { live: 'Streams', short: 'Shorts', vod: 'Videos' },
+    empty: 'Nothing here yet.',
   },
 
   profile: {
