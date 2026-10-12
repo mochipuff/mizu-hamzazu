@@ -1,5 +1,30 @@
 .section {
+  position: relative;
   padding-block: clamp(3rem, 8vw, 5.5rem);
+}
+
+/* Stickers along the edges. They sit under the content layer and ignore the pointer, so the art and the text always win. */
+.decor {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.deco {
+  position: absolute;
+  opacity: 0.85;
+}
+
+.deco svg {
+  width: 100%;
+  height: auto;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
 }
 
 .grid {
