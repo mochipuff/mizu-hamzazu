@@ -91,9 +91,17 @@ body::before {
   }
 }
 
+/* The page fills at least the screen, and <main> takes the leftover height, so the footer sits at the bottom even when the content is short or empty. */
 #root {
   position: relative;
   isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+#root > main {
+  flex: 1 0 auto;
 }
 
 h1,
@@ -184,11 +192,4 @@ a {
   html {
     scroll-behavior: auto;
   }
-}
-
-.load-error {
-  margin-top: 1rem;
-  color: var(--ink-soft);
-  font-weight: 700;
-  text-align: center;
 }
