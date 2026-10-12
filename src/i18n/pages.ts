@@ -2,12 +2,12 @@ import { isLocale, type Locale } from './locales.ts';
 import type { Messages } from './messages/index.ts';
 
 /** Every page of the site. Each one exists once per language: /<locale>/<slug>. */
-export const PAGES = ['home', 'supports'] as const;
+export const PAGES = ['home', 'supports', 'content'] as const;
 
 export type PageId = (typeof PAGES)[number];
 
 /** The URL segment after the language. The home page has none. */
-const SLUGS: Record<PageId, string> = { home: '', supports: 'supports' };
+const SLUGS: Record<PageId, string> = { home: '', supports: 'supports', content: 'content' };
 
 const pageBySlug = new Map<string, PageId>(PAGES.map((page) => [SLUGS[page], page]));
 
@@ -23,4 +23,4 @@ export function pageFromPath(pathname: string): PageId {
   return pageBySlug.get(isLocale(first) ? second : first) ?? 'home';
 }
 
-export const pageSeo = (t: Messages, page: PageId): { title: string; description: string } => (page === 'supports' ? t.supports.seo : t.seo);
+export const pageSeo = (t: Messages, page: PageId): { title: string; description: string } => (page === 'home' ? t.seo : t[page].seo);
