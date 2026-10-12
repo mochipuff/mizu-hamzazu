@@ -4,13 +4,14 @@
 
 .grid {
   display: grid;
-  gap: 1.5rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
   width: min(100%, 64rem);
   margin-inline: auto;
 }
 
 .slot {
-  padding: 0.9rem 0.6rem 0.4rem;
+  padding: 0.9rem 0.2rem 0.3rem;
 }
 
 /* A polaroid taped onto the page. */
@@ -108,9 +109,45 @@
   margin-top: 1.5rem;
 }
 
+/* Two columns of six on a phone: the cards shrink to fit. */
+@media (max-width: 759px) {
+  .card {
+    padding: 0.5rem 0.5rem 0.7rem;
+  }
+
+  .card::before {
+    width: 52px;
+    height: 18px;
+    top: -10px;
+  }
+
+  .caption {
+    margin-top: 0.5rem;
+    padding-right: 1.4rem;
+  }
+
+  .username {
+    font-size: 1.15rem;
+  }
+
+  .date {
+    font-size: 0.95rem;
+  }
+
+  .heart {
+    right: 0.45rem;
+    bottom: 0.45rem;
+    width: 1.3rem;
+  }
+}
+
 @media (min-width: 480px) {
   .grid {
-    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+
+  .slot {
+    padding: 0.9rem 0.6rem 0.4rem;
   }
 }
 
