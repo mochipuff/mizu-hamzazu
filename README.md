@@ -194,12 +194,15 @@ create index if not exists viewers_notes_approved_idx on public.viewers_notes (i
 
 ```sql
 create table public.fanarts (
+create table if not exists public.fanarts (
   id bigint generated always as identity primary key,
   username text not null check (btrim(username) <> '' and username !~ '^@'),
   media_url text not null check (media_url ~ '^https://'),
   posted_at timestamptz not null
 );
-create index fanarts_posted_at_idx on public.fanarts (posted_at desc, id desc);
+
+create index if not exists fanarts_posted_at_idx on public.fanarts (posted_at desc, id desc);
+
 alter table public.fanarts enable row level security;
 ```
 
@@ -211,14 +214,16 @@ drop table if exists public.donations;
 - **Existing database** (Content page added): run this before deploying the API, then add `YOUTUBE_API_KEY` in Vercel (Google Cloud Console, enable YouTube Data API v3, create an API key; mark it **Sensitive**). Also add `CRON_SECRET` (at least 32 random characters, mark it **Sensitive**). After deploying, run the cron job once from Vercel, Project Settings, Cron Jobs, Run, to fill the table; from then on it refreshes daily, so new uploads appear without any manual step.
 
 ```sql
-create table public.videos (
+create table if not exists public.videos (
   id text primary key,
   kind text not null check (kind in ('live', 'short', 'vod')),
   label text check (label in ('original', 'cover')),
   title text not null,
   published_at timestamptz not null
 );
-create index videos_kind_published_at_idx on public.videos (kind, published_at desc);
+
+create index if not exists videos_kind_published_at_idx on public.videos (kind, published_at desc);
+
 alter table public.videos enable row level security;
 ```
 
