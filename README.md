@@ -81,7 +81,8 @@ The public routes accept no query string (`/api/notes/?x=1` answers `400`), beca
 
 ```sql
 -- Keeps updated_at honest on every edit, whether it comes from the Table Editor, the API or another service.
-create function public.set_updated_at() returns trigger
+-- [FIX]: Menggunakan CREATE OR REPLACE FUNCTION agar tidak error "same argument types" jika dijalankan ulang
+create or replace function public.set_updated_at() returns trigger
 language plpgsql
 set search_path = ''
 as $$
@@ -92,7 +93,7 @@ end;
 $$;
 
 -- The "Likes" and "Not so much" lists of the Lore section. One row per item, written in all four site languages.
-create table public.likes_dislikes (
+create table if not exists public.likes_dislikes (
   id bigint generated always as identity primary key,
   kind text not null check (kind in ('like', 'dislike')),
   label jsonb not null check (label ?& array['en', 'jp', 'id', 'kr']),
@@ -102,8 +103,7 @@ create table public.likes_dislikes (
 );
 
 -- The notes pinned on the Supports page, newest first. Only rows with is_approved = true are served.
--- Default true suits notes you insert yourself; use `default false` if notes ever arrive from a public form, then approve them by hand.
-create table public.viewers_notes (
+create table if not exists public.viewers_notes (
   id bigint generated always as identity primary key,
   name text not null check (btrim(name) <> ''),
   note text not null check (btrim(note) <> ''),
@@ -112,22 +112,20 @@ create table public.viewers_notes (
   updated_at timestamptz not null default now()
 );
 
-create index viewers_notes_approved_idx on public.viewers_notes (is_approved, created_at desc);
+create index if not exists viewers_notes_approved_idx on public.viewers_notes (is_approved, created_at desc);
 
--- The fan art on the Supports page, newest post first. `username` is the poster's handle on social media, without the @.
--- `media_url` is a direct https link to the image; its host must be listed in `img-src` of the Content-Security-Policy in vercel.json.
-create table public.fanarts (
+-- The fan art on the Supports page, newest post first.
+create table if not exists public.fanarts (
   id bigint generated always as identity primary key,
   username text not null check (btrim(username) <> '' and username !~ '^@'),
   media_url text not null check (media_url ~ '^https://'),
   posted_at timestamptz not null
 );
 
-create index fanarts_posted_at_idx on public.fanarts (posted_at desc, id desc);
+create index if not exists fanarts_posted_at_idx on public.fanarts (posted_at desc, id desc);
 
--- The Content page. `id` is the YouTube video id, `kind` is live (stream), short or vod (regular video).
--- `label` is set by hand: original or cover turns the video into a Song, whatever its kind. Filled by the daily GET /api/videos/sync/ (Vercel Cron).
-create table public.videos (
+-- The Content page.
+create table if not exists public.videos (
   id text primary key,
   kind text not null check (kind in ('live', 'short', 'vod')),
   label text check (label in ('original', 'cover')),
@@ -135,9 +133,13 @@ create table public.videos (
   published_at timestamptz not null
 );
 
-create index videos_kind_published_at_idx on public.videos (kind, published_at desc);
+create index if not exists videos_kind_published_at_idx on public.videos (kind, published_at desc);
 
+-- [FIX]: Menghapus trigger lama (jika ada) sebelum membuatnya kembali agar tidak error duplicate trigger
+drop trigger if exists likes_dislikes_updated_at on public.likes_dislikes;
 create trigger likes_dislikes_updated_at before update on public.likes_dislikes for each row execute function public.set_updated_at();
+
+drop trigger if exists viewers_notes_updated_at on public.viewers_notes;
 create trigger viewers_notes_updated_at before update on public.viewers_notes for each row execute function public.set_updated_at();
 
 -- RLS on with no policy: only the secret key (the API) can read or write. The browser never talks to Supabase.
