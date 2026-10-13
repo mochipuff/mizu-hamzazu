@@ -7,7 +7,7 @@ import { getProfileFacts } from '../src/data/content.ts';
 import { criticalImages, emoteNames, emoteUrl, heroImages } from '../src/data/images.ts';
 import { browserLanguageMap, DEFAULT_LOCALE, LOCALE_STORAGE_KEY, LOCALES, localeFromPath, localeInfo, localePath, type Locale } from '../src/i18n/locales.ts';
 import { messages } from '../src/i18n/messages/index.ts';
-import { pageFromPath, PAGES, pagePath, pageSeo, type PageId } from '../src/i18n/pages.ts';
+import { FORBIDDEN_PATH, HIDDEN_PAGES, isHiddenPage, pageFromPath, PAGES, pagePath, pageSeo, type PageId, type PublicPageId } from '../src/i18n/pages.ts';
 
 const AI_CRAWLERS = [
   'GPTBot',
@@ -190,7 +190,7 @@ function buildJsonLd(siteUrl: string, locale: Locale): string {
 }
 
 /** Home > this page, so results show the path instead of the bare URL. */
-function buildBreadcrumbJsonLd(siteUrl: string, locale: Locale, page: Exclude<PageId, 'home'>): string {
+function buildBreadcrumbJsonLd(siteUrl: string, locale: Locale, page: Exclude<PublicPageId, 'home'>): string {
   const t = messages[locale];
   const trail = [
     { name: site.name, url: pageUrl(siteUrl, locale, 'home') },
@@ -212,7 +212,7 @@ function buildHead(siteUrl: string, locale: Locale, page: PageId): HtmlTagDescri
     { tag: 'title', children: escapeHtml(title) },
     meta({ name: 'description', content: description }),
     meta({ name: 'keywords', content: t.seo.keywords.join(', ') }),
-    meta({ name: 'robots', content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' }),
+    meta({ name: 'robots', content: isHiddenPage(page) ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' }),
     meta({ name: 'theme-color', content: site.themeColor }),
     meta({ name: 'author', content: site.name }),
     meta({ name: 'application-name', content: site.name }),
@@ -231,7 +231,7 @@ function buildHead(siteUrl: string, locale: Locale, page: PageId): HtmlTagDescri
     link({ rel: 'alternate', type: 'text/plain', href: `${localePath(locale)}llms.txt`, title: 'Summary for AI assistants' }),
     ...(page === 'home'
       ? [{ tag: 'script', attrs: { type: 'application/ld+json' }, children: buildJsonLd(siteUrl, locale) }]
-      : siteUrl
+      : siteUrl && !isHiddenPage(page)
         ? [{ tag: 'script', attrs: { type: 'application/ld+json' }, children: buildBreadcrumbJsonLd(siteUrl, locale, page) }]
         : []),
     ...criticalImages.map((href) => link({ rel: 'preload', as: 'image', type: 'image/webp', href, fetchpriority: 'high' })),
@@ -241,7 +241,8 @@ function buildHead(siteUrl: string, locale: Locale, page: PageId): HtmlTagDescri
     tags.push(meta({ name: 'twitter:site', content: twitterHandle }), meta({ name: 'twitter:creator', content: twitterHandle }));
   }
 
-  if (siteUrl) {
+  // A hidden page is not a version of anything: no canonical, no hreflang, no link preview.
+  if (siteUrl && !isHiddenPage(page)) {
     const imageUrl = `${siteUrl}${seo.image.path}`;
     tags.push(
       link({ rel: 'canonical', href: canonical }),
@@ -542,12 +543,18 @@ export function seoPlugin(rawSiteUrl: string): Plugin {
       }
 
       for (const locale of LOCALES) {
-        for (const page of PAGES) {
+        for (const page of [...PAGES, ...HIDDEN_PAGES]) {
           const folder = join(outDir, pagePath(locale, page));
           mkdirSync(folder, { recursive: true });
           writeFileSync(join(folder, 'index.html'), fillTemplate(template, locale, siteUrl, page));
         }
       }
+
+      // The API sends a visitor who opens an address directly to the language-less /forbidden/, so it needs a real file; the app then moves the visitor to their language.
+      const forbiddenFolder = join(outDir, FORBIDDEN_PATH);
+      mkdirSync(forbiddenFolder, { recursive: true });
+      writeFileSync(join(forbiddenFolder, 'index.html'), fillTemplate(template, DEFAULT_LOCALE, siteUrl, 'forbidden'));
+
       writeFileSync(rootFile, buildRootPage(siteUrl));
     },
   };
