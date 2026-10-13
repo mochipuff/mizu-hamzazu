@@ -3,6 +3,7 @@ import { useApi } from '../../data/api.ts';
 import { supportLinks, type ViewerNote } from '../../data/supports.ts';
 import { useI18n } from '../../i18n/i18n.ts';
 import { ButtonLink } from '../ui/Button.tsx';
+import { Notice } from '../ui/Notice.tsx';
 import { Paper } from '../ui/Paper.tsx';
 import { Reveal } from '../ui/Reveal.tsx';
 import { SectionHeading } from '../ui/SectionHeading.tsx';
@@ -26,6 +27,9 @@ export function ViewerNotes() {
         <SectionHeading headingId="notes-title" title={notes.title}>
           {notes.lead}
         </SectionHeading>
+
+        {status === 'error' && <Notice kind="error">{t.common.loadFailed}</Notice>}
+        {status === 'ready' && viewerNotes.length === 0 && <Notice kind="empty">{t.common.empty}</Notice>}
 
         <ul className={styles.wall} aria-label={notes.listLabel}>
           {viewerNotes.map(({ id, name, text }, index) => (
@@ -59,11 +63,6 @@ export function ViewerNotes() {
             </li>
           )}
         </ul>
-        {status === 'error' && (
-          <p className="load-error" role="alert">
-            {t.common.loadFailed}
-          </p>
-        )}
       </div>
     </section>
   );

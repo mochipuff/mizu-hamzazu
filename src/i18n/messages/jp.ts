@@ -5,6 +5,7 @@ export const jp: Messages = {
 
   common: {
     loadFailed: '読み込めませんでした。しばらくしてからもう一度お試しください。',
+    empty: 'まだ何もありません。',
     copyBlocked: 'このブラウザではコピーがブロックされています。',
     secretCode: '隠しコード発見！紙吹雪の嵐が解放されました。',
   },
@@ -16,19 +17,20 @@ export const jp: Messages = {
   },
 
   header: {
-    brandLabel: (name) => `${name}、ページの先頭へ戻る`,
-    brandHomeLabel: (name) => `${name}、ホームページへ`,
+    brandMenuLabel: (name) => `${name}、クイックメニューを開く`,
     primaryNav: 'メイン',
     mobileNav: 'モバイル',
-    soundOn: '効果音をオンにする',
-    soundOff: '効果音をオフにする',
+    soundOn: 'SFX: オン',
+    soundOff: 'SFX: オフ',
     openMenu: 'メニューを開く',
     closeMenu: 'メニューを閉じる',
     language: '言語',
   },
 
   nav: {
+    home: 'ホーム',
     about: '紹介',
+    lore: 'ロア',
     schedule: 'スケジュール',
     emotes: 'エモート',
     join: '参加',
@@ -82,8 +84,8 @@ export const jp: Messages = {
     title: 'コンテンツ',
     lead: 'MizuのYouTubeチャンネルの配信、ショート、動画。',
     tabsLabel: 'コンテンツの種類',
-    kinds: { live: '配信', short: 'ショート', vod: '動画' },
-    empty: 'まだ何もありません。',
+    kinds: { live: '配信', short: 'ショート', vod: '動画', song: '歌' },
+    tags: { live: '配信', short: 'ショート', vod: '動画', original: 'オリジナル曲', cover: 'カバー曲' },
   },
 
   profile: {
@@ -167,7 +169,7 @@ export const jp: Messages = {
   about: {
     title: 'Mizuを知ろう',
     lead: 'もっと私のことを知ってね…',
-    storyTitle: '自己紹介',
+    storyTitle: 'ロア',
     profileTitle: 'プロフィール',
     likesTitle: '好きなもの',
     dislikesTitle: '苦手なもの',

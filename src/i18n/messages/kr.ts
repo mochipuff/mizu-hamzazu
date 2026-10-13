@@ -5,6 +5,7 @@ export const kr: Messages = {
 
   common: {
     loadFailed: '불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
+    empty: '아직 아무것도 없어요.',
     copyBlocked: '이 브라우저에서는 복사가 차단되어 있어요.',
     secretCode: '비밀 코드 발견! 색종이 폭풍이 열렸어요.',
   },
@@ -16,19 +17,20 @@ export const kr: Messages = {
   },
 
   header: {
-    brandLabel: (name) => `${name}, 맨 위로 이동`,
-    brandHomeLabel: (name) => `${name}, 홈페이지로`,
+    brandMenuLabel: (name) => `${name}, 빠른 메뉴 열기`,
     primaryNav: '주요',
     mobileNav: '모바일',
-    soundOn: '효과음 켜기',
-    soundOff: '효과음 끄기',
+    soundOn: 'SFX: 켜짐',
+    soundOff: 'SFX: 꺼짐',
     openMenu: '메뉴 열기',
     closeMenu: '메뉴 닫기',
     language: '언어',
   },
 
   nav: {
+    home: '홈',
     about: '소개',
+    lore: '로어',
     schedule: '스케줄',
     emotes: '이모티콘',
     join: '참여',
@@ -82,8 +84,8 @@ export const kr: Messages = {
     title: '콘텐츠',
     lead: 'Mizu의 YouTube 채널에 올라온 방송, 쇼츠, 영상이에요.',
     tabsLabel: '콘텐츠 종류',
-    kinds: { live: '라이브', short: '쇼츠', vod: '영상' },
-    empty: '아직 아무것도 없어요.',
+    kinds: { live: '라이브', short: '쇼츠', vod: '영상', song: '노래' },
+    tags: { live: '라이브', short: '쇼츠', vod: '영상', original: '오리지널 곡', cover: '커버 곡' },
   },
 
   profile: {
@@ -167,7 +169,7 @@ export const kr: Messages = {
   about: {
     title: 'Mizu 알아보기',
     lead: '나에 대해 더 알아가 봐요...',
-    storyTitle: '소개',
+    storyTitle: '로어',
     profileTitle: '프로필',
     likesTitle: '좋아하는 것',
     dislikesTitle: '별로인 것',

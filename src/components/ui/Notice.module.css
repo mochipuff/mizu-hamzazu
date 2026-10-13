@@ -1,0 +1,26 @@
+.notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  width: min(100%, 32rem);
+  margin: 1.5rem auto 0;
+  padding: 1rem 1.4rem;
+  border: 3px dashed var(--ink);
+  border-radius: 20px;
+  background: var(--pastel-butter);
+  box-shadow: var(--pop-small);
+  font-weight: 700;
+  text-align: center;
+}
+
+.notice[data-kind='error'] {
+  background: var(--pastel-pink);
+}
+
+.icon {
+  flex: none;
+  width: 2.2rem;
+  height: 2.2rem;
+  rotate: -12deg;
+}

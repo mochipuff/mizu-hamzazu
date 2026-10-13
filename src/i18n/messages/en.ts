@@ -8,6 +8,7 @@ export const en = {
 
   common: {
     loadFailed: 'This could not be loaded. Please try again later.',
+    empty: 'Nothing here yet.',
     copyBlocked: 'Copy is blocked in this browser.',
     secretCode: 'Secret code found! Confetti storm unlocked.',
   },
@@ -20,19 +21,20 @@ export const en = {
   },
 
   header: {
-    brandLabel: (name: string) => `${name}, back to top`,
-    brandHomeLabel: (name: string) => `${name}, go to the home page`,
+    brandMenuLabel: (name: string) => `${name}, open the quick menu`,
     primaryNav: 'Primary',
     mobileNav: 'Mobile',
-    soundOn: 'Turn sound effects on',
-    soundOff: 'Turn sound effects off',
+    soundOn: 'Sfx: on',
+    soundOff: 'Sfx: off',
     openMenu: 'Open menu',
     closeMenu: 'Close menu',
     language: 'Language',
   },
 
   nav: {
+    home: 'Home',
     about: 'About',
+    lore: 'Lore',
     schedule: 'Schedule',
     emotes: 'Emotes',
     join: 'Join',
@@ -87,8 +89,8 @@ export const en = {
     title: 'Content',
     lead: 'Streams, Shorts and videos from Mizu’s YouTube channel.',
     tabsLabel: 'Type of content',
-    kinds: { live: 'Streams', short: 'Shorts', vod: 'Videos' },
-    empty: 'Nothing here yet.',
+    kinds: { live: 'Streams', short: 'Shorts', vod: 'Videos', song: 'Songs' },
+    tags: { live: 'Stream', short: 'Short', vod: 'Video', original: 'Original song', cover: 'Cover song' },
   },
 
   profile: {
@@ -172,7 +174,7 @@ export const en = {
   about: {
     title: 'Meet Mizu',
     lead: 'Know me better...',
-    storyTitle: 'About',
+    storyTitle: 'Lore',
     profileTitle: 'Profile',
     likesTitle: 'Likes',
     dislikesTitle: 'Not so much',

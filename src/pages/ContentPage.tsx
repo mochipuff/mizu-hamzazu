@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button } from '../components/ui/Button.tsx';
+import { Notice } from '../components/ui/Notice.tsx';
 import { SectionHeading } from '../components/ui/SectionHeading.tsx';
 import { WaveDivider } from '../components/ui/WaveDivider.tsx';
 import { useApi } from '../data/api.ts';
@@ -7,47 +8,53 @@ import { useI18n } from '../i18n/i18n.ts';
 import { localeInfo } from '../i18n/locales.ts';
 import styles from './ContentPage.module.css';
 
-const KINDS = ['live', 'short', 'vod'] as const;
+// `song` is not a kind of upload but a label on one: the API gathers every video labelled as a song here, whatever its kind.
+const TABS = ['live', 'short', 'vod', 'song'] as const;
 
-type Kind = (typeof KINDS)[number];
+type Tab = (typeof TABS)[number];
+type Kind = Exclude<Tab, 'song'>;
 
 interface Video {
   id: string;
+  kind: Kind;
+  label: 'original' | 'cover' | null;
   title: string;
   publishedAt: string;
 }
 
 const videoUrl = (kind: Kind, id: string): string => (kind === 'short' ? `https://www.youtube.com/shorts/${id}` : `https://www.youtube.com/watch?v=${id}`);
 
-function VideoList({ kind }: { kind: Kind }) {
+function VideoList({ tab }: { tab: Tab }) {
   const { t, locale } = useI18n();
-  const videos = useApi<Video[]>(`/api/content/${kind}/`);
+  const videos = useApi<Video[]>(`/api/content/${tab}/`);
 
-  if (videos.status === 'error') {
-    return (
-      <p className="load-error" role="alert">
-        {t.common.loadFailed}
-      </p>
-    );
-  }
+  if (videos.status === 'error') return <Notice kind="error">{t.common.loadFailed}</Notice>;
   if (videos.status !== 'ready') return null;
-  if (videos.data.length === 0) return <p className="load-error">{t.content.empty}</p>;
+  if (videos.data.length === 0) return <Notice kind="empty">{t.common.empty}</Notice>;
 
   const formatDate = new Intl.DateTimeFormat(localeInfo[locale].htmlLang, { dateStyle: 'medium' }).format;
 
   return (
-    <ul className={styles.grid} data-kind={kind} aria-label={t.content.kinds[kind]}>
-      {videos.data.map(({ id, title, publishedAt }) => (
-        <li key={id}>
-          <a className={styles.card} href={videoUrl(kind, id)} target="_blank" rel="noopener noreferrer">
-            <img className={styles.thumb} src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`} alt="" loading="lazy" decoding="async" />
-            <span className={styles.title}>{title}</span>
-            <time className={styles.date} dateTime={publishedAt}>
-              {formatDate(new Date(publishedAt))}
-            </time>
-          </a>
-        </li>
-      ))}
+    <ul className={styles.grid} data-kind={tab} aria-label={t.content.kinds[tab]}>
+      {videos.data.map(({ id, kind, label, title, publishedAt }) => {
+        const tag = label ?? kind;
+        return (
+          <li key={id}>
+            <a className={styles.card} href={videoUrl(kind, id)} target="_blank" rel="noopener noreferrer">
+              <img className={styles.thumb} src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`} alt="" loading="lazy" decoding="async" />
+              <span className={styles.title}>{title}</span>
+              <span className={styles.meta}>
+                <span className={styles.tag} data-tag={tag}>
+                  {t.content.tags[tag]}
+                </span>
+                <time className={styles.date} dateTime={publishedAt}>
+                  {formatDate(new Date(publishedAt))}
+                </time>
+              </span>
+            </a>
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -55,7 +62,7 @@ function VideoList({ kind }: { kind: Kind }) {
 export function ContentPage() {
   const { t } = useI18n();
   const { content } = t;
-  const [kind, setKind] = useState<Kind>('live');
+  const [tab, setTab] = useState<Tab>('live');
 
   return (
     <>
@@ -67,14 +74,14 @@ export function ContentPage() {
             </SectionHeading>
 
             <div className={styles.tabs} role="group" aria-label={content.tabsLabel}>
-              {KINDS.map((id) => (
-                <Button key={id} variant={id === kind ? 'sun' : 'secondary'} size="sm" aria-pressed={id === kind} onClick={() => setKind(id)}>
+              {TABS.map((id) => (
+                <Button key={id} variant={id === tab ? 'sun' : 'secondary'} size="sm" aria-pressed={id === tab} onClick={() => setTab(id)}>
                   {content.kinds[id]}
                 </Button>
               ))}
             </div>
 
-            <VideoList key={kind} kind={kind} />
+            <VideoList key={tab} tab={tab} />
           </div>
         </section>
       </main>
