@@ -5,6 +5,7 @@ export const kr: Messages = {
 
   common: {
     loadFailed: '불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
+    loading: '불러오는 중…',
     empty: '아직 아무것도 없어요.',
     copyBlocked: '이 브라우저에서는 복사가 차단되어 있어요.',
     secretCode: '비밀 코드 발견! 색종이 폭풍이 열렸어요.',
@@ -88,6 +89,18 @@ export const kr: Messages = {
     tags: { live: '라이브', short: '쇼츠', vod: '영상', original: '오리지널 곡', cover: '커버 곡' },
   },
 
+  // Where the API sends a visitor who opens one of its addresses in the browser (see api/index.ts).
+  forbidden: {
+    seo: {
+      title: '접근 금지 | Mizu Hamzazu',
+      description: '이 주소는 직접 열 수 없습니다.',
+    },
+    sticker: '오류 403',
+    title: '접근 금지',
+    lead: '데이터는 굴속에서 안전하게 보관되고 있어요. 이 주소는 직접 열 수 없으니 웹사이트를 이용해 주세요.',
+    homeCta: '홈으로 돌아가기',
+  },
+
   profile: {
     tagline: '인도네시아 햄스터 버튜버: 프리토크, 힐링 게임, 노래 방송.',
     bio: 'Mizu Hamzazu는 2021년 11월 1일에 데뷔한 인도네시아 버추얼 유튜버(VTuber)입니다. 햄스터 캐릭터로, YouTube와 Twitch에서 프리토크, 힐링 게임, 노래 방송, 그리고 생산적인 방송 #RABUATIF를 진행하며, 팬 "Zutopian"과는 Discord 서버 Hamzazu Palace에서 함께 어울립니다.',
@@ -153,6 +166,8 @@ export const kr: Messages = {
     liveNow: '지금 라이브 중',
     nextStream: '다음 방송',
     joinStream: '방송 참여하기',
+    nowLive: '지금 라이브',
+    nowLiveOn: (platform) => `${platform}에서 라이브 중, 방송 열기`,
     startsIn: (days, hours, minutes) => `${days}일 ${hours}시간 ${minutes}분 후 시작`,
     units: { day: '일', hour: '시간', minute: '분' },
     spinHint: '쳇바퀴를 돌려보세요. 반응해 줄 거예요.',

@@ -8,6 +8,7 @@ export const en = {
 
   common: {
     loadFailed: 'This could not be loaded. Please try again later.',
+    loading: 'Loading…',
     empty: 'Nothing here yet.',
     copyBlocked: 'Copy is blocked in this browser.',
     secretCode: 'Secret code found! Confetti storm unlocked.',
@@ -93,6 +94,18 @@ export const en = {
     tags: { live: 'Stream', short: 'Short', vod: 'Video', original: 'Original song', cover: 'Cover song' },
   },
 
+  // Where the API sends a visitor who opens one of its addresses in the browser (see api/index.ts).
+  forbidden: {
+    seo: {
+      title: 'Forbidden | Mizu Hamzazu',
+      description: 'This address is not open to visitors.',
+    },
+    sticker: 'error 403',
+    title: 'Forbidden',
+    lead: 'Mizu’s data stays safe in the burrow. This address can’t be opened directly, so please use the website instead.',
+    homeCta: 'Back to home',
+  },
+
   profile: {
     tagline: 'Indonesian hamster VTuber: freetalk, cozy games and karaoke.',
     bio: 'Mizu Hamzazu is an Indonesian virtual youtuber (VTuber) who debuted on November 1, 2021. She is a hamster who streams freetalk, cozy games, karaoke and the productive #RABUATIF stream on YouTube and Twitch, and hangs out with her fans, the Zutopian, in the Hamzazu Palace Discord.',
@@ -158,6 +171,8 @@ export const en = {
     liveNow: 'Live right now',
     nextStream: 'Next stream',
     joinStream: 'Join the stream',
+    nowLive: 'Now live',
+    nowLiveOn: (platform: string) => `Now live on ${platform}, open the stream`,
     startsIn: (days: number, hours: number, minutes: number) => `Starts in ${days} days, ${hours} hours, ${minutes} minutes`,
     units: { day: 'd', hour: 'h', minute: 'm' },
     spinHint: 'Give the wheel a spin, she reacts.',
