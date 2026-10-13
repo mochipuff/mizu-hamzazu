@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button } from '../components/ui/Button.tsx';
+import { ImagePlaceholder, LoadingImage } from '../components/ui/LoadingImage.tsx';
 import { Notice } from '../components/ui/Notice.tsx';
 import { SectionHeading } from '../components/ui/SectionHeading.tsx';
 import { WaveDivider } from '../components/ui/WaveDivider.tsx';
@@ -22,14 +23,38 @@ interface Video {
   publishedAt: string;
 }
 
+// The API keeps 12 videos per category, so the placeholders fill the same grid and nothing jumps when the list arrives.
+const SKELETON_COUNT = 12;
+
 const videoUrl = (kind: Kind, id: string): string => (kind === 'short' ? `https://www.youtube.com/shorts/${id}` : `https://www.youtube.com/watch?v=${id}`);
+
+/** Cards in the shape of the real ones, with an animated thumbnail and two bars for the title, while the list is on its way. */
+function VideoSkeleton({ tab }: { tab: Tab }) {
+  const { t } = useI18n();
+
+  return (
+    <ul className={styles.grid} data-kind={tab} aria-busy="true" aria-label={t.common.loading}>
+      {Array.from({ length: SKELETON_COUNT }, (_, index) => (
+        <li key={index}>
+          <div className={`${styles.card} ${styles.pending}`} aria-hidden="true">
+            <span className={styles.thumb}>
+              <ImagePlaceholder />
+            </span>
+            <span className={styles.bar} />
+            <span className={`${styles.bar} ${styles.barShort}`} />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 function VideoList({ tab }: { tab: Tab }) {
   const { t, locale } = useI18n();
   const videos = useApi<Video[]>(`/api/content/${tab}/`);
 
   if (videos.status === 'error') return <Notice kind="error">{t.common.loadFailed}</Notice>;
-  if (videos.status !== 'ready') return null;
+  if (videos.status !== 'ready') return <VideoSkeleton tab={tab} />;
   if (videos.data.length === 0) return <Notice kind="empty">{t.common.empty}</Notice>;
 
   const formatDate = new Intl.DateTimeFormat(localeInfo[locale].htmlLang, { dateStyle: 'medium' }).format;
@@ -41,7 +66,7 @@ function VideoList({ tab }: { tab: Tab }) {
         return (
           <li key={id}>
             <a className={styles.card} href={videoUrl(kind, id)} target="_blank" rel="noopener noreferrer">
-              <img className={styles.thumb} src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`} alt="" loading="lazy" decoding="async" />
+              <LoadingImage className={styles.thumb} src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`} alt="" loading="lazy" decoding="async" />
               <span className={styles.title}>{title}</span>
               <span className={styles.meta}>
                 <span className={styles.tag} data-tag={tag}>

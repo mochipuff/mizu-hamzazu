@@ -5,6 +5,7 @@ export const jp: Messages = {
 
   common: {
     loadFailed: '読み込めませんでした。しばらくしてからもう一度お試しください。',
+    loading: '読み込み中…',
     empty: 'まだ何もありません。',
     copyBlocked: 'このブラウザではコピーがブロックされています。',
     secretCode: '隠しコード発見！紙吹雪の嵐が解放されました。',
@@ -88,6 +89,18 @@ export const jp: Messages = {
     tags: { live: '配信', short: 'ショート', vod: '動画', original: 'オリジナル曲', cover: 'カバー曲' },
   },
 
+  // Where the API sends a visitor who opens one of its addresses in the browser (see api/index.ts).
+  forbidden: {
+    seo: {
+      title: 'アクセス禁止 | Mizu Hamzazu',
+      description: 'このアドレスには直接アクセスできません。',
+    },
+    sticker: 'エラー 403',
+    title: 'アクセス禁止',
+    lead: 'データは巣穴の中で大切に守られています。このアドレスは直接開けないので、ウェブサイトからご利用ください。',
+    homeCta: 'ホームに戻る',
+  },
+
   profile: {
     tagline: 'インドネシアのハムスターVTuber。フリートーク、まったりゲーム、歌枠。',
     bio: 'Mizu Hamzazuは、2021年11月1日にデビューしたインドネシア出身のバーチャルYouTuber（VTuber）。ハムスターの女の子で、YouTubeとTwitchでフリートーク、まったりゲーム、歌枠、そして生産的な配信「#RABUATIF」をお届けしています。ファンの「Zutopian」とは、Discordサーバー「Hamzazu Palace」で交流しています。',
@@ -153,6 +166,8 @@ export const jp: Messages = {
     liveNow: 'ただいま配信中',
     nextStream: '次の配信',
     joinStream: '配信に参加',
+    nowLive: 'ライブ配信中',
+    nowLiveOn: (platform) => `${platform}で配信中、配信を開く`,
     startsIn: (days, hours, minutes) => `開始まであと${days}日${hours}時間${minutes}分`,
     units: { day: '日', hour: '時間', minute: '分' },
     spinHint: 'ホイールを回してみて。反応してくれるよ。',

@@ -1,0 +1,155 @@
+.section {
+  padding-block: clamp(2.5rem, 7vw, 4.5rem) clamp(3rem, 7vw, 5rem);
+}
+
+.stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  text-align: center;
+}
+
+/* a stitched ribbon label, like the one on the supports page */
+.ribbon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 1.5rem;
+  border: var(--outline);
+  border-radius: 8px;
+  background: var(--pastel-pink);
+  box-shadow: var(--pop-small);
+  font-family: var(--font-hand);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+  rotate: -3deg;
+}
+
+.ribbon::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 2px dashed rgb(255 255 255 / 0.9);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* the padlock rattles now and then, as if someone tried the door */
+.lock {
+  transform-origin: 50% 85%;
+  animation: rattle 3.6s ease-in-out infinite;
+}
+
+.title {
+  font-size: clamp(3.4rem, 13vw, 7rem);
+  color: var(--drop);
+  paint-order: stroke fill;
+  -webkit-text-stroke: 0.2em var(--white);
+  filter: drop-shadow(0.05em 0.07em 0 var(--ink));
+  rotate: -1.5deg;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.lead {
+  width: min(100%, 34rem);
+  margin-top: 0.6rem;
+  margin-bottom: 0.6rem;
+  font-family: var(--font-hand);
+  font-size: clamp(1.4rem, 3.6vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.35;
+  text-wrap: pretty;
+}
+
+.deco {
+  position: absolute;
+  z-index: -1;
+  width: clamp(2.4rem, 7vw, 4rem);
+  rotate: var(--turn, 0deg);
+  animation: bob 4.5s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  pointer-events: none;
+}
+
+.star {
+  --turn: 12deg;
+
+  top: 1.2rem;
+  right: 3%;
+}
+
+.heart {
+  --turn: -14deg;
+
+  top: 3rem;
+  left: 2%;
+}
+
+.paw,
+.sparkle {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .paw,
+  .sparkle {
+    display: block;
+  }
+
+  .paw {
+    --turn: -10deg;
+
+    bottom: 2rem;
+    left: 8%;
+    width: clamp(2rem, 5vw, 3.2rem);
+  }
+
+  .sparkle {
+    top: 40%;
+    right: 12%;
+    width: 2.2rem;
+  }
+}
+
+@keyframes bob {
+  50% {
+    translate: 0 -0.6rem;
+    scale: 1.06;
+  }
+}
+
+@keyframes rattle {
+  0%,
+  70%,
+  100% {
+    rotate: 0deg;
+  }
+
+  75% {
+    rotate: -16deg;
+  }
+
+  80% {
+    rotate: 13deg;
+  }
+
+  85% {
+    rotate: -9deg;
+  }
+
+  90% {
+    rotate: 5deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deco,
+  .lock {
+    animation: none;
+  }
+}

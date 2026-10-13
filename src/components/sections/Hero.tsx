@@ -9,18 +9,49 @@ import { getNextOccurrence, getStatus, splitDuration } from '../../lib/schedule.
 import { HamsterWheelScene } from '../character/HamsterWheelScene.tsx';
 import { ButtonLink } from '../ui/Button.tsx';
 import { Sparkle, Starfish } from '../ui/Doodles.tsx';
+import { LiveButton } from '../ui/LiveButton.tsx';
 import { platformIcon } from '../ui/platformIcon.ts';
 import styles from './Hero.module.css';
 
 const pad = (value: number): string => String(value).padStart(2, '0');
 
-function NextStream() {
-  const { t } = useI18n();
+/** The stream that is on now or else the next one, and whether it is on. */
+function useNextStream() {
   const now = useNow();
   const { slots } = useStreamSlots();
-  const dotRef = useRef<HTMLSpanElement>(null);
   const occurrence = getNextOccurrence(slots, now);
-  const live = occurrence ? getStatus(occurrence, now) === 'live' : false;
+  return { now, occurrence, live: occurrence ? getStatus(occurrence, now) === 'live' : false };
+}
+
+/** Watch buttons for YouTube and Twitch. The one for the platform that is streaming right now turns into the animated Now live button. */
+function HeroActions() {
+  const { t } = useI18n();
+  const { occurrence, live } = useNextStream();
+  const livePlatform = live ? occurrence?.slot.platform : undefined;
+
+  return (
+    <div className={styles.actions}>
+      {site.platforms
+        .filter((platform) => platform.id === 'youtube' || platform.id === 'twitch')
+        .map((platform, index) =>
+          platform.id === livePlatform ? (
+            <LiveButton key={platform.id} size="lg" href={platform.liveUrl} aria-label={t.hero.nowLiveOn(platform.label)}>
+              {t.hero.nowLive}
+            </LiveButton>
+          ) : (
+            <ButtonLink key={platform.id} variant={index === 0 ? 'primary' : 'secondary'} size="lg" icon={platformIcon[platform.id]} href={platform.url}>
+              {t.platforms[platform.id].cta}
+            </ButtonLink>
+          ),
+        )}
+    </div>
+  );
+}
+
+function NextStream() {
+  const { t } = useI18n();
+  const { now, occurrence, live } = useNextStream();
+  const dotRef = useRef<HTMLSpanElement>(null);
 
   useGsap(
     dotRef,
@@ -94,21 +125,7 @@ export function Hero() {
           </h1>
           <p className={styles.intro}>{t.hero.intro}</p>
 
-          <div className={styles.actions}>
-            {site.platforms
-              .filter((platform) => platform.id === 'youtube' || platform.id === 'twitch')
-              .map((platform, index) => (
-                <ButtonLink
-                  key={platform.id}
-                  variant={index === 0 ? 'primary' : 'secondary'}
-                  size="lg"
-                  icon={platformIcon[platform.id]}
-                  href={platform.url}
-                >
-                  {t.platforms[platform.id].cta}
-                </ButtonLink>
-              ))}
-          </div>
+          <HeroActions />
 
           <NextStream />
         </div>

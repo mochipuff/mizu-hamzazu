@@ -40,17 +40,37 @@
   transform: translateY(-3px) rotate(-0.6deg);
 }
 
+/* The frame of a thumbnail. `LoadingImage` fills it with the picture, the skeleton with the placeholder. */
 .thumb {
+  position: relative;
   display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
   border: 2px solid var(--ink);
   background: var(--pastel-sky);
-  object-fit: cover;
+  overflow: hidden;
 }
 
 .grid[data-kind='short'] .thumb {
   aspect-ratio: 9 / 16;
+}
+
+/* A card that is only a placeholder: it neither lifts on hover nor takes the pointer. */
+.pending {
+  pointer-events: none;
+}
+
+.bar {
+  display: block;
+  height: 1rem;
+  border-radius: 999px;
+  background: var(--shallows);
+  animation: pulse 1.3s ease-in-out infinite alternate;
+}
+
+.barShort {
+  width: 55%;
+  animation-delay: 0.2s;
 }
 
 .title {
@@ -104,6 +124,22 @@
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--ink-soft);
+}
+
+@keyframes pulse {
+  from {
+    opacity: 0.45;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar {
+    animation: none;
+  }
 }
 
 @media (min-width: 560px) {

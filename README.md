@@ -75,6 +75,20 @@ Five more routes of `api/index.ts` read Supabase through the same secret key (RL
 
 Only this site's own pages may call the API: other origins get `403` (CORS plus an origin check). Allowed are `VITE_SITE_URL`, the Vercel production domain, `ALLOWED_ORIGINS`, and outside production the Vercel preview URLs and `localhost:3000` / `localhost:5173`.
 
+**Opening an API address in the browser shows the Forbidden page, never data.** A visitor who types `/api/schedule/` in the address bar, follows a link to it or puts it in a frame is sent (`307`) to `/forbidden/`, which the app moves to `/<locale>/forbidden/` (`src/pages/ForbiddenPage.tsx`, in all four languages, `noindex`). It is decided before any database call, in two places:
+
+1. `vercel.json`, first entry of `redirects`: matches `Sec-Fetch-Dest: document | iframe | frame | fencedframe | embed | object` on `/api/*`. This runs before the CDN cache, so a response cached for the site's own `fetch()` can never be served to a page that opens the same address.
+2. `api/index.ts`, `opensAsPage()`: the same test inside the function, plus a fallback for browsers that send no `Sec-Fetch-*` headers (they still ask for `text/html`). Every API response also carries `Vary: Origin, Accept, Sec-Fetch-Site, Sec-Fetch-Dest`.
+
+What this does and does not do: it keeps the data out of the address bar, links, frames and other sites' tags. It cannot hide what the page itself shows: the site's `fetch()` calls are visible in the browser's developer tools, and a command-line client can send any header it likes. Keep every API response to the fields the page really displays (as today), and never put anything in it that must stay private.
+
+After a deploy, check it from a terminal (the first command must answer `307` with `location: /forbidden/`, the second `200` with JSON):
+
+```bash
+curl -si -H 'Sec-Fetch-Dest: document' -H 'Sec-Fetch-Mode: navigate' -H 'Sec-Fetch-Site: none' https://your-domain.tld/api/schedule/ | head -5
+curl -si -H 'Sec-Fetch-Dest: empty' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: same-origin' https://your-domain.tld/api/schedule/ | head -5
+```
+
 The public routes accept no query string (`/api/notes/?x=1` answers `400`), because every distinct URL would miss the CDN cache and hit the database. The function has no rate limiter of its own (a counter in one serverless instance does not hold). Add one in the Vercel Firewall (Project, Firewall, New Rule): path starts with `/api/`, action Rate Limit, fixed window 60 s, about 60 requests per IP. Optionally add a second rule that denies `/api/` requests with a non-empty query string, so they never reach the function (Hobby allows one rate-limit rule per project).
 
 1. Run this in the Supabase SQL editor (tables, view, RLS):
@@ -262,14 +276,18 @@ curl "$SUPABASE_URL/rest/v1/fanarts?select=id,username,media_url&order=posted_at
 | Profile facts that are the same in every language (height, debut, birthday, fan name, socials, aliases). Empty values (like `illustrator` until it is known) are never published | `src/config/site.ts` (`profile`, `fanName`) |
 | **All text**, in English, Japanese, Indonesian and Korean: UI labels, SEO title/description, bio, FAQ, emote names, form messages | `src/i18n/messages/{en,jp,id,kr}.ts` |
 | Language list, URL codes (`/en/`, `/jp/`, `/id/`, `/kr/`), device-language detection, saved choice | `src/i18n/locales.ts`, `src/i18n/navigation.ts` |
-| Routes (`/<locale>/`, `/<locale>/supports/`, `/<locale>/content/`), redirect for URLs without a language | `src/App.tsx`, page slugs in `src/i18n/pages.ts`, sections in `src/pages/` |
+| Routes (`/<locale>/`, `/<locale>/supports/`, `/<locale>/content/`, and the hidden `/<locale>/forbidden/`), redirect for URLs without a language | `src/App.tsx`, page slugs in `src/i18n/pages.ts`, sections in `src/pages/` |
 | Per-language, per-page HTML files, meta tags, hreflang, JSON-LD, robots.txt (AI crawler rules), llms.txt (one per language too), sitemap.xml, sitemap-images.xml, no-JS fallback HTML, the `/` language redirect | `vite/seoPlugin.ts` |
 | Animations (GSAP + ScrollTrigger, reduced-motion aware: with reduced motion nothing animates and CSS shows the final look) | `src/lib/motion.ts`, `src/hooks/useGsap.ts`, `Reveal.tsx` |
 | Membership tier badges | `TIER_LEVELS` in `FloatingBadges.tsx`, `public/membership/tier-1.webp` to `tier-6.webp` (1:1, replace the placeholders) |
 | Clover and branch decorations | `Clover` / `Branch` in `Doodles.tsx`, `Garland.tsx`, `SectionHeading.tsx` |
 | Header. Desktop: a bar with About (dropdown with Lore, Schedule, Emotes, FAQ), Join, Content, Supports and the language menu. Below 1024 px the menu button opens a popup bubble with the language menu and the same links. The brand pill opens a second bubble with Home and the sound switch (`Sfx: on` / `Sfx: off`, remembered in `localStorage` as `mizu:sound`, off by default; the effects are synthesized with the Web Audio API, the site ships no audio files) | `src/components/layout/Header.tsx`, `Header.module.css`, `src/context/sound.ts` |
 | Home sections, in order: Hero, Lore (`id="lore"`: the lore card, profile, likes, not so much, stream types), Schedule, Emotes, Join, FAQ. The Lore link in the About dropdown points at `#lore`; the dropdown button itself keeps the label `nav.about` | `src/pages/HomePage.tsx`, `src/components/sections/`, `navIds` in `Header.tsx` |
-| Fan art decorations (stickers along both edges of the section). Fixed zigzag, the same on every visit, behind the grid | `DECORATION_COUNT`, `SIZES` and `TILTS` in `Fanart.tsx` |
+| Fan art decorations (stickers along both edges of the section). Fixed zigzag, the same on every visit, behind the grid. They pop in on scroll, drift at their own speed while scrolling and fly a small loop of their own when idle (three nested layers, GSAP through `useGsap`; with reduced motion they sit still) | `DECORATION_COUNT`, `SIZES`, `TILTS`, `PARALLAX` and the `useGsap` call in `Fanart.tsx` |
+| Emotes: every emote sits in the same square tile and keeps its own proportions (`object-fit: contain`), so images that are not exactly 1:1 are not stretched | `.face` in `Emotes.module.css` |
+| Hero watch buttons: YouTube and Twitch. While the schedule says a stream is on, the button of that stream's platform becomes the animated **Now live** button (pulsing dot, rippling ring, sheen) and opens the live page; otherwise it is the normal `Watch on ...` button | `HeroActions` in `Hero.tsx`, `LiveButton.tsx`, texts `hero.nowLive` / `hero.nowLiveOn` |
+| Content page loading: skeleton cards while the list loads, and every thumbnail shows an animated placeholder (sliding stripes, hopping paw) until its image arrives, then fades in. A failed image keeps a calm placeholder. Reusable for any image: `<LoadingImage className="..." src alt />` | `LoadingImage.tsx`, `VideoSkeleton` in `ContentPage.tsx` |
+| Forbidden page, shown when a browser opens an API address (see Supports, likes and notes backend) | `src/pages/ForbiddenPage.tsx`, `forbidden` in the messages, `HIDDEN_PAGES` in `src/i18n/pages.ts` |
 | Emotes, hero art, first-paint images | `src/data/images.ts` |
 | Stream schedule: table in Supabase, API in `api/index.ts`, client request in `src/data/schedule.ts`, date maths in `src/lib/schedule.ts`. Likes, viewer notes and fan art: tables in Supabase, same API file, shared client hook `src/data/api.ts`, support links and note type in `src/data/supports.ts`, the fan art section in `src/components/sections/Fanart.tsx`. The words are in `src/i18n/messages` | `api/index.ts`, `src/data/api.ts`, `src/data/schedule.ts`, `src/data/supports.ts` |
 | Loading screen markup + styles / logic | `index.html` (inline critical CSS; keep the `<!--locale-head-->` and `<!--locale-noscript-->` markers, the build fails without them) / `src/main.tsx` |
@@ -287,7 +305,8 @@ The header menu switches language without a reload and remembers the choice.
 - Text with a value in it is a function, for example `iAm: (name) => ...`, so each language can put the value where its grammar wants it.
 - To add a language: add its code to `LOCALES` and `localeInfo` in `src/i18n/locales.ts`, a `src/i18n/messages/<code>.ts` file, register it in `messages/index.ts`, and add its language subtag to `browserLanguageMap` in `src/i18n/locales.ts`.
 - `npm run build` writes one file per language and page (`dist/<code>/index.html`, `dist/<code>/supports/index.html`, `dist/<code>/content/index.html`) with its own title, meta tags and hreflang links (JSON-LD on the home page), so search engines see each language and a direct visit or refresh of any page finds a real file.
-- To add a page: add it to `PAGES` and `SLUGS` in `src/i18n/pages.ts`, a `<Route>` in `src/App.tsx`, and its `seo` text in the messages.
+- To add a page: add it to `PAGES` and `SLUGS` in `src/i18n/pages.ts`, a `<Route>` in `src/App.tsx`, and its `seo` text in the messages. A page that must never be listed by search engines (like `forbidden`) goes in `HIDDEN_PAGES` instead: it gets a file per language with `noindex`, and no sitemap entry, canonical or hreflang.
+- `npm run build` also writes `dist/forbidden/index.html`, the language-less address the API sends browsers to.
 - Stream titles in the `stream_slots` table are the real YouTube titles and are not translated; their descriptions are (`description` holds `en`, `jp`, `id`, `kr`).
 
 ## Conventions

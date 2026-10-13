@@ -12,6 +12,7 @@ import { isLocale, localeFromPath } from './i18n/locales.ts';
 import { preferredLocale, usePage } from './i18n/navigation.ts';
 import { pageFromPath, pagePath } from './i18n/pages.ts';
 import { ContentPage } from './pages/ContentPage.tsx';
+import { ForbiddenPage } from './pages/ForbiddenPage.tsx';
 import { HomePage } from './pages/HomePage.tsx';
 import { SupportsPage } from './pages/SupportsPage.tsx';
 
@@ -47,7 +48,7 @@ function KeepPage() {
   return null;
 }
 
-/** `/`, `/supports/` and `/xx/` become the same page in a real language. Unknown paths land on the home page, as they always did. */
+/** `/`, `/supports/`, `/forbidden/` (where the API sends a browser that opens one of its addresses) and `/xx/` become the same page in a real language. Unknown paths land on the home page, as they always did. */
 function RedirectToLocale() {
   const { pathname, search, hash } = useLocation();
   const locale = localeFromPath(pathname) ?? preferredLocale();
@@ -108,6 +109,7 @@ export function App() {
           <Route index element={<HomePage />} />
           <Route path="supports" element={<SupportsPage />} />
           <Route path="content" element={<ContentPage />} />
+          <Route path="forbidden" element={<ForbiddenPage />} />
         </Route>
         <Route path="*" element={<RedirectToLocale />} />
       </Routes>

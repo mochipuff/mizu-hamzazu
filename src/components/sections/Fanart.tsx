@@ -1,7 +1,9 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { load } from '../../data/api.ts';
+import { useGsap } from '../../hooks/useGsap.ts';
 import { useI18n } from '../../i18n/i18n.ts';
 import { localeInfo } from '../../i18n/locales.ts';
+import { gsap, IDLE, POP } from '../../lib/motion.ts';
 import { Button } from '../ui/Button.tsx';
 import { Paw } from '../ui/Doodles.tsx';
 import { Notice } from '../ui/Notice.tsx';
@@ -38,6 +40,8 @@ const SHAPES = [Flower, Cloud, Pin, Paw, Heart] as const;
 const SIZES = [44, 36, 40, 32] as const;
 const TILTS = [-14, 10, -6, 16, -18, 8] as const;
 const DECORATION_COUNT = 14;
+// How far each sticker drifts against the scroll, in px. They cycle, so neighbours move at different speeds.
+const PARALLAX = [30, 55, 40, 70] as const;
 
 // A fixed zigzag down the two edges of the section, behind the grid: same spot on every visit, never two stickers side by side, never covering the art.
 const decorations: Decoration[] = Array.from({ length: DECORATION_COUNT }, (_, id) => ({
@@ -54,6 +58,46 @@ export function Fanart() {
   const { fanart } = t.supports;
   const language = localeInfo[locale].htmlLang;
   const [feed, setFeed] = useState<Feed>({ posts: [], page: 0, hasMore: true, status: 'loading' });
+  const decorRef = useRef<HTMLDivElement>(null);
+
+  // Each layer owns different properties, so the three animations never fight over a transform (same idea as StreamDecor).
+  // Scroll: the stickers pop in the first time the section is seen, then drift at their own speed as it scrolls past.
+  // Idle: each one flies a small loop of its own, drifting towards the content, so none moves in lockstep.
+  useGsap(decorRef, () => {
+    const section = decorRef.current?.closest('section');
+    if (!section) return;
+
+    gsap.from('[data-layer="pop"]', {
+      scale: 0,
+      rotation: -60,
+      opacity: 0,
+      duration: 0.8,
+      ease: POP,
+      stagger: 0.07,
+      scrollTrigger: { trigger: section, start: 'top 80%', once: true },
+    });
+
+    gsap.utils.toArray<HTMLElement>('[data-layer="parallax"]').forEach((layer, index) => {
+      const reach = PARALLAX[index % PARALLAX.length] ?? 0;
+      gsap.fromTo(layer, { y: -reach }, { y: reach, ease: 'none', scrollTrigger: { trigger: section, start: 'top bottom', end: 'bottom top', scrub: 0.6 } });
+    });
+
+    gsap.utils.toArray<HTMLElement>('[data-layer="float"]').forEach((layer, index) => {
+      const inward = index % 2 === 0 ? 1 : -1;
+      const reach = 10 + (index % 4) * 4;
+      const leg = 1.6 + (index % 3) * 0.4;
+      gsap.to(layer, {
+        keyframes: [
+          { x: inward * reach, y: -reach, rotation: 14, duration: leg },
+          { x: inward * reach * 0.3, y: reach * 0.7, rotation: -12, duration: leg },
+          { x: 0, y: 0, rotation: 0, duration: leg },
+        ],
+        easeEach: IDLE,
+        repeat: -1,
+        delay: index * 0.2,
+      });
+    });
+  });
 
   // Page 1 loads with the section, every older page only when "Load more" is clicked.
   const loadPage = (page: number) => {
@@ -83,10 +127,16 @@ export function Fanart() {
 
   return (
     <section id="fanart" className={styles.section} aria-labelledby="fanart-title">
-      <div className={styles.decor} aria-hidden="true">
+      <div ref={decorRef} className={styles.decor} aria-hidden="true">
         {decorations.map(({ id, Shape, top, side, size, tilt }) => (
           <span key={id} className={styles.deco} style={{ top: `${top}%`, [side]: 0, width: size, rotate: `${tilt}deg` }}>
-            <Shape />
+            <span className={styles.layer} data-layer="pop">
+              <span className={styles.layer} data-layer="parallax">
+                <span className={styles.layer} data-layer="float">
+                  <Shape />
+                </span>
+              </span>
+            </span>
           </span>
         ))}
       </div>

@@ -5,6 +5,7 @@ export const id: Messages = {
 
   common: {
     loadFailed: 'Belum bisa dimuat. Coba lagi nanti ya.',
+    loading: 'Memuat…',
     empty: 'Belum ada apa-apa di sini.',
     copyBlocked: 'Penyalinan diblokir di browser ini.',
     secretCode: 'Kode rahasia ditemukan! Badai konfeti terbuka.',
@@ -88,6 +89,18 @@ export const id: Messages = {
     tags: { live: 'Live stream', short: 'Shorts', vod: 'Video', original: 'Lagu original', cover: 'Lagu cover' },
   },
 
+  // Where the API sends a visitor who opens one of its addresses in the browser (see api/index.ts).
+  forbidden: {
+    seo: {
+      title: 'Akses Ditolak | Mizu Hamzazu',
+      description: 'Alamat ini tidak bisa dibuka langsung.',
+    },
+    sticker: 'error 403',
+    title: 'Akses Ditolak',
+    lead: 'Data Mizu aman di dalam sarang. Alamat ini tidak bisa dibuka langsung, jadi silakan gunakan situsnya.',
+    homeCta: 'Kembali ke beranda',
+  },
+
   profile: {
     tagline: 'VTuber hamster Indonesia: freetalk, cozy games, dan karaoke.',
     bio: 'Mizu Hamzazu adalah virtual youtuber (VTuber) asal Indonesia yang debut pada 1 November 2021. Ia seekor hamster yang streaming freetalk, cozy games, karaoke, dan stream produktif #RABUATIF di YouTube dan Twitch, serta nongkrong bareng para penggemarnya, Zutopian, di Discord Hamzazu Palace.',
@@ -153,6 +166,8 @@ export const id: Messages = {
     liveNow: 'Sedang live sekarang',
     nextStream: 'Stream berikutnya',
     joinStream: 'Gabung stream',
+    nowLive: 'Sedang live',
+    nowLiveOn: (platform) => `Sedang live di ${platform}, buka siarannya`,
     startsIn: (days, hours, minutes) => `Mulai dalam ${days} hari, ${hours} jam, ${minutes} menit`,
     units: { day: 'hr', hour: 'j', minute: 'mnt' },
     spinHint: 'Putar rodanya, nanti dia bereaksi.',

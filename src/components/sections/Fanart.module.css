@@ -3,7 +3,7 @@
   padding-block: clamp(3rem, 8vw, 5.5rem);
 }
 
-/* Stickers along the edges. They sit under the content layer and ignore the pointer, so the art and the text always win. */
+/* Stickers along the edges. They sit under the content layer and ignore the pointer, so the art and the text always win. They fly (see `useGsap` in Fanart.tsx); with reduced motion nothing runs and they rest where the zigzag puts them. */
 .decor {
   position: absolute;
   inset: 0;
@@ -16,6 +16,11 @@
   position: absolute;
   opacity: 0.85;
   scale: 0.6;
+}
+
+/* The layers GSAP moves. Inline elements ignore transforms, so they have to be blocks. */
+.layer {
+  display: block;
 }
 
 .deco svg {

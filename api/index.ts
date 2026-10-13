@@ -1,6 +1,6 @@
 import { timingSafeEqual } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
 
 /** Reads a secret from the environment (`.env.local` under `vercel dev`, Project Settings on Vercel). A missing or wrong value stops the function instead of failing later. */
@@ -101,7 +101,19 @@ const allowedOrigins = new Set([
     : [...toOrigin(process.env.VERCEL_BRANCH_URL), ...toOrigin(process.env.VERCEL_URL), 'http://localhost:3000', 'http://localhost:5173']),
 ]);
 
+// Where a visitor who opens an API address in the browser ends up. A real page of the site (`src/pages/ForbiddenPage.tsx`); keep in step with FORBIDDEN_PATH in src/i18n/pages.ts.
+const FORBIDDEN_PATH = '/forbidden/';
+// What a browser asks for when the address is opened as a page, tab or frame. The site's own fetch() sends `Sec-Fetch-Dest: empty`.
+const PAGE_DESTINATIONS = new Set(['document', 'iframe', 'frame', 'fencedframe', 'embed', 'object']);
+
 const app = new Hono({ strict: false });
+
+/** True when the browser is showing this address itself (address bar, a link, a frame) instead of the site's script reading it. Browsers too old to send `Sec-Fetch-*` still list `text/html` first in `Accept`. */
+function opensAsPage(c: Context): boolean {
+  const destination = c.req.header('sec-fetch-dest');
+  if (destination) return PAGE_DESTINATIONS.has(destination);
+  return !c.req.header('sec-fetch-site') && (c.req.header('accept') ?? '').includes('text/html');
+}
 
 function unwrap<T>({ data, error }: { data: T | null; error: { message: string } | null }): T {
   if (error || data === null) throw new Error(`Supabase: ${error?.message ?? 'no data'}`, { cause: error });
@@ -179,10 +191,19 @@ const readVideos = async (kind: VideoKind | 'song'): Promise<VideoRow[]> => {
 };
 
 // This function is the site's Backend-for-Frontend: the browser only ever talks to it, and the Supabase and YouTube secrets never leave it.
-// CORS lets only our own pages read the answers; the guard below also turns away what CORS does not stop, such as another site's <img>/<script> tag or the address bar.
+// CORS lets only our own pages read the answers; the guard below also turns away what CORS does not stop: the address bar and frames are sent to the Forbidden page, another site's <img>/<script> tag gets a 403.
 app.use('/api/*', cors({ origin: (origin) => (allowedOrigins.has(origin) ? origin : null), allowMethods: ['GET'], maxAge: 86_400 }));
 app.use('/api/*', async (c, next) => {
   c.header('Cross-Origin-Resource-Policy', 'same-origin');
+  // The answer depends on who asks, so a cache must not hand a script's answer to a page that opens the same address.
+  c.header('Vary', 'Origin, Accept, Sec-Fetch-Site, Sec-Fetch-Dest', { append: true });
+
+  // Nothing is read for a visitor who opens an API address: they are sent to the Forbidden page, never shown data.
+  if (opensAsPage(c)) {
+    c.header('Cache-Control', 'no-store');
+    return c.redirect(FORBIDDEN_PATH, 307);
+  }
+
   const origin = c.req.header('origin');
   const fetchSite = c.req.header('sec-fetch-site');
   // Browsers always send `Sec-Fetch-Site` (`none` for a typed address). Callers that are not browsers send neither header: the cron proves itself with its secret.
