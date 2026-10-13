@@ -46,10 +46,14 @@
   overflow: hidden;
 }
 
+/* Every emote sits in the same square tile and keeps its own proportions. Without `object-fit` an image that is not exactly square is stretched to fill the tile. */
 .face {
   display: block;
   width: 100%;
   height: 100%;
+  padding: 0.3rem;
+  object-fit: contain;
+  object-position: center;
   transition: transform 0.35s var(--ease-pop);
 }
 
