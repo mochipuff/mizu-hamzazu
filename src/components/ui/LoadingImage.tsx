@@ -11,6 +11,16 @@ export function ImagePlaceholder({ failed = false }: { failed?: boolean }) {
   );
 }
 
+/** Two bars in the shape of a title and a date, pulsing while the text of a card is on its way. */
+export function SkeletonLines() {
+  return (
+    <span className={styles.lines} aria-hidden="true">
+      <span className={styles.bar} />
+      <span className={styles.bar} />
+    </span>
+  );
+}
+
 type LoadingImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'alt' | 'onLoad' | 'onError'> & {
   src: string;
   alt: string;

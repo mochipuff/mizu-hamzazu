@@ -4,19 +4,21 @@
   overflow: hidden;
 }
 
-/* Waiting: the image is there but invisible. Arrived: it fades in, un-blurs and settles to its size. */
+/* `--image-fit` and `--image-pad` on the frame change how the picture sits in it (cover and no padding by default). Waiting: the image is there but invisible. Arrived: it fades in, un-blurs and settles to its size. */
 .image {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  padding: var(--image-pad, 0);
+  object-fit: var(--image-fit, cover);
   opacity: 0;
   scale: 1.06;
   filter: blur(0.5rem);
   transition:
     opacity 0.45s ease-out,
     scale 0.6s var(--ease-pop),
-    filter 0.45s ease-out;
+    filter 0.45s ease-out,
+    transform 0.35s var(--ease-pop);
 }
 
 .frame[data-state='ready'] .image {
@@ -78,6 +80,35 @@
   opacity: 0.6;
 }
 
+/* Pulsing bars for the text of a card that is still loading. */
+.lines {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.bar {
+  display: block;
+  height: 1rem;
+  border-radius: 999px;
+  background: var(--shallows);
+  animation: pulse 1.3s ease-in-out infinite alternate;
+}
+
+.bar:last-child {
+  width: 55%;
+  animation-delay: 0.2s;
+}
+
+@keyframes pulse {
+  from {
+    opacity: 0.45;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes slide {
   to {
     background-position: 1.4142rem 0;
@@ -103,7 +134,8 @@
   }
 
   .placeholder::before,
-  .paw {
+  .paw,
+  .bar {
     animation: none;
   }
 }

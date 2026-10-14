@@ -1,9 +1,8 @@
 import { useMemo, useState, type CSSProperties } from 'react';
 import { getPlatform, site } from '../../config/site.ts';
-import { useRealtime } from '../../context/realtime.ts';
 import { useSound } from '../../context/sound.ts';
 import { useToast } from '../../context/toast.ts';
-import { useStreamSlots } from '../../data/schedule.ts';
+import { useGuerillaMode, useStreamSlots } from '../../data/schedule.ts';
 import { useLocalStorage } from '../../hooks/useLocalStorage.ts';
 import { useNow } from '../../hooks/useNow.ts';
 import { useI18n } from '../../i18n/i18n.ts';
@@ -18,7 +17,6 @@ import { Reveal } from '../ui/Reveal.tsx';
 import { SectionHeading } from '../ui/SectionHeading.tsx';
 import { StreamDecor } from '../ui/StreamDecor.tsx';
 import styles from './Schedule.module.css';
-import { GuerillaBanner } from './GuerillaBanner.tsx';
 import { StreamCard } from './StreamCard.tsx';
 
 const BASE_ZONE = site.scheduleTimeZone;
@@ -102,10 +100,9 @@ export function Schedule() {
   const language = localeInfo[locale].htmlLang;
   const now = useNow();
   const { slots, status } = useStreamSlots();
+  const guerilla = useGuerillaMode();
   const toast = useToast();
   const sound = useSound();
-  const { guerilla } = useRealtime();
-  const paused = guerilla?.is_active === true;
   const [storedZone, setStoredZone] = useLocalStorage<string>('mizu:timezone', '');
   const [detectedZone] = useState(getBrowserTimeZone);
 
@@ -138,9 +135,9 @@ export function Schedule() {
   };
 
   return (
-    <section id="schedule" className={styles.section} aria-labelledby="schedule-title">
+    <section id="schedule" className={styles.section} data-guerilla={guerilla} aria-labelledby="schedule-title">
       <StreamDecor />
-      <div className="container">
+      <div className={`container ${styles.stage}`}>
         <SectionHeading headingId="schedule-title" title={t.schedule.title}>
           {t.schedule.lead}
         </SectionHeading>
@@ -166,7 +163,7 @@ export function Schedule() {
                   {t.schedule.useMyTimeZone}
                 </Button>
               )}
-              {upcoming.length > 0 && !paused && (
+              {upcoming.length > 0 && (
                 <Button variant="sun" size="sm" icon="calendar" onClick={handleDownloadAll}>
                   {t.schedule.addAll}
                 </Button>
@@ -175,40 +172,36 @@ export function Schedule() {
           </Panel>
         </Reveal>
 
-        {paused ? (
-          <GuerillaBanner notice={guerilla.notice} />
-        ) : (
-          <ol className={styles.week} aria-label={t.schedule.weekLabel(zoneLabel)}>
-            {columns.map((column, index) => (
-              <li
-                key={column.key}
-                className={styles.day}
-                data-today={column.isToday}
-                data-empty={column.items.length === 0}
-                style={{ '--count': column.items.length } as CSSProperties}
-              >
-                <Reveal variant="pop" delay={index * 60} className={styles.dayReveal}>
-                  <div className={styles.dayHead}>
-                    <span className={styles.weekday}>{column.weekday}</span>
-                    <span className={styles.date}>{column.relative ? t.schedule[column.relative] : column.date}</span>
-                  </div>
+        <ol className={styles.week} aria-label={t.schedule.weekLabel(zoneLabel)}>
+          {columns.map((column, index) => (
+            <li
+              key={column.key}
+              className={styles.day}
+              data-today={column.isToday}
+              data-empty={column.items.length === 0}
+              style={{ '--count': column.items.length } as CSSProperties}
+            >
+              <Reveal variant="pop" delay={index * 60} className={styles.dayReveal}>
+                <div className={styles.dayHead}>
+                  <span className={styles.weekday}>{column.weekday}</span>
+                  <span className={styles.date}>{column.relative ? t.schedule[column.relative] : column.date}</span>
+                </div>
 
-                  {column.items.length === 0 ? (
-                    status === 'ready' && <p className={styles.rest}>{t.schedule.restDay}</p>
-                  ) : (
-                    <ul className={styles.events}>
-                      {column.items.map((occurrence) => (
-                        <StreamCard key={occurrence.slot.id} occurrence={occurrence} now={now} zone={zone} onAddToCalendar={handleDownloadOne} />
-                      ))}
-                    </ul>
-                  )}
-                </Reveal>
-              </li>
-            ))}
-          </ol>
-        )}
+                {column.items.length === 0 ? (
+                  status === 'ready' && <p className={styles.rest}>{t.schedule.restDay}</p>
+                ) : (
+                  <ul className={styles.events}>
+                    {column.items.map((occurrence) => (
+                      <StreamCard key={occurrence.slot.id} occurrence={occurrence} now={now} zone={zone} onAddToCalendar={handleDownloadOne} />
+                    ))}
+                  </ul>
+                )}
+              </Reveal>
+            </li>
+          ))}
+        </ol>
 
-        {status === 'error' && !paused && (
+        {status === 'error' && (
           <p className={styles.note} role="alert">
             {t.schedule.loadFailed}
           </p>

@@ -3,6 +3,7 @@
   top: 0;
   z-index: 100;
   padding-block: 0.7rem;
+  view-transition-name: site-header;
   transition:
     background-color 0.25s,
     border-color 0.25s,
@@ -53,7 +54,7 @@
   height: 1.6rem;
 }
 
-/* A speech bubble under the brand pill: the sound switch, the live alerts switch and the way home. */
+/* A speech bubble under the brand pill: the sound switch and the way home. */
 .bubble {
   position: absolute;
   top: calc(100% + 0.9rem);
@@ -114,8 +115,12 @@
 }
 
 .bubbleItem:disabled {
-  opacity: 0.6;
-  cursor: progress;
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.bubbleItem:disabled:hover {
+  background: none;
 }
 
 .bubbleItem[data-on='true'] {

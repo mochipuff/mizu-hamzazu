@@ -90,7 +90,12 @@
   background: repeating-linear-gradient(135deg, var(--pastel-sky) 0 8px, rgb(255 255 255 / 0.65) 8px 16px);
 }
 
+.link {
+  display: block;
+}
+
 .photo {
+  position: relative;
   display: block;
   aspect-ratio: 1;
   border: 2px solid var(--ink);
@@ -98,11 +103,13 @@
   overflow: hidden;
 }
 
-.photo img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+/* A card that is only a placeholder: the photo frame is filled by `ImagePlaceholder`, the bars stand in for the caption. */
+.pending {
+  pointer-events: none;
+}
+
+.pending > :last-child {
+  margin-top: 0.7rem;
 }
 
 .caption {

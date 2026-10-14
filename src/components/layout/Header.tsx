@@ -1,7 +1,6 @@
 import { useEffect, useId, useRef, useState, type RefObject } from 'react';
 import { useSound } from '../../context/sound.ts';
 import { site } from '../../config/site.ts';
-import { useLiveNotif } from '../../hooks/useLiveNotif.ts';
 import { useI18n } from '../../i18n/i18n.ts';
 import { usePage } from '../../i18n/navigation.ts';
 import { pagePath } from '../../i18n/pages.ts';
@@ -100,7 +99,6 @@ export function Header() {
   const isHome = page === 'home';
   const homePath = pagePath(locale, 'home');
   const sound = useSound();
-  const liveNotif = useLiveNotif();
   const bubbleId = useId();
   const [activeId, setActiveId] = useState('');
   const [open, setOpen] = useState(false);
@@ -207,12 +205,10 @@ export function Header() {
               <Icon name={sound.enabled ? 'sound-on' : 'sound-off'} size={20} />
               <span>{sound.enabled ? t.header.soundOn : t.header.soundOff}</span>
             </button>
-            {liveNotif.configured && (
-              <button type="button" className={styles.bubbleItem} data-on={liveNotif.enabled} aria-pressed={liveNotif.enabled} disabled={liveNotif.busy} onClick={() => void liveNotif.toggle()}>
-                <Icon name={liveNotif.enabled ? 'bell-on' : 'bell-off'} size={20} />
-                <span>{liveNotif.enabled ? t.header.liveNotifOn : t.header.liveNotifOff}</span>
-              </button>
-            )}
+            <button type="button" className={styles.bubbleItem} disabled>
+              <Icon name="bell" size={20} />
+              <span>{t.header.comingSoon}</span>
+            </button>
           </div>
         </div>
 

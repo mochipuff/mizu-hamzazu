@@ -6,6 +6,7 @@ import { localeInfo } from '../../i18n/locales.ts';
 import { gsap, IDLE, POP } from '../../lib/motion.ts';
 import { Button } from '../ui/Button.tsx';
 import { Paw } from '../ui/Doodles.tsx';
+import { ImagePlaceholder, LoadingImage, SkeletonLines } from '../ui/LoadingImage.tsx';
 import { Notice } from '../ui/Notice.tsx';
 import { Reveal } from '../ui/Reveal.tsx';
 import { SectionHeading } from '../ui/SectionHeading.tsx';
@@ -36,6 +37,8 @@ interface Decoration {
 }
 
 const COLUMNS = 3;
+// The API serves 9 posts a page, so the placeholders fill the same grid and nothing jumps when the first page arrives.
+const SKELETON_COUNT = 9;
 const SHAPES = [Flower, Cloud, Pin, Paw, Heart] as const;
 const SIZES = [44, 36, 40, 32] as const;
 const TILTS = [-14, 10, -6, 16, -18, 8] as const;
@@ -153,8 +156,8 @@ export function Fanart() {
                 <li key={id} className={styles.slot}>
                   <Reveal variant="pop" delay={(index % COLUMNS) * 90}>
                     <figure className={styles.card}>
-                      <a href={mediaUrl} target="_blank" rel="noopener noreferrer" className={styles.photo}>
-                        <img src={mediaUrl} alt={fanart.alt(username)} loading="lazy" decoding="async" />
+                      <a href={mediaUrl} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                        <LoadingImage className={styles.photo} src={mediaUrl} alt={fanart.alt(username)} loading="lazy" decoding="async" />
                       </a>
                       <figcaption className={styles.caption}>
                         <span className={styles.username}>@{username}</span>
@@ -170,6 +173,21 @@ export function Fanart() {
             </ul>
             <script type="application/ld+json">{JSON.stringify(gallery).replace(/</g, '\\u003c')}</script>
           </>
+        )}
+
+        {feed.posts.length === 0 && feed.status === 'loading' && (
+          <ul className={styles.grid} aria-busy="true" aria-label={t.common.loading}>
+            {Array.from({ length: SKELETON_COUNT }, (_, index) => (
+              <li key={index} className={styles.slot}>
+                <div className={`${styles.card} ${styles.pending}`} aria-hidden="true">
+                  <span className={styles.photo}>
+                    <ImagePlaceholder />
+                  </span>
+                  <SkeletonLines />
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
 
         {feed.status === 'error' && <Notice kind="error">{t.common.loadFailed}</Notice>}

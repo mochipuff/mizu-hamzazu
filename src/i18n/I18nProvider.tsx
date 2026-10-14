@@ -16,7 +16,7 @@ export function I18nProvider({ locale, children }: { locale: Locale; children: R
       if (next === locale) return;
       storeLocale(next);
       // Switching language keeps the visitor on the page they are reading.
-      void navigate(`${pagePath(next, page)}${window.location.search}${window.location.hash}`);
+      void navigate(`${pagePath(next, page)}${window.location.search}${window.location.hash}`, { viewTransition: true });
     },
     [locale, page, navigate],
   );

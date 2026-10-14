@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '../components/ui/Button.tsx';
-import { ImagePlaceholder, LoadingImage } from '../components/ui/LoadingImage.tsx';
+import { ImagePlaceholder, LoadingImage, SkeletonLines } from '../components/ui/LoadingImage.tsx';
 import { Notice } from '../components/ui/Notice.tsx';
 import { SectionHeading } from '../components/ui/SectionHeading.tsx';
 import { WaveDivider } from '../components/ui/WaveDivider.tsx';
@@ -28,7 +28,7 @@ const SKELETON_COUNT = 12;
 
 const videoUrl = (kind: Kind, id: string): string => (kind === 'short' ? `https://www.youtube.com/shorts/${id}` : `https://www.youtube.com/watch?v=${id}`);
 
-/** Cards in the shape of the real ones, with an animated thumbnail and two bars for the title, while the list is on its way. */
+/** Cards in the shape of the real ones, with an animated thumbnail and two bars for the text, while the list is on its way. */
 function VideoSkeleton({ tab }: { tab: Tab }) {
   const { t } = useI18n();
 
@@ -40,8 +40,7 @@ function VideoSkeleton({ tab }: { tab: Tab }) {
             <span className={styles.thumb}>
               <ImagePlaceholder />
             </span>
-            <span className={styles.bar} />
-            <span className={`${styles.bar} ${styles.barShort}`} />
+            <SkeletonLines />
           </div>
         </li>
       ))}

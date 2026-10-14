@@ -11,6 +11,7 @@ export type IconName =
   | 'close'
   | 'sound-on'
   | 'sound-off'
+  | 'bell'
   | 'heart'
   | 'star'
   | 'arrow-up'
@@ -20,9 +21,7 @@ export type IconName =
   | 'lock'
   | 'globe'
   | 'chevron-down'
-  | 'check'
-  | 'bell-on'
-  | 'bell-off';
+  | 'check';
 
 const glyphs: Record<IconName, ReactNode> = {
   play: (
@@ -71,6 +70,12 @@ const glyphs: Record<IconName, ReactNode> = {
       <path d="m16 9.5 5 5M21 9.5l-5 5" />
     </>
   ),
+  bell: (
+    <>
+      <path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z" />
+      <path d="M10 20.5a2 2 0 0 0 4 0" />
+    </>
+  ),
   heart: <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />,
   star: <path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9l-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z" />,
   'arrow-up': <path d="M12 19V6M6.5 11.5 12 6l5.5 5.5" />,
@@ -96,18 +101,6 @@ const glyphs: Record<IconName, ReactNode> = {
   ),
   'chevron-down': <path d="m6 9 6 6 6-6" />,
   check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
-  'bell-on': (
-    <>
-      <path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" />
-      <path d="M10 21h4" />
-    </>
-  ),
-  'bell-off': (
-    <>
-      <path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" />
-      <path d="M10 21h4M4 4l16 16" />
-    </>
-  ),
 };
 
 interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {

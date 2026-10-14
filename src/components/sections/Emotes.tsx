@@ -5,6 +5,7 @@ import { emoteNames, emoteUrl, type EmoteName } from '../../data/images.ts';
 import { useI18n } from '../../i18n/i18n.ts';
 import { Garland } from '../ui/Garland.tsx';
 import { Icon } from '../ui/Icon.tsx';
+import { LoadingImage } from '../ui/LoadingImage.tsx';
 import { Reveal } from '../ui/Reveal.tsx';
 import { SectionHeading } from '../ui/SectionHeading.tsx';
 import styles from './Emotes.module.css';
@@ -42,18 +43,16 @@ export function Emotes() {
                 <Reveal variant="pop" delay={(index % 4) * 90} className={styles.reveal}>
                   <article className={styles.card} style={{ '--tile': TILE_TONES[index % TILE_TONES.length] } as CSSProperties}>
                     <Garland corner={index % 2 === 0 ? 'top-right' : 'top-left'} />
-                    <div className={styles.tile}>
-                      <img
-                        className={styles.face}
-                        src={emoteUrl(name)}
-                        alt={t.emotes.imageAlt(name, emote.usage)}
-                        width={512}
-                        height={512}
-                        loading="lazy"
-                        decoding="async"
-                        draggable={false}
-                      />
-                    </div>
+                    <LoadingImage
+                      className={styles.tile}
+                      src={emoteUrl(name)}
+                      alt={t.emotes.imageAlt(name, emote.usage)}
+                      width={512}
+                      height={512}
+                      loading="lazy"
+                      decoding="async"
+                      draggable={false}
+                    />
                     <h3 className={styles.name}>{emote.label}</h3>
                     <p className={styles.usage}>{emote.usage}</p>
                     <div className={styles.actions}>

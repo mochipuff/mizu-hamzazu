@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-// Latin only on purpose: the Japanese subsets are 1 to 1.5 MB each (or hundreds of CSS rules when sliced), so kana, kanji and Hangul use the system fonts listed in --font-cjk-fallback.
+// Latin only on purpose: the Japanese subsets are 1 to 1.5 MB each (or hundreds of CSS rules when sliced), so kana and kanji use the system fonts listed in --font-cjk-fallback.
 import '@fontsource/mochiy-pop-one/latin-400.css';
 import '@fontsource/zen-maru-gothic/latin-500.css';
 import '@fontsource/zen-maru-gothic/latin-700.css';

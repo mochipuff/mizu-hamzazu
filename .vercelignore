@@ -1,4 +1,4 @@
 server/
 requirements.txt
 __pycache__/
-worker
+database/

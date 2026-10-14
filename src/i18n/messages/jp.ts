@@ -23,8 +23,7 @@ export const jp: Messages = {
     mobileNav: 'モバイル',
     soundOn: 'SFX: オン',
     soundOff: 'SFX: オフ',
-    liveNotifOn: 'ライブ通知: オン',
-    liveNotifOff: 'ライブ通知: オフ',
+    comingSoon: '近日公開',
     openMenu: 'メニューを開く',
     closeMenu: 'メニューを閉じる',
     language: '言語',
@@ -52,13 +51,13 @@ export const jp: Messages = {
   supports: {
     seo: {
       title: 'サポート | Mizu Hamzazu',
-      description: 'Mizu Hamzazuへのファンアートと、視聴者からのやさしいメッセージ。ありがとう、Zutopian！',
+      description: 'Mizu Hamzazuへのファンアート。ありがとう、Zutopian！',
     },
-    marquee: ['ありがとう、Zutopian！', 'ひとつひとつの差し入れが車輪を回してくれる', 'Mizu Hamzazu', 'メッセージは愛を込めて貼り出し中'],
+    marquee: ['ありがとう、Zutopian！', 'ひとつひとつの差し入れが車輪を回してくれる', 'Mizu Hamzazu', 'Zutopianからのファンアート'],
     cover: {
       sticker: 'ありがとう！',
       title: 'サポート',
-      lead: 'Mizuの車輪を回し続けてくれる、差し入れとメッセージのスクラップブック。ありがとう、Zutopian！',
+      lead: 'Mizuの車輪を回し続けてくれる、差し入れとファンアートのスクラップブック。ありがとう、Zutopian！',
       waysLabel: '応援する方法',
     },
     fanart: {
@@ -67,15 +66,6 @@ export const jp: Messages = {
       listLabel: 'ファンアート',
       alt: (username) => `@${username}さんのファンアート`,
       loadMore: 'もっと見る',
-    },
-    notes: {
-      title: '視聴者のメッセージ',
-      lead: '視聴者から届いた小さなメッセージを、Mizuのために貼り出しました。',
-      listLabel: '視聴者からのメッセージ',
-      from: (name) => `${name}より`,
-      inviteTitle: 'あなたのメッセージもここに',
-      inviteLead: '差し入れにメッセージを添えて送ると、この壁に貼られるかもしれません。',
-      inviteCta: '差し入れを送る',
     },
   },
 
@@ -101,26 +91,6 @@ export const jp: Messages = {
     title: 'アクセス禁止',
     lead: 'データは巣穴の中で大切に守られています。このアドレスは直接開けないので、ウェブサイトからご利用ください。',
     homeCta: 'ホームに戻る',
-  },
-
-  live: {
-    notifEnabled: 'ライブ通知をオンにしました。Mizuの配信が始まったらお知らせします。',
-    notifDisabled: 'ライブ通知をオフにしました。',
-    notifBlocked: 'このサイトの通知がブロックされています。ブラウザの設定で許可してください。',
-    notifDismissed: '通知が許可されなかったため、ライブ通知はオフのままです。',
-    notifUnsupported: 'このブラウザはプッシュ通知に対応していません。iPhoneでは先にサイトをホーム画面に追加してください。',
-    notifFailed: 'ライブ通知をオンにできませんでした。もう一度お試しください。',
-    nowLiveToast: (title) => `Mizuが配信中です: ${title}`,
-  },
-
-  docs: {
-    seo: {
-      title: 'APIドキュメント | Mizu Hamzazu',
-      description: 'Mizu Hamzazuのライブ・スケジュールAPIのインタラクティブなリファレンス。',
-    },
-    title: 'APIドキュメント',
-    loading: 'APIリファレンスを読み込み中…',
-    loadFailed: 'APIリファレンスを読み込めませんでした。しばらくしてからもう一度お試しください。',
   },
 
   profile: {
@@ -244,11 +214,6 @@ export const jp: Messages = {
     calendarName: (name) => `${name} 配信`,
     calendarDownloaded: 'カレンダーファイルをダウンロードしました。',
     reminder: (title) => `${title}があと15分で始まります`,
-    guerilla: {
-      badge: 'ゲリラモード',
-      title: 'ゲリラ配信',
-      message: 'ゲリラモード中です。待機所なしで突然配信が始まることがあるため、通常のスケジュールは一時停止しています。',
-    },
   },
 
   emotes: {

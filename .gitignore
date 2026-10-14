@@ -26,8 +26,8 @@ dist-ssr
 .env
 .env.local
 .vercel
+_schedule-creator
+_latestZIP
 
 __pycache__/
 .venv/
-.dev.vars
-worker/.wrangler/

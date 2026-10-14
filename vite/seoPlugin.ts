@@ -7,7 +7,7 @@ import { getProfileFacts } from '../src/data/content.ts';
 import { criticalImages, emoteNames, emoteUrl, heroImages } from '../src/data/images.ts';
 import { browserLanguageMap, DEFAULT_LOCALE, LOCALE_STORAGE_KEY, LOCALES, localeFromPath, localeInfo, localePath, type Locale } from '../src/i18n/locales.ts';
 import { messages } from '../src/i18n/messages/index.ts';
-import { DOCS_PATH, FORBIDDEN_PATH, HIDDEN_PAGES, isHiddenPage, pageFromPath, PAGES, pagePath, pageSeo, type PageId, type PublicPageId } from '../src/i18n/pages.ts';
+import { FORBIDDEN_PATH, HIDDEN_PAGES, isHiddenPage, pageFromPath, PAGES, pagePath, pageSeo, type PageId, type PublicPageId } from '../src/i18n/pages.ts';
 
 const AI_CRAWLERS = [
   'GPTBot',
@@ -554,11 +554,6 @@ export function seoPlugin(rawSiteUrl: string): Plugin {
       const forbiddenFolder = join(outDir, FORBIDDEN_PATH);
       mkdirSync(forbiddenFolder, { recursive: true });
       writeFileSync(join(forbiddenFolder, 'index.html'), fillTemplate(template, DEFAULT_LOCALE, siteUrl, 'forbidden'));
-
-      // The API reference is shared as /docs/ with no language, so it needs a real file too.
-      const docsFolder = join(outDir, DOCS_PATH);
-      mkdirSync(docsFolder, { recursive: true });
-      writeFileSync(join(docsFolder, 'index.html'), fillTemplate(template, DEFAULT_LOCALE, siteUrl, 'docs'));
 
       writeFileSync(rootFile, buildRootPage(siteUrl));
     },
