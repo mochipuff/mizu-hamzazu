@@ -27,8 +27,7 @@ export const en = {
     mobileNav: 'Mobile',
     soundOn: 'Sfx: on',
     soundOff: 'Sfx: off',
-    liveNotifOn: 'Live notif: on',
-    liveNotifOff: 'Live notif: off',
+    comingSoon: 'Coming soon',
     openMenu: 'Open menu',
     closeMenu: 'Close menu',
     language: 'Language',
@@ -57,13 +56,13 @@ export const en = {
   supports: {
     seo: {
       title: 'Supports | Mizu Hamzazu',
-      description: 'The sweetest fan art and viewer notes for Mizu Hamzazu. Thank you, Zutopian!',
+      description: 'The sweetest fan art for Mizu Hamzazu. Thank you, Zutopian!',
     },
-    marquee: ['Thank you, Zutopian!', 'Every treat keeps the wheel spinning', 'Mizu Hamzazu', 'Notes pinned up with love'],
+    marquee: ['Thank you, Zutopian!', 'Every treat keeps the wheel spinning', 'Mizu Hamzazu', 'Fan art from the Zutopian'],
     cover: {
       sticker: 'thank you!',
       title: 'Supports',
-      lead: 'A scrapbook of the treats and notes that keep Mizu’s wheel spinning. Thank you, Zutopian!',
+      lead: 'A scrapbook of the treats and fan art that keep Mizu’s wheel spinning. Thank you, Zutopian!',
       waysLabel: 'Ways to support',
     },
     fanart: {
@@ -72,15 +71,6 @@ export const en = {
       listLabel: 'Fan art',
       alt: (username: string) => `Fan art by @${username}`,
       loadMore: 'Load more',
-    },
-    notes: {
-      title: 'Viewer notes',
-      lead: 'Little messages from viewers, pinned up for Mizu.',
-      listLabel: 'Notes from viewers',
-      from: (name: string) => `from ${name}`,
-      inviteTitle: 'Your note could be here',
-      inviteLead: 'Send a treat with a message and it might get pinned to this wall.',
-      inviteCta: 'Send a treat',
     },
   },
 
@@ -106,26 +96,6 @@ export const en = {
     title: 'Forbidden',
     lead: 'Mizu’s data stays safe in the burrow. This address can’t be opened directly, so please use the website instead.',
     homeCta: 'Back to home',
-  },
-
-  live: {
-    notifEnabled: 'Live alerts are on. We’ll ping you when Mizu goes live.',
-    notifDisabled: 'Live alerts are off.',
-    notifBlocked: 'Notifications are blocked for this site. Allow them in your browser settings.',
-    notifDismissed: 'No permission given, so live alerts stay off.',
-    notifUnsupported: 'This browser can’t receive push alerts. On iPhone, add the site to your Home Screen first.',
-    notifFailed: 'Could not turn on live alerts. Please try again.',
-    nowLiveToast: (title: string) => `Mizu is live now: ${title}`,
-  },
-
-  docs: {
-    seo: {
-      title: 'API docs | Mizu Hamzazu',
-      description: 'Interactive API reference for the Mizu Hamzazu live and schedule services.',
-    },
-    title: 'API documentation',
-    loading: 'Loading the API reference…',
-    loadFailed: 'The API reference could not be loaded. Please try again later.',
   },
 
   profile: {
@@ -249,11 +219,6 @@ export const en = {
     calendarName: (name: string) => `${name} streams`,
     calendarDownloaded: 'Calendar file downloaded.',
     reminder: (title: string) => `${title} starts in 15 minutes`,
-    guerilla: {
-      badge: 'Guerilla mode',
-      title: 'Guerilla stream',
-      message: 'Guerilla Mode is active. Normal schedule is paused as the stream may start at any moment without a waiting room.',
-    },
   },
 
   emotes: {

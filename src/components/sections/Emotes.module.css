@@ -38,6 +38,9 @@
 }
 
 .tile {
+  --image-fit: contain;
+  --image-pad: 0.3rem;
+
   width: 100%;
   aspect-ratio: 1;
   border: 3px solid var(--ink);
@@ -46,18 +49,8 @@
   overflow: hidden;
 }
 
-/* Every emote sits in the same square tile and keeps its own proportions. Without `object-fit` an image that is not exactly square is stretched to fill the tile. */
-.face {
-  display: block;
-  width: 100%;
-  height: 100%;
-  padding: 0.3rem;
-  object-fit: contain;
-  object-position: center;
-  transition: transform 0.35s var(--ease-pop);
-}
-
-.card:hover .face {
+/* Every emote sits in the same square tile (`LoadingImage` with `--image-fit: contain`) and keeps its own proportions, so an image that is not exactly square is not stretched. */
+.card:hover .tile img {
   transform: scale(1.08) rotate(3deg);
 }
 
@@ -118,7 +111,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .card:hover,
-  .card:hover .face {
+  .card:hover .tile img {
     transform: none;
   }
 }

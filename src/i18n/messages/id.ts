@@ -23,8 +23,7 @@ export const id: Messages = {
     mobileNav: 'Seluler',
     soundOn: 'Sfx: nyala',
     soundOff: 'Sfx: mati',
-    liveNotifOn: 'Notif live: aktif',
-    liveNotifOff: 'Notif live: mati',
+    comingSoon: 'Segera hadir',
     openMenu: 'Buka menu',
     closeMenu: 'Tutup menu',
     language: 'Bahasa',
@@ -52,13 +51,13 @@ export const id: Messages = {
   supports: {
     seo: {
       title: 'Dukungan | Mizu Hamzazu',
-      description: 'Fan art dan catatan manis dari penonton untuk Mizu Hamzazu. Terima kasih, Zutopian!',
+      description: 'Fan art manis untuk Mizu Hamzazu. Terima kasih, Zutopian!',
     },
-    marquee: ['Terima kasih, Zutopian!', 'Setiap traktiran bikin kincir terus berputar', 'Mizu Hamzazu', 'Catatan ditempel penuh cinta'],
+    marquee: ['Terima kasih, Zutopian!', 'Setiap traktiran bikin kincir terus berputar', 'Mizu Hamzazu', 'Fan art dari para Zutopian'],
     cover: {
       sticker: 'makasih!',
       title: 'Dukungan',
-      lead: 'Buku tempel berisi traktiran dan catatan yang bikin kincir Mizu terus berputar. Terima kasih, Zutopian!',
+      lead: 'Buku tempel berisi traktiran dan fan art yang bikin kincir Mizu terus berputar. Terima kasih, Zutopian!',
       waysLabel: 'Cara mendukung',
     },
     fanart: {
@@ -67,15 +66,6 @@ export const id: Messages = {
       listLabel: 'Fan art',
       alt: (username) => `Fan art oleh @${username}`,
       loadMore: 'Muat lebih banyak',
-    },
-    notes: {
-      title: 'Catatan penonton',
-      lead: 'Pesan-pesan kecil dari penonton, ditempel untuk Mizu.',
-      listLabel: 'Catatan dari penonton',
-      from: (name) => `dari ${name}`,
-      inviteTitle: 'Catatanmu bisa ada di sini',
-      inviteLead: 'Kirim traktiran beserta pesan, dan catatanmu mungkin ikut ditempel di dinding ini.',
-      inviteCta: 'Kirim traktiran',
     },
   },
 
@@ -101,26 +91,6 @@ export const id: Messages = {
     title: 'Akses Ditolak',
     lead: 'Data Mizu aman di dalam sarang. Alamat ini tidak bisa dibuka langsung, jadi silakan gunakan situsnya.',
     homeCta: 'Kembali ke beranda',
-  },
-
-  live: {
-    notifEnabled: 'Notifikasi live aktif. Kami kabari kamu saat Mizu mulai live.',
-    notifDisabled: 'Notifikasi live dimatikan.',
-    notifBlocked: 'Notifikasi diblokir untuk situs ini. Izinkan lewat pengaturan browser.',
-    notifDismissed: 'Izin tidak diberikan, jadi notifikasi live tetap mati.',
-    notifUnsupported: 'Browser ini tidak bisa menerima notifikasi push. Di iPhone, tambahkan situs ke Layar Utama dulu.',
-    notifFailed: 'Notifikasi live gagal diaktifkan. Coba lagi ya.',
-    nowLiveToast: (title) => `Mizu lagi live sekarang: ${title}`,
-  },
-
-  docs: {
-    seo: {
-      title: 'Dokumentasi API | Mizu Hamzazu',
-      description: 'Referensi API interaktif untuk layanan live dan jadwal Mizu Hamzazu.',
-    },
-    title: 'Dokumentasi API',
-    loading: 'Memuat referensi API…',
-    loadFailed: 'Referensi API tidak bisa dimuat. Coba lagi nanti.',
   },
 
   profile: {
@@ -244,11 +214,6 @@ export const id: Messages = {
     calendarName: (name) => `Stream ${name}`,
     calendarDownloaded: 'File kalender diunduh.',
     reminder: (title) => `${title} mulai 15 menit lagi`,
-    guerilla: {
-      badge: 'Mode gerilya',
-      title: 'Stream gerilya',
-      message: 'Mode Gerilya aktif. Jadwal biasa dijeda karena stream bisa mulai kapan saja tanpa waiting room.',
-    },
   },
 
   emotes: {

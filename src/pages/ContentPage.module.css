@@ -60,19 +60,6 @@
   pointer-events: none;
 }
 
-.bar {
-  display: block;
-  height: 1rem;
-  border-radius: 999px;
-  background: var(--shallows);
-  animation: pulse 1.3s ease-in-out infinite alternate;
-}
-
-.barShort {
-  width: 55%;
-  animation-delay: 0.2s;
-}
-
 .title {
   display: -webkit-box;
   overflow: hidden;
@@ -124,22 +111,6 @@
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--ink-soft);
-}
-
-@keyframes pulse {
-  from {
-    opacity: 0.45;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bar {
-    animation: none;
-  }
 }
 
 @media (min-width: 560px) {

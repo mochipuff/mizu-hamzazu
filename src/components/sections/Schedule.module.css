@@ -316,3 +316,55 @@
     transform: none;
   }
 }
+
+/* Guerilla mode: the schedule means nothing, so every 3 seconds of calm ends in a short glitch. Each keyframe holds until the next one (`steps`), 0.5s of the 3.5s cycle is the glitch. */
+.section[data-guerilla='true'] .stage {
+  animation: glitch 3.5s steps(1, end) infinite;
+}
+
+@keyframes glitch {
+  0%,
+  85.7%,
+  98.6%,
+  100% {
+    translate: none;
+    transform: none;
+    filter: none;
+  }
+
+  87.1% {
+    translate: -6px 0;
+    transform: skewX(-4deg);
+    filter: drop-shadow(5px 0 0 var(--rust)) drop-shadow(-5px 0 0 var(--lagoon));
+  }
+
+  89.3% {
+    translate: 5px -2px;
+    transform: skewX(3deg);
+    filter: drop-shadow(-4px 0 0 var(--rust)) drop-shadow(4px 0 0 var(--leaf));
+  }
+
+  92.1% {
+    translate: -3px 1px;
+    transform: skewX(-2deg);
+    filter: hue-rotate(40deg) drop-shadow(3px 0 0 var(--lagoon));
+  }
+
+  94.3% {
+    translate: 4px 0;
+    transform: skewX(5deg);
+    filter: drop-shadow(-6px 0 0 var(--rust));
+  }
+
+  97.1% {
+    translate: -2px 0;
+    transform: none;
+    filter: drop-shadow(2px 0 0 var(--lagoon));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section[data-guerilla='true'] .stage {
+    animation: none;
+  }
+}

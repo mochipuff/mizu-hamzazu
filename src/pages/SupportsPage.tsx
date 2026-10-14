@@ -1,6 +1,5 @@
 import { Fanart } from '../components/sections/Fanart.tsx';
 import { SupportsCover } from '../components/sections/SupportsCover.tsx';
-import { ViewerNotes } from '../components/sections/ViewerNotes.tsx';
 import { Marquee } from '../components/ui/Marquee.tsx';
 import { WaveDivider } from '../components/ui/WaveDivider.tsx';
 import { useI18n } from '../i18n/i18n.ts';
@@ -14,7 +13,6 @@ export function SupportsPage() {
         <SupportsCover />
         <Marquee items={t.supports.marquee} tone="sun" tilt={-1.5} />
         <Fanart />
-        <ViewerNotes />
       </main>
       <WaveDivider color="var(--ink)" />
     </>

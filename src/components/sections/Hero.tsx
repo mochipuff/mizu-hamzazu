@@ -1,6 +1,5 @@
 import { useRef } from 'react';
 import { getPlatform, site } from '../../config/site.ts';
-import { useRealtime } from '../../context/realtime.ts';
 import { useStreamSlots } from '../../data/schedule.ts';
 import { useGsap } from '../../hooks/useGsap.ts';
 import { useNow } from '../../hooks/useNow.ts';
@@ -24,16 +23,11 @@ function useNextStream() {
   return { now, occurrence, live: occurrence ? getStatus(occurrence, now) === 'live' : false };
 }
 
-const isYouTubeUrl = (url: string): boolean => url.startsWith('https://www.youtube.com/');
-
-/** Watch buttons for YouTube and Twitch. The one for the platform that is streaming right now turns into the animated Now live button, the moment the live connection says so. */
+/** Watch buttons for YouTube and Twitch. The one for the platform that is streaming right now turns into the animated Now live button. */
 function HeroActions() {
   const { t } = useI18n();
-  const { occurrence, live: slotLive } = useNextStream();
-  const { live: pushed } = useRealtime();
-  const livePlatform = pushed?.is_live ? pushed.platform : slotLive ? occurrence?.slot.platform : undefined;
-  // The Worker knows the exact stream, so the button can open it directly instead of the channel's live page.
-  const liveUrl = pushed?.is_live && isYouTubeUrl(pushed.url) ? pushed.url : undefined;
+  const { occurrence, live } = useNextStream();
+  const livePlatform = live ? occurrence?.slot.platform : undefined;
 
   return (
     <div className={styles.actions}>
@@ -41,7 +35,7 @@ function HeroActions() {
         .filter((platform) => platform.id === 'youtube' || platform.id === 'twitch')
         .map((platform, index) =>
           platform.id === livePlatform ? (
-            <LiveButton key={platform.id} size="lg" href={liveUrl ?? platform.liveUrl} aria-label={t.hero.nowLiveOn(platform.label)}>
+            <LiveButton key={platform.id} size="lg" href={platform.liveUrl} aria-label={t.hero.nowLiveOn(platform.label)}>
               {t.hero.nowLive}
             </LiveButton>
           ) : (
@@ -57,7 +51,6 @@ function HeroActions() {
 function NextStream() {
   const { t } = useI18n();
   const { now, occurrence, live } = useNextStream();
-  const { guerilla } = useRealtime();
   const dotRef = useRef<HTMLSpanElement>(null);
 
   useGsap(
@@ -68,8 +61,7 @@ function NextStream() {
     [live],
   );
 
-  // While the schedule is paused the countdown would promise a start time nobody can keep.
-  if (!occurrence || (guerilla?.is_active && !live)) return null;
+  if (!occurrence) return null;
 
   const platform = getPlatform(occurrence.slot.platform);
   const { days, hours, minutes } = splitDuration(occurrence.start - now);

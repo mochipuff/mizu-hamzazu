@@ -21,11 +21,9 @@
   --pastel-sky: #d3e4f2;
   --pastel-lilac: #e3d6f0;
   --rust: #c1592d;
-  --crimson: #d4162b;
-  --crimson-glow: #ff4b5c;
   --leaf: #8fae6b;
 
-  --font-cjk-fallback: 'Hiragino Maru Gothic ProN', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR';
+  --font-cjk-fallback: 'Hiragino Maru Gothic ProN';
   --font-display: 'Mochiy Pop One', 'Zen Maru Gothic', var(--font-cjk-fallback), ui-rounded, system-ui, sans-serif;
   --font-hand: 'Gaegu', 'Zen Maru Gothic', var(--font-cjk-fallback), ui-rounded, cursive;
   --font-body: 'Zen Maru Gothic', var(--font-cjk-fallback), ui-rounded, system-ui, sans-serif;
@@ -206,5 +204,35 @@ a {
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+}
+
+/* Page changes: browsers with view transitions cross-fade the old and new page (the router asks for one on every link); the others fade the new page in. */
+@keyframes page-in {
+  from {
+    opacity: 0;
+  }
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.4s;
+  animation-timing-function: ease-in-out;
+}
+
+@supports not (view-transition-name: none) {
+  main {
+    animation: page-in 0.4s ease-out backwards;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.01ms;
+  }
+
+  main {
+    animation: none;
   }
 }

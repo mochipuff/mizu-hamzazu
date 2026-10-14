@@ -5,14 +5,14 @@ import type { Messages } from './messages/index.ts';
 export const PAGES = ['home', 'supports', 'content'] as const;
 
 /** Pages a visitor can land on but that are never published: no sitemap entry, no hreflang, `noindex`. */
-export const HIDDEN_PAGES = ['forbidden', 'docs'] as const;
+export const HIDDEN_PAGES = ['forbidden'] as const;
 
 export type PublicPageId = (typeof PAGES)[number];
 export type HiddenPageId = (typeof HIDDEN_PAGES)[number];
 export type PageId = PublicPageId | HiddenPageId;
 
 /** The URL segment after the language. The home page has none. */
-const SLUGS: Record<PageId, string> = { home: '', supports: 'supports', content: 'content', forbidden: 'forbidden', docs: 'docs' };
+const SLUGS: Record<PageId, string> = { home: '', supports: 'supports', content: 'content', forbidden: 'forbidden' };
 
 const pageBySlug = new Map<string, PageId>([...PAGES, ...HIDDEN_PAGES].map((page) => [SLUGS[page], page]));
 
@@ -23,9 +23,6 @@ export const isHiddenPage = (page: PageId): page is HiddenPageId => HIDDEN_PAGES
  * It has no language: the app moves the visitor on to `/<locale>/forbidden/`.
  */
 export const FORBIDDEN_PATH = '/forbidden/';
-
-/** The language-less address of the API reference; the app moves the visitor on to `/<locale>/docs/`. */
-export const DOCS_PATH = '/docs/';
 
 /** `/en/` for the home page, `/en/supports/` for the others. Always ends with a slash, like the folders in the build output. */
 export const pagePath = (locale: Locale, page: PageId): string => (page === 'home' ? `/${locale}/` : `/${locale}/${SLUGS[page]}/`);
