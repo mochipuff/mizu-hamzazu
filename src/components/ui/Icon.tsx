@@ -20,7 +20,9 @@ export type IconName =
   | 'lock'
   | 'globe'
   | 'chevron-down'
-  | 'check';
+  | 'check'
+  | 'bell-on'
+  | 'bell-off';
 
 const glyphs: Record<IconName, ReactNode> = {
   play: (
@@ -94,6 +96,18 @@ const glyphs: Record<IconName, ReactNode> = {
   ),
   'chevron-down': <path d="m6 9 6 6 6-6" />,
   check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
+  'bell-on': (
+    <>
+      <path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" />
+      <path d="M10 21h4" />
+    </>
+  ),
+  'bell-off': (
+    <>
+      <path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" />
+      <path d="M10 21h4M4 4l16 16" />
+    </>
+  ),
 };
 
 interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {

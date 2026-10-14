@@ -1,7 +1,7 @@
 {
   "name": "mizu-hamzazu",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.0-live",
   "description": "Official landing page for the virtual streamer Mizu Hamzazu",
   "type": "module",
   "engines": {
@@ -13,12 +13,14 @@
     "preview": "vite preview",
     "serve": "uvicorn server.app:app --port 8000",
     "lint": "oxlint",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "key:new": "tsx --env-file=.env.local scripts/create-api-key.ts"
   },
   "dependencies": {
     "@fontsource/gaegu": "^5.0.0",
     "@fontsource/mochiy-pop-one": "^5.3.0",
     "@fontsource/zen-maru-gothic": "^5.3.0",
+    "@scalar/api-reference-react": "^0.9.80",
     "@supabase/supabase-js": "^2.117.3",
     "gsap": "^3.15.0",
     "hono": "^4.13.13",
@@ -32,6 +34,7 @@
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
     "oxlint": "^1.81.0",
+    "tsx": "^4.23.15",
     "typescript": "~6.0.2",
     "vite": "^8.3.0"
   }

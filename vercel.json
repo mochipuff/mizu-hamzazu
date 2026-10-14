@@ -7,7 +7,6 @@
   "trailingSlash": true,
   "rewrites": [{ "source": "/api/(.*)", "destination": "/api" }],
   "functions": { "api/index.ts": { "maxDuration": 30 } },
-  "crons": [{ "path": "/api/videos/sync/", "schedule": "0 3 * * *" }],
   "redirects": [
     {
       "source": "/api/:path*",
@@ -32,6 +31,10 @@
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=2592000, stale-while-revalidate=31536000" }]
     },
     {
+      "source": "/sw.js",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+    },
+    {
       "source": "/(llms.txt|robots.txt|sitemap.xml|sitemap-images.xml)",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600" }]
     },
@@ -43,7 +46,7 @@
         { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com https://*.supabase.co https://pbs.twimg.com; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com https://*.supabase.co https://pbs.twimg.com; font-src 'self' data:; connect-src 'self' https://live.your-domain.tld; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
         },
         { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
       ]

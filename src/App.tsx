@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router';
+import { RealtimeProvider } from './context/RealtimeProvider.tsx';
 import { SoundProvider } from './context/SoundProvider.tsx';
 import { ToastProvider } from './context/ToastProvider.tsx';
 import { Footer } from './components/layout/Footer.tsx';
@@ -12,6 +13,7 @@ import { isLocale, localeFromPath } from './i18n/locales.ts';
 import { preferredLocale, usePage } from './i18n/navigation.ts';
 import { pageFromPath, pagePath } from './i18n/pages.ts';
 import { ContentPage } from './pages/ContentPage.tsx';
+import { DocsPage } from './pages/DocsPage.tsx';
 import { ForbiddenPage } from './pages/ForbiddenPage.tsx';
 import { HomePage } from './pages/HomePage.tsx';
 import { SupportsPage } from './pages/SupportsPage.tsx';
@@ -48,7 +50,7 @@ function KeepPage() {
   return null;
 }
 
-/** `/`, `/supports/`, `/forbidden/` (where the API sends a browser that opens one of its addresses) and `/xx/` become the same page in a real language. Unknown paths land on the home page, as they always did. */
+/** `/`, `/supports/`, `/docs/`, `/forbidden/` (where the API sends a browser that opens one of its addresses) and `/xx/` become the same page in a real language. Unknown paths land on the home page, as they always did. */
 function RedirectToLocale() {
   const { pathname, search, hash } = useLocation();
   const locale = localeFromPath(pathname) ?? preferredLocale();
@@ -93,7 +95,9 @@ function LocaleShell() {
     <I18nProvider locale={locale}>
       <SoundProvider>
         <ToastProvider>
-          <Layout />
+          <RealtimeProvider>
+            <Layout />
+          </RealtimeProvider>
         </ToastProvider>
       </SoundProvider>
     </I18nProvider>
@@ -110,6 +114,7 @@ export function App() {
           <Route path="supports" element={<SupportsPage />} />
           <Route path="content" element={<ContentPage />} />
           <Route path="forbidden" element={<ForbiddenPage />} />
+          <Route path="docs" element={<DocsPage />} />
         </Route>
         <Route path="*" element={<RedirectToLocale />} />
       </Routes>

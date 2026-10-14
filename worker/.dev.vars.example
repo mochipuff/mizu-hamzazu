@@ -1,0 +1,11 @@
+# Copy to .dev.vars for `npm run dev`. Never commit .dev.vars.
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_SECRET_KEY=sb_secret_...
+YOUTUBE_API_KEY=
+# npx web-push generate-vapid-keys
+VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+# openssl rand -hex 32
+WORKER_BRIDGE_SECRET=
+# Local overrides of the vars in wrangler.jsonc
+SITE_ORIGINS=http://localhost:5173

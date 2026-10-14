@@ -27,6 +27,8 @@ export const en = {
     mobileNav: 'Mobile',
     soundOn: 'Sfx: on',
     soundOff: 'Sfx: off',
+    liveNotifOn: 'Live notif: on',
+    liveNotifOff: 'Live notif: off',
     openMenu: 'Open menu',
     closeMenu: 'Close menu',
     language: 'Language',
@@ -104,6 +106,26 @@ export const en = {
     title: 'Forbidden',
     lead: 'Mizu’s data stays safe in the burrow. This address can’t be opened directly, so please use the website instead.',
     homeCta: 'Back to home',
+  },
+
+  live: {
+    notifEnabled: 'Live alerts are on. We’ll ping you when Mizu goes live.',
+    notifDisabled: 'Live alerts are off.',
+    notifBlocked: 'Notifications are blocked for this site. Allow them in your browser settings.',
+    notifDismissed: 'No permission given, so live alerts stay off.',
+    notifUnsupported: 'This browser can’t receive push alerts. On iPhone, add the site to your Home Screen first.',
+    notifFailed: 'Could not turn on live alerts. Please try again.',
+    nowLiveToast: (title: string) => `Mizu is live now: ${title}`,
+  },
+
+  docs: {
+    seo: {
+      title: 'API docs | Mizu Hamzazu',
+      description: 'Interactive API reference for the Mizu Hamzazu live and schedule services.',
+    },
+    title: 'API documentation',
+    loading: 'Loading the API reference…',
+    loadFailed: 'The API reference could not be loaded. Please try again later.',
   },
 
   profile: {
@@ -227,6 +249,11 @@ export const en = {
     calendarName: (name: string) => `${name} streams`,
     calendarDownloaded: 'Calendar file downloaded.',
     reminder: (title: string) => `${title} starts in 15 minutes`,
+    guerilla: {
+      badge: 'Guerilla mode',
+      title: 'Guerilla stream',
+      message: 'Guerilla Mode is active. Normal schedule is paused as the stream may start at any moment without a waiting room.',
+    },
   },
 
   emotes: {

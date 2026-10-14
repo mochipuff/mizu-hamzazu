@@ -23,6 +23,8 @@ export const kr: Messages = {
     mobileNav: '모바일',
     soundOn: 'SFX: 켜짐',
     soundOff: 'SFX: 꺼짐',
+    liveNotifOn: '라이브 알림: 켜짐',
+    liveNotifOff: '라이브 알림: 꺼짐',
     openMenu: '메뉴 열기',
     closeMenu: '메뉴 닫기',
     language: '언어',
@@ -99,6 +101,26 @@ export const kr: Messages = {
     title: '접근 금지',
     lead: '데이터는 굴속에서 안전하게 보관되고 있어요. 이 주소는 직접 열 수 없으니 웹사이트를 이용해 주세요.',
     homeCta: '홈으로 돌아가기',
+  },
+
+  live: {
+    notifEnabled: '라이브 알림을 켰어요. Mizu가 방송을 시작하면 알려드릴게요.',
+    notifDisabled: '라이브 알림을 껐어요.',
+    notifBlocked: '이 사이트의 알림이 차단되어 있어요. 브라우저 설정에서 허용해 주세요.',
+    notifDismissed: '알림 권한이 허용되지 않아 라이브 알림은 꺼진 상태예요.',
+    notifUnsupported: '이 브라우저는 푸시 알림을 받을 수 없어요. iPhone에서는 먼저 사이트를 홈 화면에 추가해 주세요.',
+    notifFailed: '라이브 알림을 켜지 못했어요. 다시 시도해 주세요.',
+    nowLiveToast: (title) => `Mizu가 지금 라이브 중: ${title}`,
+  },
+
+  docs: {
+    seo: {
+      title: 'API 문서 | Mizu Hamzazu',
+      description: 'Mizu Hamzazu 라이브·일정 서비스의 인터랙티브 API 레퍼런스.',
+    },
+    title: 'API 문서',
+    loading: 'API 레퍼런스를 불러오는 중…',
+    loadFailed: 'API 레퍼런스를 불러오지 못했어요. 나중에 다시 시도해 주세요.',
   },
 
   profile: {
@@ -222,6 +244,11 @@ export const kr: Messages = {
     calendarName: (name) => `${name} 방송`,
     calendarDownloaded: '캘린더 파일을 다운로드했어요.',
     reminder: (title) => `${title} 방송이 15분 후에 시작돼요`,
+    guerilla: {
+      badge: '게릴라 모드',
+      title: '게릴라 방송',
+      message: '게릴라 모드가 켜져 있어요. 대기실 없이 언제든 방송이 시작될 수 있어서 일반 일정은 잠시 멈췄어요.',
+    },
   },
 
   emotes: {

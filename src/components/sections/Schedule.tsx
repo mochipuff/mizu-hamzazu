@@ -1,5 +1,6 @@
 import { useMemo, useState, type CSSProperties } from 'react';
 import { getPlatform, site } from '../../config/site.ts';
+import { useRealtime } from '../../context/realtime.ts';
 import { useSound } from '../../context/sound.ts';
 import { useToast } from '../../context/toast.ts';
 import { useStreamSlots } from '../../data/schedule.ts';
@@ -17,6 +18,7 @@ import { Reveal } from '../ui/Reveal.tsx';
 import { SectionHeading } from '../ui/SectionHeading.tsx';
 import { StreamDecor } from '../ui/StreamDecor.tsx';
 import styles from './Schedule.module.css';
+import { GuerillaBanner } from './GuerillaBanner.tsx';
 import { StreamCard } from './StreamCard.tsx';
 
 const BASE_ZONE = site.scheduleTimeZone;
@@ -102,6 +104,8 @@ export function Schedule() {
   const { slots, status } = useStreamSlots();
   const toast = useToast();
   const sound = useSound();
+  const { guerilla } = useRealtime();
+  const paused = guerilla?.is_active === true;
   const [storedZone, setStoredZone] = useLocalStorage<string>('mizu:timezone', '');
   const [detectedZone] = useState(getBrowserTimeZone);
 
@@ -162,7 +166,7 @@ export function Schedule() {
                   {t.schedule.useMyTimeZone}
                 </Button>
               )}
-              {upcoming.length > 0 && (
+              {upcoming.length > 0 && !paused && (
                 <Button variant="sun" size="sm" icon="calendar" onClick={handleDownloadAll}>
                   {t.schedule.addAll}
                 </Button>
@@ -171,36 +175,40 @@ export function Schedule() {
           </Panel>
         </Reveal>
 
-        <ol className={styles.week} aria-label={t.schedule.weekLabel(zoneLabel)}>
-          {columns.map((column, index) => (
-            <li
-              key={column.key}
-              className={styles.day}
-              data-today={column.isToday}
-              data-empty={column.items.length === 0}
-              style={{ '--count': column.items.length } as CSSProperties}
-            >
-              <Reveal variant="pop" delay={index * 60} className={styles.dayReveal}>
-                <div className={styles.dayHead}>
-                  <span className={styles.weekday}>{column.weekday}</span>
-                  <span className={styles.date}>{column.relative ? t.schedule[column.relative] : column.date}</span>
-                </div>
+        {paused ? (
+          <GuerillaBanner notice={guerilla.notice} />
+        ) : (
+          <ol className={styles.week} aria-label={t.schedule.weekLabel(zoneLabel)}>
+            {columns.map((column, index) => (
+              <li
+                key={column.key}
+                className={styles.day}
+                data-today={column.isToday}
+                data-empty={column.items.length === 0}
+                style={{ '--count': column.items.length } as CSSProperties}
+              >
+                <Reveal variant="pop" delay={index * 60} className={styles.dayReveal}>
+                  <div className={styles.dayHead}>
+                    <span className={styles.weekday}>{column.weekday}</span>
+                    <span className={styles.date}>{column.relative ? t.schedule[column.relative] : column.date}</span>
+                  </div>
 
-                {column.items.length === 0 ? (
-                  status === 'ready' && <p className={styles.rest}>{t.schedule.restDay}</p>
-                ) : (
-                  <ul className={styles.events}>
-                    {column.items.map((occurrence) => (
-                      <StreamCard key={occurrence.slot.id} occurrence={occurrence} now={now} zone={zone} onAddToCalendar={handleDownloadOne} />
-                    ))}
-                  </ul>
-                )}
-              </Reveal>
-            </li>
-          ))}
-        </ol>
+                  {column.items.length === 0 ? (
+                    status === 'ready' && <p className={styles.rest}>{t.schedule.restDay}</p>
+                  ) : (
+                    <ul className={styles.events}>
+                      {column.items.map((occurrence) => (
+                        <StreamCard key={occurrence.slot.id} occurrence={occurrence} now={now} zone={zone} onAddToCalendar={handleDownloadOne} />
+                      ))}
+                    </ul>
+                  )}
+                </Reveal>
+              </li>
+            ))}
+          </ol>
+        )}
 
-        {status === 'error' && (
+        {status === 'error' && !paused && (
           <p className={styles.note} role="alert">
             {t.schedule.loadFailed}
           </p>

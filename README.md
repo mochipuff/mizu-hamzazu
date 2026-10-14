@@ -27,7 +27,7 @@ curl -sI -H 'Accept-Encoding: gzip' localhost:8000/en/   # shows content-encodin
 Import the repo (`vercel.json` sets the Vite preset and adds cache and security headers; `.vercelignore` keeps the Python test server out). Vercel compresses responses itself (Brotli or gzip, whichever the browser asks for), so the `.gz` files are skipped there.
 Set `VITE_SITE_URL` (for example `https://mizu.id`) in Project Settings, Environment Variables.
 Without it the build falls back to the Vercel production domain; with neither, the canonical URL, Open Graph image, `sitemap.xml` and JSON-LD URLs are skipped.
-Also set `SUPABASE_URL` and `SUPABASE_SECRET_KEY` there (next section), plus `YOUTUBE_API_KEY` and `CRON_SECRET` for the Content page (see Supports, likes and notes backend). `ALLOWED_ORIGINS` is optional (extra sites allowed to call `/api/*`, comma separated, for example a `www` alias).
+Also set `SUPABASE_URL` and `SUPABASE_SECRET_KEY` there (next section), plus `VITE_REALTIME_URL` and `VITE_VAPID_PUBLIC_KEY` for the live features (see Live Worker). `ALLOWED_ORIGINS` is optional (extra sites allowed to call `/api/*`, comma separated, for example a `www` alias).
 The Content-Security-Policy in `vercel.json` only lets images load from this site, `i.ytimg.com`, `*.supabase.co` and `pbs.twimg.com`.
 
 ## Schedule backend
@@ -71,7 +71,7 @@ Five more routes of `api/index.ts` read Supabase through the same secret key (RL
 | `GET /api/notes/` | `viewers_notes` | Viewer notes (Supports) |
 | `GET /api/fanart/<page>/` | `fanarts` | Fan art, 9 per page (3 by 3 on a desktop, 2 columns on a phone), newest post first (Supports). `<page>` starts at 1 (up to 100), the answer is `{ posts, hasMore }`. The page loads page 1 and asks for the next one only when "Load more" is clicked |
 | `GET /api/content/<kind>/` | `videos` | Content page, one tab per `<kind>`: `live` (streams), `short` (Shorts), `vod` (regular videos) or `song` (every video whose `label` is `original` or `cover`, whatever its kind). The 12 newest of that kind. Only reads the table; it never calls YouTube |
-| `GET /api/videos/sync/` | `videos` | Not for the browser. Vercel Cron calls it daily at 03:00 UTC (`crons` in `vercel.json`). It reads the newest uploads of the `@MizuHamzazu` channel from the YouTube Data API v3 (streams, regular videos and Shorts), inserts the ones the table does not have yet, then deletes the oldest so each category keeps 12. Rows already in the table are never changed, so a `kind` or `label` you corrected by hand stays. Answers `401` unless the request carries `Authorization: Bearer $CRON_SECRET`. Needs `YOUTUBE_API_KEY` and `CRON_SECRET` (at least 32 characters, for example `openssl rand -hex 32`) |
+| _(video sync)_ | `videos` | Moved to the live Worker (see Live Worker): it fills the table, and the database keeps every category at 12 |
 
 Only this site's own pages may call the API: other origins get `403` (CORS plus an origin check). Allowed are `VITE_SITE_URL`, the Vercel production domain, `ALLOWED_ORIGINS`, and outside production the Vercel preview URLs and `localhost:3000` / `localhost:5173`.
 
@@ -187,6 +187,43 @@ insert into public.viewers_notes (name, note) values
   ('Fikk', 'Semangat streaming dan bikin kontennya, btw mizu kangen.');
 ```
 
+## Live Worker (v1.0.0-live)
+
+`worker/` is a Cloudflare Worker (Hono + one Durable Object, `LiveHub`). It is the real-time edge and the machine-to-machine (M2M) gateway; the Vercel function above stays the cached public read API.
+
+| Address (on the Worker) | What it does |
+| --- | --- |
+| `GET /api/realtime/events` | Server-Sent Events. Channels `live:status`, `schedule:update`, `system:guerilla`. A new connection first receives the latest message of each channel. The site opens one connection (`RealtimeProvider.tsx`), closes it after a minute in a hidden tab and reopens it when the tab is shown |
+| `POST` / `DELETE /api/notifications/subscribe` | Web Push (VAPID) subscription, only from the site's own pages, only for browser push services |
+| `POST /api/system/guerilla` | Guerilla mode on/off. Scope `system:write` or `admin` |
+| `POST /api/schedule`, `DELETE /api/schedule/:id` | Create, update, delete streams. Scope `schedule:write` |
+| `POST /api/videos/sync`, `POST /api/videos/prune` | Sync uploads now (3 YouTube units, once a minute) and re-apply the window. Scope `content:write` |
+
+Everything is described, with an interactive explorer, at `/docs/` and `/<locale>/docs/` (`src/pages/DocsPage.tsx`, spec in `src/data/openapi.ts`; hidden from search engines through `HIDDEN_PAGES`, loaded only when opened).
+
+**What a minute of cron does** (`worker/src/poller.ts`): read `system_configs` and the schedule, poll YouTube (every 5 minutes; every minute within 30 minutes of a stream's start, while a stream is live, or in guerilla mode), write what changed to `stream_slots`, publish the state to every open page (a message that did not change is not sent), send the "live" alert in batches, and once a day (or when the database asks for a backfill) sync the newest uploads. Table Editor edits reach open pages within a minute. A poll costs 2 YouTube units and a sync 3; the Durable Object counts them per Pacific day and stops at 9,000 of the 10,000.
+
+**Guerilla mode** (`system_configs`, key `guerilla_mode`, value `{"active": true, "message": "..."}`): set it with the API or in the Table Editor. The Schedule section turns into the glitch banner (`GuerillaBanner.tsx`), the Hero countdown hides, the Worker stops routine syncing and waiting-room writes but keeps polling every minute so a surprise stream is caught at once.
+
+**Sliding window**: `videos` keeps 12 per bucket (`live`, `short`, `vod`, `song`; original/cover labels are songs). The database does it (`videos_rebalance` trigger, `prune_videos()`, `ingest_videos()`), so editing a label in the Table Editor rebalances at once. When a bucket YouTube can fill runs short, the trigger sets `video_backfill` and the Worker refills it (at most every 30 minutes).
+
+### Set it up
+
+1. Run `supabase/migrations/20261014000000_v1_live.sql` in the SQL editor (idempotent, safe to run again).
+2. `cd worker && npm install`, set the vars in `wrangler.jsonc`, then secrets: `npx wrangler secret put SUPABASE_URL SUPABASE_SECRET_KEY YOUTUBE_API_KEY VAPID_PUBLIC_KEY VAPID_PRIVATE_KEY WORKER_BRIDGE_SECRET` (one at a time). `npx web-push generate-vapid-keys` makes the VAPID pair, `openssl rand -hex 32` the bridge secret. `npm run deploy`.
+3. In Vercel add `VITE_REALTIME_URL` (the Worker's address) and `VITE_VAPID_PUBLIC_KEY`, and put the same address in `connect-src` of `vercel.json`. Deploy the Worker **before** the site: the daily Vercel cron and `/api/videos/sync/` are gone, the Worker fills `videos` now (its first tick does the first sync). `YOUTUBE_API_KEY` and `CRON_SECRET` are no longer needed in Vercel.
+4. `public/sw.js` is the service worker that shows the push. Add a notification icon there if you want one.
+
+### API keys (no dashboard)
+
+```bash
+npm run key:new -- --name "schedule-bot" --scopes "schedule:write,content:write" [--rate-limit 60]
+```
+
+or in the Supabase SQL editor: `select public.generate_api_key('schedule-bot', array['schedule:write']);`. Scopes: `schedule:write`, `content:write`, `system:write`, `admin`. The key (`mizu_live_` + 48 hex) is shown once; only its SHA-256 is stored (a salt would add nothing for 192 random bits, and the hash is the lookup key). Send it as `X-API-Key` or `Authorization: Bearer`. To revoke, set `is_active` to `false` in `api_keys` (the Worker looks the key up on every call, so it stops working at once). `WORKER_BRIDGE_SECRET` is accepted in place of a key by trusted services: no lookup and no per-key limit, so keep it to the Worker's own callers.
+
+Tests: `cd worker && npm test`.
+
 ## Maintaining the data
 
 | To | Do this in the Table Editor |
@@ -272,6 +309,7 @@ curl "$SUPABASE_URL/rest/v1/fanarts?select=id,username,media_url&order=posted_at
 
 | What | Where |
 | --- | --- |
+| Live events, Live notif, guerilla banner | `worker/`, `src/context/RealtimeProvider.tsx`, `src/hooks/useLiveNotif.ts`, `src/components/sections/GuerillaBanner.tsx`, `public/sw.js` |
 | Site name, links, handles, theme colour, share image | `src/config/site.ts` |
 | Profile facts that are the same in every language (height, debut, birthday, fan name, socials, aliases). Empty values (like `illustrator` until it is known) are never published | `src/config/site.ts` (`profile`, `fanName`) |
 | **All text**, in English, Japanese, Indonesian and Korean: UI labels, SEO title/description, bio, FAQ, emote names, form messages | `src/i18n/messages/{en,jp,id,kr}.ts` |

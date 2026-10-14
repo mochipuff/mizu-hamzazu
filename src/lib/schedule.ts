@@ -11,6 +11,8 @@ export interface StreamSlot {
   platform: PlatformId;
   membersOnly: boolean;
   thumbnailUrl: string | null;
+  /** What the live Worker saw on YouTube. null for a stream added by hand: its times decide. */
+  liveStatus?: 'upcoming' | 'live' | 'ended' | null;
 }
 
 export interface StreamOccurrence {
@@ -117,12 +119,16 @@ export function getOccurrence(slot: StreamSlot): StreamOccurrence {
 
 /** The stream that is live now, or else the next one to start. */
 export function getNextOccurrence(slots: StreamSlot[], now: number): StreamOccurrence | null {
-  const upcoming = slots.map(getOccurrence).filter((occurrence) => occurrence.end > now);
+  const upcoming = slots.map(getOccurrence).filter((occurrence) => getStatus(occurrence, now) !== 'done');
   return upcoming.sort((a, b) => a.start - b.start)[0] ?? null;
 }
 
+/** YouTube's word wins when the Worker has it: a stream that runs past its planned end is still live, and a waiting room is not live at its start time. */
 export function getStatus(occurrence: StreamOccurrence, now: number): OccurrenceStatus {
-  if (now >= occurrence.end) return 'done';
+  const { liveStatus } = occurrence.slot;
+  if (liveStatus === 'live') return 'live';
+  if (liveStatus === 'ended' || now >= occurrence.end) return 'done';
+  if (liveStatus === 'upcoming') return 'upcoming';
   return now >= occurrence.start ? 'live' : 'upcoming';
 }
 

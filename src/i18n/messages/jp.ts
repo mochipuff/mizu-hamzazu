@@ -23,6 +23,8 @@ export const jp: Messages = {
     mobileNav: 'モバイル',
     soundOn: 'SFX: オン',
     soundOff: 'SFX: オフ',
+    liveNotifOn: 'ライブ通知: オン',
+    liveNotifOff: 'ライブ通知: オフ',
     openMenu: 'メニューを開く',
     closeMenu: 'メニューを閉じる',
     language: '言語',
@@ -99,6 +101,26 @@ export const jp: Messages = {
     title: 'アクセス禁止',
     lead: 'データは巣穴の中で大切に守られています。このアドレスは直接開けないので、ウェブサイトからご利用ください。',
     homeCta: 'ホームに戻る',
+  },
+
+  live: {
+    notifEnabled: 'ライブ通知をオンにしました。Mizuの配信が始まったらお知らせします。',
+    notifDisabled: 'ライブ通知をオフにしました。',
+    notifBlocked: 'このサイトの通知がブロックされています。ブラウザの設定で許可してください。',
+    notifDismissed: '通知が許可されなかったため、ライブ通知はオフのままです。',
+    notifUnsupported: 'このブラウザはプッシュ通知に対応していません。iPhoneでは先にサイトをホーム画面に追加してください。',
+    notifFailed: 'ライブ通知をオンにできませんでした。もう一度お試しください。',
+    nowLiveToast: (title) => `Mizuが配信中です: ${title}`,
+  },
+
+  docs: {
+    seo: {
+      title: 'APIドキュメント | Mizu Hamzazu',
+      description: 'Mizu Hamzazuのライブ・スケジュールAPIのインタラクティブなリファレンス。',
+    },
+    title: 'APIドキュメント',
+    loading: 'APIリファレンスを読み込み中…',
+    loadFailed: 'APIリファレンスを読み込めませんでした。しばらくしてからもう一度お試しください。',
   },
 
   profile: {
@@ -222,6 +244,11 @@ export const jp: Messages = {
     calendarName: (name) => `${name} 配信`,
     calendarDownloaded: 'カレンダーファイルをダウンロードしました。',
     reminder: (title) => `${title}があと15分で始まります`,
+    guerilla: {
+      badge: 'ゲリラモード',
+      title: 'ゲリラ配信',
+      message: 'ゲリラモード中です。待機所なしで突然配信が始まることがあるため、通常のスケジュールは一時停止しています。',
+    },
   },
 
   emotes: {

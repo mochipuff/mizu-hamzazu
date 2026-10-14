@@ -23,6 +23,8 @@ export const id: Messages = {
     mobileNav: 'Seluler',
     soundOn: 'Sfx: nyala',
     soundOff: 'Sfx: mati',
+    liveNotifOn: 'Notif live: aktif',
+    liveNotifOff: 'Notif live: mati',
     openMenu: 'Buka menu',
     closeMenu: 'Tutup menu',
     language: 'Bahasa',
@@ -99,6 +101,26 @@ export const id: Messages = {
     title: 'Akses Ditolak',
     lead: 'Data Mizu aman di dalam sarang. Alamat ini tidak bisa dibuka langsung, jadi silakan gunakan situsnya.',
     homeCta: 'Kembali ke beranda',
+  },
+
+  live: {
+    notifEnabled: 'Notifikasi live aktif. Kami kabari kamu saat Mizu mulai live.',
+    notifDisabled: 'Notifikasi live dimatikan.',
+    notifBlocked: 'Notifikasi diblokir untuk situs ini. Izinkan lewat pengaturan browser.',
+    notifDismissed: 'Izin tidak diberikan, jadi notifikasi live tetap mati.',
+    notifUnsupported: 'Browser ini tidak bisa menerima notifikasi push. Di iPhone, tambahkan situs ke Layar Utama dulu.',
+    notifFailed: 'Notifikasi live gagal diaktifkan. Coba lagi ya.',
+    nowLiveToast: (title) => `Mizu lagi live sekarang: ${title}`,
+  },
+
+  docs: {
+    seo: {
+      title: 'Dokumentasi API | Mizu Hamzazu',
+      description: 'Referensi API interaktif untuk layanan live dan jadwal Mizu Hamzazu.',
+    },
+    title: 'Dokumentasi API',
+    loading: 'Memuat referensi API…',
+    loadFailed: 'Referensi API tidak bisa dimuat. Coba lagi nanti.',
   },
 
   profile: {
@@ -222,6 +244,11 @@ export const id: Messages = {
     calendarName: (name) => `Stream ${name}`,
     calendarDownloaded: 'File kalender diunduh.',
     reminder: (title) => `${title} mulai 15 menit lagi`,
+    guerilla: {
+      badge: 'Mode gerilya',
+      title: 'Stream gerilya',
+      message: 'Mode Gerilya aktif. Jadwal biasa dijeda karena stream bisa mulai kapan saja tanpa waiting room.',
+    },
   },
 
   emotes: {

@@ -1,4 +1,3 @@
-import { timingSafeEqual } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
@@ -30,6 +29,8 @@ interface StreamSlotRow {
   platform: 'youtube' | 'twitch' | 'x' | 'discord';
   membersOnly: boolean;
   thumbnailUrl: string | null;
+  /** Set by the live Worker; null for rows added by hand. */
+  liveStatus: 'upcoming' | 'live' | 'ended' | null;
 }
 
 interface PreferenceRow {
@@ -61,10 +62,6 @@ interface VideoRow {
   publishedAt: string;
 }
 
-interface YouTubePlaylistPage {
-  items: { snippet: { title: string }; contentDetails: { videoId: string; videoPublishedAt?: string } }[];
-}
-
 const DAY_MS = 86_400_000;
 const cacheControl = (sMaxAge: number, staleWhileRevalidate: number): string => `public, s-maxage=${sMaxAge}, stale-while-revalidate=${staleWhileRevalidate}`;
 const SCHEDULE_CACHE = cacheControl(60, 300);
@@ -73,17 +70,11 @@ const SLOW_CACHE = cacheControl(3_600, 86_400);
 const FANART_PAGE_SIZE = 9;
 const FANART_MAX_PAGE = 100;
 
-const YOUTUBE_API = 'https://www.googleapis.com/youtube/v3';
-const YOUTUBE_HANDLE = '@MizuHamzazu';
-// A channel id `UCxxx` has one auto-made playlist per kind of upload: `UULVxxx` live streams, `UUSHxxx` Shorts, `UULFxxx` regular videos.
-const VIDEO_PLAYLIST_PREFIX = { live: 'UULV', short: 'UUSH', vod: 'UULF' } as const;
-type VideoKind = keyof typeof VIDEO_PLAYLIST_PREFIX;
-// Videos the sync tries to keep per category (Streams, Shorts, Videos, Songs). A video labelled original/cover in `videos.label` is a Song, whatever its kind.
+// The kinds of upload a Content tab lists. The Worker (`worker/src/youtube.ts`) fills the `videos` table; this function only reads it.
+const VIDEO_KINDS = ['live', 'short', 'vod'] as const;
+type VideoKind = (typeof VIDEO_KINDS)[number];
+// Videos a category shows (Streams, Shorts, Videos, Songs). A video labelled original/cover in `videos.label` is a Song, whatever its kind. The database keeps each bucket at this size.
 const VIDEOS_PER_CATEGORY = 12;
-// A playlist page holds more than a category keeps, so the window stays full after videos are labelled as songs.
-const VIDEO_SYNC_PAGE_SIZE = 50;
-// A video that sits in two playlists keeps the kind of the later one: what is in the /videos tab is a Video, and a Short is a Short.
-const SYNC_KINDS = ['live', 'vod', 'short'] as const satisfies readonly VideoKind[];
 
 const toOrigin = (value: string | undefined): string[] => {
   const host = value?.trim();
@@ -120,65 +111,7 @@ function unwrap<T>({ data, error }: { data: T | null; error: { message: string }
   return data;
 }
 
-const isContentKind = (value: string): value is VideoKind | 'song' => value === 'song' || Object.hasOwn(VIDEO_PLAYLIST_PREFIX, value);
-
-async function youtube<T>(path: string, params: Record<string, string>): Promise<T | null> {
-  const response = await fetch(`${YOUTUBE_API}/${path}?${new URLSearchParams(params)}`, { headers: { 'x-goog-api-key': requireEnv('YOUTUBE_API_KEY') } });
-  // A channel with no Shorts (or no streams) has no such playlist.
-  if (response.status === 404) return null;
-  if (!response.ok) throw new Error(`YouTube ${path} failed: ${response.status}`);
-  return (await response.json()) as T;
-}
-
-async function fetchChannelVideos(channelId: string, kind: VideoKind) {
-  const playlistId = VIDEO_PLAYLIST_PREFIX[kind] + channelId.slice(2);
-  const result = await youtube<YouTubePlaylistPage>('playlistItems', { part: 'snippet,contentDetails', playlistId, maxResults: String(VIDEO_SYNC_PAGE_SIZE) });
-  // Private and deleted videos stay in a playlist but have no publish date.
-  return (result?.items ?? []).flatMap(({ snippet, contentDetails }) =>
-    contentDetails.videoPublishedAt ? [{ id: contentDetails.videoId, kind, title: snippet.title, published_at: contentDetails.videoPublishedAt }] : [],
-  );
-}
-
-/** Rolling window: once a category holds more than VIDEOS_PER_CATEGORY, the oldest videos go. Songs are a category of their own. */
-async function pruneVideos(): Promise<void> {
-  const rows = unwrap(
-    await supabase
-      .from('videos')
-      .select('id,kind,label')
-      .order('published_at', { ascending: false })
-      .overrideTypes<Pick<VideoRow, 'id' | 'kind' | 'label'>[], { merge: false }>(),
-  );
-
-  const kept = new Map<string, number>();
-  const stale = rows
-    .filter(({ kind, label }) => {
-      const category = label ? 'song' : kind;
-      const count = (kept.get(category) ?? 0) + 1;
-      kept.set(category, count);
-      return count > VIDEOS_PER_CATEGORY;
-    })
-    .map(({ id }) => id);
-
-  if (stale.length === 0) return;
-  const { error } = await supabase.from('videos').delete().in('id', stale);
-  if (error) throw new Error(`Supabase: ${error.message}`, { cause: error });
-}
-
-/** Called by the daily cron: adds the newest videos of the channel from YouTube to Supabase, then drops the ones that fell out of the window. Existing rows are never changed here, so `kind` and `label` can be edited by hand. */
-async function syncVideos(): Promise<void> {
-  const channel = await youtube<{ items?: { id: string }[] }>('channels', { part: 'id', forHandle: YOUTUBE_HANDLE });
-  const channelId = channel?.items?.[0]?.id;
-  if (!channelId) throw new Error(`YouTube channel ${YOUTUBE_HANDLE} not found`);
-
-  const lists = await Promise.all(SYNC_KINDS.map((kind) => fetchChannelVideos(channelId, kind)));
-  // Keyed by id, so a video found in two playlists is saved once, with the kind of the later list.
-  const byId = new Map(lists.flat().map((row) => [row.id, row]));
-  // Only new videos are inserted: a row already in the table keeps its `kind` and `label`, so what is corrected by hand stays corrected.
-  const { error } = await supabase.from('videos').upsert([...byId.values()], { onConflict: 'id', ignoreDuplicates: true });
-  if (error) throw new Error(`Supabase: ${error.message}`, { cause: error });
-
-  await pruneVideos();
-}
+const isContentKind = (value: string): value is VideoKind | 'song' => value === 'song' || VIDEO_KINDS.some((kind) => kind === value);
 
 const readVideos = async (kind: VideoKind | 'song'): Promise<VideoRow[]> => {
   const videos = supabase.from('videos').select('id,kind,label,title,publishedAt:published_at');
@@ -206,7 +139,7 @@ app.use('/api/*', async (c, next) => {
 
   const origin = c.req.header('origin');
   const fetchSite = c.req.header('sec-fetch-site');
-  // Browsers always send `Sec-Fetch-Site` (`none` for a typed address). Callers that are not browsers send neither header: the cron proves itself with its secret.
+  // Browsers always send `Sec-Fetch-Site` (`none` for a typed address). Callers that are not browsers send neither header and are let through: everything under /api here is public data.
   const fromOurPages = origin ? allowedOrigins.has(origin) : !fetchSite || fetchSite === 'same-origin';
   if (fromOurPages) return next();
 
@@ -226,7 +159,7 @@ app.get('/api/schedule', async (c) => {
   const slots = unwrap(
     await supabase
       .from('stream_slots')
-      .select('id,title,description,datetime,durationMinutes:duration_minutes,platform,membersOnly:members_only,thumbnailUrl:thumbnail_url')
+      .select('id,title,description,datetime,durationMinutes:duration_minutes,platform,membersOnly:members_only,thumbnailUrl:thumbnail_url,liveStatus:live_status')
       .gte('datetime', new Date(now - DAY_MS).toISOString())
       .lt('datetime', new Date(now + 8 * DAY_MS).toISOString())
       .order('datetime')
@@ -296,18 +229,6 @@ app.get('/api/content/:kind', async (c) => {
 
   c.header('Cache-Control', SLOW_CACHE);
   return c.json(await readVideos(kind));
-});
-
-// Vercel Cron calls this daily with `Authorization: Bearer $CRON_SECRET`.
-app.get('/api/videos/sync', async (c) => {
-  c.header('Cache-Control', 'no-store');
-  const cronSecret = requireEnv('CRON_SECRET', (value) => value.length < 32 && 'must be at least 32 characters (openssl rand -hex 32)');
-  const given = Buffer.from(c.req.header('authorization') ?? '');
-  const expected = Buffer.from(`Bearer ${cronSecret}`);
-  if (given.length !== expected.length || !timingSafeEqual(given, expected)) return c.json({ error: 'Unauthorized' }, 401);
-
-  await syncVideos();
-  return c.json({ ok: true });
 });
 
 app.onError((error, c) => {

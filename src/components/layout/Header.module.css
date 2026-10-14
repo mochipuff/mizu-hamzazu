@@ -53,7 +53,7 @@
   height: 1.6rem;
 }
 
-/* A speech bubble under the brand pill: the sound switch and the way home. */
+/* A speech bubble under the brand pill: the sound switch, the live alerts switch and the way home. */
 .bubble {
   position: absolute;
   top: calc(100% + 0.9rem);
@@ -111,6 +111,11 @@
 
 .bubbleItem:hover {
   background: var(--shallows);
+}
+
+.bubbleItem:disabled {
+  opacity: 0.6;
+  cursor: progress;
 }
 
 .bubbleItem[data-on='true'] {

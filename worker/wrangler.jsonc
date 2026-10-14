@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mizu-live",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  // node:crypto (SHA-256 and timingSafeEqual for the API keys).
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+
+  // Production secrets are set with `npx wrangler secret put <NAME>`; local ones live in .dev.vars (see .dev.vars.example).
+  "vars": {
+    "SITE_ORIGINS": "https://mizu.fikk.web.id",
+    "YOUTUBE_HANDLE": "@MizuHamzazu",
+    "VAPID_SUBJECT": "mailto:yuanbay.cc@gmail.com"
+  },
+
+  "durable_objects": { "bindings": [{ "name": "LIVE_HUB", "class_name": "LiveHub" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["LiveHub"] }],
+
+  // One tick per minute. The Worker decides what each tick does: poll YouTube (every 5 minutes, every minute near a stream or in guerilla mode), publish changes, send alerts.
+  "triggers": { "crons": ["* * * * *"] },
+
+  "ratelimits": [{ "name": "LIMITER", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } }]
+}
