@@ -49,6 +49,7 @@
   overflow: hidden;
 }
 
+/* Every emote sits in the same square tile (`LoadingImage` with `--image-fit: contain`) and keeps its own proportions, so an image that is not exactly square is not stretched. */
 .card:hover .tile img {
   transform: scale(1.08) rotate(3deg);
 }

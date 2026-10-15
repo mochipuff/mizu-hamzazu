@@ -61,10 +61,12 @@ function LiveEndedStamp({ label }: { label: string }) {
 interface StreamCardProps {
   occurrence: StreamOccurrence;
   now: number;
+  /** The viewer's time zone, which the time range is shown in. */
   zone: string;
   onAddToCalendar: (occurrence: StreamOccurrence) => void;
 }
 
+/** One stream of a day: thumbnail, time, title, status and the watch and calendar buttons. */
 export function StreamCard({ occurrence, now, zone, onAddToCalendar }: StreamCardProps) {
   const { locale, t } = useI18n();
   const { slot } = occurrence;
