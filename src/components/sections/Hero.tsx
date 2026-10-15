@@ -15,7 +15,6 @@ import styles from './Hero.module.css';
 
 const pad = (value: number): string => String(value).padStart(2, '0');
 
-/** The stream that is on now or else the next one, and whether it is on. */
 function useNextStream() {
   const now = useNow();
   const { slots } = useStreamSlots();
@@ -23,7 +22,6 @@ function useNextStream() {
   return { now, occurrence, live: occurrence ? getStatus(occurrence, now) === 'live' : false };
 }
 
-/** Watch buttons for YouTube and Twitch. The one for the platform that is streaming right now turns into the animated Now live button. */
 function HeroActions() {
   const { t } = useI18n();
   const { occurrence, live } = useNextStream();

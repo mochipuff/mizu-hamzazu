@@ -36,16 +36,13 @@ interface Decoration {
 }
 
 const COLUMNS = 3;
-// The API serves 9 posts a page, so the placeholders fill the same grid and nothing jumps when the first page arrives.
 const SKELETON_COUNT = 9;
 const SHAPES = [Flower, Cloud, Pin, Paw, Heart] as const;
 const SIZES = [44, 36, 40, 32] as const;
 const TILTS = [-14, 10, -6, 16, -18, 8] as const;
 const DECORATION_COUNT = 14;
-// How far each sticker drifts against the scroll, in px. They cycle, so neighbours move at different speeds.
 const PARALLAX = [30, 55, 40, 70] as const;
 
-// A fixed zigzag down the two edges of the section, behind the grid: same spot on every visit, never two stickers side by side, never covering the art.
 const decorations: Decoration[] = Array.from({ length: DECORATION_COUNT }, (_, id) => ({
   id,
   Shape: SHAPES[id % SHAPES.length] ?? Heart,
@@ -57,7 +54,6 @@ const decorations: Decoration[] = Array.from({ length: DECORATION_COUNT }, (_, i
 
 const pagePath = (page: number): string => `/api/fanart/${page}/`;
 
-/** Cards in the shape of the real ones, one page of them, while the API answers. */
 function FanartSkeleton() {
   return Array.from({ length: SKELETON_COUNT }, (_, index) => (
     <li key={index} className={styles.slot}>
@@ -71,7 +67,6 @@ function FanartSkeleton() {
   ));
 }
 
-/** The cards of one page of the API. Reading the page suspends the nearest boundary until it has arrived. */
 function FanartPage({ page }: { page: number }) {
   const { t, locale } = useI18n();
   const { fanart } = t.supports;
@@ -117,7 +112,6 @@ function FanartPage({ page }: { page: number }) {
   );
 }
 
-/** Shown below the last page that was read, and only when the API says there is an older one. */
 function LoadMore({ page, busy, onMore }: { page: number; busy: boolean; onMore: () => void }) {
   const { t } = useI18n();
   const { hasMore } = useData<FanartResponse>(pagePath(page));
@@ -132,7 +126,6 @@ function LoadMore({ page, busy, onMore }: { page: number; busy: boolean; onMore:
   );
 }
 
-/** Page 1 loads with the section, every older page when "Load more" is pressed: the page that is already on screen stays put while the next one arrives. */
 function Feed() {
   const { t } = useI18n();
   const [pages, setPages] = useState(1);
@@ -176,9 +169,6 @@ export function Fanart() {
   const { fanart } = t.supports;
   const decorRef = useRef<HTMLDivElement>(null);
 
-  // Each layer owns different properties, so the three animations never fight over a transform (same idea as StreamDecor).
-  // Scroll: the stickers pop in the first time the section is seen, then drift at their own speed as it scrolls past.
-  // Idle: each one flies a small loop of its own, drifting towards the content, so none moves in lockstep.
   useGsap(decorRef, () => {
     const section = decorRef.current?.closest('section');
     if (!section) return;

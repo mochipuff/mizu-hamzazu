@@ -1,12 +1,3 @@
--- 05_patch_fanart_unique.sql  [Incremental Patch]
--- Run after 01_schema.sql on any database, new or existing, any number of times.
---
--- Makes `POST /api/admin/fanarts` idempotent: a bot that times out and sends the same fan art again gets `409 Already exists`
--- instead of the art being stored twice.
---
--- Nothing is ever deleted here. If the table already holds the same `media_url` more than once the index is not created and a
--- notice says how many links are duplicated: remove the extra rows in the Table Editor, then run this file again.
-
 do $$
 declare
   v_duplicated bigint;

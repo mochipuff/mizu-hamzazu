@@ -82,7 +82,6 @@ export const id: Messages = {
     tags: { live: 'Live stream', short: 'Shorts', vod: 'Video', original: 'Lagu original', cover: 'Lagu cover' },
   },
 
-  // Where the API sends a visitor who opens one of its addresses in the browser (see api/index.ts).
   forbidden: {
     seo: {
       title: 'Akses Ditolak | Mizu Hamzazu',
@@ -152,7 +151,7 @@ export const id: Messages = {
 
   hero: {
     tag: 'Virtual Youtuber',
-    greeting: 'Cihuyyy,',
+    greeting: 'Halo,',
     iAm: (name) => `Aku ${name}!`,
     intro:
       'Mizu Hamzazu adalah hamster isekai yang datang dengan satu misi utama: menemukan adiknya yang hilang. Berusia 18 tahun selamanya, Mizu kini membuka lembaran baru dalam perjalanannya.',

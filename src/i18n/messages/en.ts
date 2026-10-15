@@ -1,8 +1,3 @@
-/**
- * English is the source of truth. `Messages` (see ./index.ts) is derived from this object, so adding or renaming
- * a key here makes the compiler list every other language that has to follow.
- * Strings that need a value are functions, so each language can place the value where its grammar wants it.
- */
 export const en = {
   skipLink: 'Skip to content',
 
@@ -15,7 +10,6 @@ export const en = {
     secretCode: 'Secret code found! Confetti storm unlocked.',
   },
 
-  // Shown before the app loads. Keep in step with the literal text in index.html.
   loader: {
     title: 'Loading',
     note: 'Waking up mizu...',
@@ -46,7 +40,6 @@ export const en = {
     content: 'Content',
   },
 
-  // Search engines, link previews and AI crawlers.
   seo: {
     title: 'Mizu Hamzazu | Indonesian Hamster VTuber',
     description: 'Official site of Mizu Hamzazu, an Indonesian hamster VTuber. Weekly stream schedule for freetalk, cozy games and karaoke, emotes, and the Zutopian community.',
@@ -87,7 +80,6 @@ export const en = {
     tags: { live: 'Stream', short: 'Short', vod: 'Video', original: 'Original song', cover: 'Cover song' },
   },
 
-  // Where the API sends a visitor who opens one of its addresses in the browser (see api/index.ts).
   forbidden: {
     seo: {
       title: 'Forbidden | Mizu Hamzazu',
@@ -157,7 +149,7 @@ export const en = {
 
   hero: {
     tag: 'Virtual Youtuber',
-    greeting: 'Cihuyyy,',
+    greeting: 'Hello,',
     iAm: (name: string) => `I’m ${name}!`,
     intro:
       'Mizu Hamzazu is an isekai hamster who arrived with one primary mission: to find her lost younger sibling. Eternally 18 years old, Mizu is turning a new page in her journey.',
@@ -284,7 +276,6 @@ export const en = {
     legal: (year: number, owner: string) => `© ${year} ${owner}. Fan art and clips are welcome, please credit and link back.`,
   },
 
-  // The no-JavaScript fallback page that search engines read.
   noscript: {
     findOnline: (name: string) => `Find ${name} online`,
   },
