@@ -18,10 +18,6 @@ import { SupportsPage } from './pages/SupportsPage.tsx';
 
 const PAGE_KEY = 'mizu:page';
 
-/**
- * Some browsers reload a tab on the URL it first loaded, not the one it is showing (Android Chrome's "Desktop site" switch).
- * The page being read is kept per tab and put back after a reload.
- */
 function KeepPage() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -41,14 +37,12 @@ function KeepPage() {
       }
       window.sessionStorage.setItem(PAGE_KEY, pathname);
     } catch {
-      /* storage is unavailable; a reload simply stays where the browser put it */
     }
   }, [pathname, navigate]);
 
   return null;
 }
 
-/** `/`, `/supports/`, `/forbidden/` (where the API sends a browser that opens one of its addresses) and `/xx/` become the same page in a real language. Unknown paths land on the home page, as they always did. */
 function RedirectToLocale() {
   const { pathname, search, hash } = useLocation();
   const locale = localeFromPath(pathname) ?? preferredLocale();
@@ -61,7 +55,6 @@ function Layout() {
   const { hash } = useLocation();
   const previousPage = useRef(page);
 
-  // A new page opens at its top, or at the section named in the URL (`/en/#faq`). The first page the visitor loads is left to the browser.
   useEffect(() => {
     if (previousPage.current === page) return;
     previousPage.current = page;
