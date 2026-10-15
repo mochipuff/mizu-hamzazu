@@ -5,6 +5,7 @@ export const jp: Messages = {
 
   common: {
     loadFailed: '読み込めませんでした。しばらくしてからもう一度お試しください。',
+    retry: 'もう一度試す',
     loading: '読み込み中…',
     empty: 'まだ何もありません。',
     copyBlocked: 'このブラウザではコピーがブロックされています。',

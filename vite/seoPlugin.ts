@@ -325,13 +325,12 @@ function fillTemplate(template: string, locale: Locale, siteUrl: string, page: P
     .replace(/\{\{(\w+)\}\}/g, (match, key: string) => values[key] ?? match);
 }
 
-/**
- * What `/` serves: a tiny page that sends the visitor to their language without downloading the app.
- * Saved choice first, then the device languages, then the default. Mirrors `ensureLocaleInUrl` in src/i18n/navigation.ts.
- */
-function buildRootPage(siteUrl: string): string {
-  const { title, description } = messages[DEFAULT_LOCALE].seo;
-  const redirect = `(function(){
+// The language redirect is a file of its own, not an inline script, so the Content-Security-Policy can say `script-src 'self'` with no `'unsafe-inline'`.
+const REDIRECT_SCRIPT = 'redirect.js';
+
+/** Saved choice first, then the device languages, then the default. Mirrors `ensureLocaleInUrl` in src/i18n/navigation.ts. */
+function buildRedirectScript(): string {
+  return `(function(){
   var map=${JSON.stringify(Object.fromEntries(browserLanguageMap))},locales=${JSON.stringify(LOCALES)},locale=null;
   try{locale=localStorage.getItem(${JSON.stringify(LOCALE_STORAGE_KEY)})}catch(e){}
   if(locales.indexOf(locale)<0){
@@ -340,7 +339,13 @@ function buildRootPage(siteUrl: string): string {
     for(var i=0;i<languages.length&&!locale;i++)locale=map[String(languages[i]).toLowerCase().split('-')[0]]||null;
   }
   location.replace('/'+(locale||${JSON.stringify(DEFAULT_LOCALE)})+'/'+location.search+location.hash);
-})();`;
+})();
+`;
+}
+
+/** What `/` serves: a tiny page that sends the visitor to their language without downloading the app. */
+function buildRootPage(siteUrl: string): string {
+  const { title, description } = messages[DEFAULT_LOCALE].seo;
 
   // The homepage is where Google reads the site name, so `/` says it too, and names itself as the page the language versions point to.
   const rootTags: HtmlTagDescriptor[] = [
@@ -371,7 +376,7 @@ function buildRootPage(siteUrl: string): string {
     <meta name="description" content="${escapeHtml(description)}">
     <meta name="robots" content="index, follow">
     ${rootTags.map(renderTag).join('\n    ')}
-    <script>${redirect}</script>
+    <script src="/${REDIRECT_SCRIPT}"></script>
     <noscript><meta http-equiv="refresh" content="0;url=${localePath(DEFAULT_LOCALE)}"></noscript>
   </head>
   <body>
@@ -556,6 +561,7 @@ export function seoPlugin(rawSiteUrl: string): Plugin {
       writeFileSync(join(forbiddenFolder, 'index.html'), fillTemplate(template, DEFAULT_LOCALE, siteUrl, 'forbidden'));
 
       writeFileSync(rootFile, buildRootPage(siteUrl));
+      writeFileSync(join(outDir, REDIRECT_SCRIPT), buildRedirectScript());
     },
   };
 }

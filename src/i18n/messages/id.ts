@@ -5,6 +5,7 @@ export const id: Messages = {
 
   common: {
     loadFailed: 'Belum bisa dimuat. Coba lagi nanti ya.',
+    retry: 'Coba lagi',
     loading: 'Memuat…',
     empty: 'Belum ada apa-apa di sini.',
     copyBlocked: 'Penyalinan diblokir di browser ini.',

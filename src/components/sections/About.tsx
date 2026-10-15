@@ -1,11 +1,13 @@
-import { useApi } from '../../data/api.ts';
+import { useData } from '../../data/api.ts';
 import { getProfileFacts } from '../../data/content.ts';
 import { emoteUrl, type EmoteName } from '../../data/images.ts';
 import { useI18n } from '../../i18n/i18n.ts';
 import type { Localized } from '../../i18n/locales.ts';
 import type { Messages } from '../../i18n/messages/index.ts';
+import { AsyncBoundary } from '../ui/AsyncBoundary.tsx';
 import { Paw } from '../ui/Doodles.tsx';
 import { Notice } from '../ui/Notice.tsx';
+import { SkeletonLines } from '../ui/LoadingImage.tsx';
 import { Panel } from '../ui/Panel.tsx';
 import { Reveal } from '../ui/Reveal.tsx';
 import { SectionHeading } from '../ui/SectionHeading.tsx';
@@ -25,17 +27,26 @@ const streamTypes = [
   { id: 'freetalk', emote: 'mizuLove' },
 ] as const satisfies readonly { id: keyof Messages['about']['streamTypes']; emote: EmoteName }[];
 
+/** One of the two lists. Both read the same request, so the API is asked once. */
+function PreferenceList({ kind }: { kind: Preference['kind'] }) {
+  const { locale, t } = useI18n();
+  const labels = useData<Preference[]>('/api/preferences/').filter((preference) => preference.kind === kind);
+
+  return (
+    <>
+      <ul className={styles.list}>
+        {labels.map(({ id, label }) => (
+          <li key={id}>{label[locale]}</li>
+        ))}
+      </ul>
+      {labels.length === 0 && <Notice kind="empty">{t.common.empty}</Notice>}
+    </>
+  );
+}
+
 export function About() {
   const { locale, t } = useI18n();
   const { about } = t;
-  const { status, data: preferences = [] } = useApi<Preference[]>('/api/preferences/');
-  const labelsOf = (kind: Preference['kind']) => preferences.filter((preference) => preference.kind === kind);
-  const listNotice = (kind: Preference['kind']) =>
-    status === 'error' ? (
-      <Notice kind="error">{t.common.loadFailed}</Notice>
-    ) : (
-      status === 'ready' && labelsOf(kind).length === 0 && <Notice kind="empty">{t.common.empty}</Notice>
-    );
 
   return (
     <section id="lore" className={styles.section} aria-labelledby="lore-title">
@@ -76,12 +87,9 @@ export function About() {
                 <Paw className={styles.listIcon} color="var(--lagoon)" />
                 {about.likesTitle}
               </h3>
-              <ul className={styles.list}>
-                {labelsOf('like').map(({ id, label }) => (
-                  <li key={id}>{label[locale]}</li>
-                ))}
-              </ul>
-              {listNotice('like')}
+              <AsyncBoundary fallback={<SkeletonLines />}>
+                <PreferenceList kind="like" />
+              </AsyncBoundary>
             </Panel>
           </Reveal>
 
@@ -91,12 +99,9 @@ export function About() {
                 <Paw className={styles.listIcon} color="var(--rust)" />
                 {about.dislikesTitle}
               </h3>
-              <ul className={styles.list}>
-                {labelsOf('dislike').map(({ id, label }) => (
-                  <li key={id}>{label[locale]}</li>
-                ))}
-              </ul>
-              {listNotice('dislike')}
+              <AsyncBoundary fallback={<SkeletonLines />}>
+                <PreferenceList kind="dislike" />
+              </AsyncBoundary>
             </Panel>
           </Reveal>
         </div>

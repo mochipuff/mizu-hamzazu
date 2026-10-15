@@ -8,6 +8,7 @@ export const en = {
 
   common: {
     loadFailed: 'This could not be loaded. Please try again later.',
+    retry: 'Try again',
     loading: 'Loading…',
     empty: 'Nothing here yet.',
     copyBlocked: 'Copy is blocked in this browser.',

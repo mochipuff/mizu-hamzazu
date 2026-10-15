@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { load } from '../../data/api.ts';
+import { useRef, useState, useTransition, type ReactNode } from 'react';
+import { useData } from '../../data/api.ts';
 import { useGsap } from '../../hooks/useGsap.ts';
 import { useI18n } from '../../i18n/i18n.ts';
 import { localeInfo } from '../../i18n/locales.ts';
 import { gsap, IDLE, POP } from '../../lib/motion.ts';
+import { AsyncBoundary, LoadFailure } from '../ui/AsyncBoundary.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Paw } from '../ui/Doodles.tsx';
 import { ImagePlaceholder, LoadingImage, SkeletonLines } from '../ui/LoadingImage.tsx';
@@ -20,11 +21,9 @@ interface FanartPost {
   postedAt: string;
 }
 
-interface Feed {
+interface FanartResponse {
   posts: FanartPost[];
-  page: number;
   hasMore: boolean;
-  status: 'idle' | 'loading' | 'error';
 }
 
 interface Decoration {
@@ -56,11 +55,125 @@ const decorations: Decoration[] = Array.from({ length: DECORATION_COUNT }, (_, i
   tilt: TILTS[id % TILTS.length] ?? 0,
 }));
 
-export function Fanart() {
+const pagePath = (page: number): string => `/api/fanart/${page}/`;
+
+/** Cards in the shape of the real ones, one page of them, while the API answers. */
+function FanartSkeleton() {
+  return Array.from({ length: SKELETON_COUNT }, (_, index) => (
+    <li key={index} className={styles.slot}>
+      <div className={`${styles.card} ${styles.pending}`} aria-hidden="true">
+        <span className={styles.photo}>
+          <ImagePlaceholder />
+        </span>
+        <SkeletonLines />
+      </div>
+    </li>
+  ));
+}
+
+/** The cards of one page of the API. Reading the page suspends the nearest boundary until it has arrived. */
+function FanartPage({ page }: { page: number }) {
   const { t, locale } = useI18n();
   const { fanart } = t.supports;
-  const language = localeInfo[locale].htmlLang;
-  const [feed, setFeed] = useState<Feed>({ posts: [], page: 0, hasMore: true, status: 'loading' });
+  const { posts } = useData<FanartResponse>(pagePath(page));
+
+  const formatDate = new Intl.DateTimeFormat(localeInfo[locale].htmlLang, { dateStyle: 'medium' }).format;
+  const gallery = {
+    '@context': 'https://schema.org',
+    '@type': 'ImageGallery',
+    name: fanart.title,
+    hasPart: posts.map(({ username, mediaUrl, postedAt }) => ({
+      '@type': 'ImageObject',
+      contentUrl: mediaUrl,
+      name: fanart.alt(username),
+      creator: { '@type': 'Person', name: `@${username}` },
+      creditText: `@${username}`,
+      uploadDate: postedAt,
+    })),
+  };
+
+  return (
+    <>
+      {posts.map(({ id, username, mediaUrl, postedAt }, index) => (
+        <li key={id} className={styles.slot}>
+          <Reveal variant="pop" delay={(index % COLUMNS) * 90}>
+            <figure className={styles.card}>
+              <a href={mediaUrl} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                <LoadingImage className={styles.photo} src={mediaUrl} alt={fanart.alt(username)} loading="lazy" decoding="async" />
+              </a>
+              <figcaption className={styles.caption}>
+                <span className={styles.username}>@{username}</span>
+                <time className={styles.date} dateTime={postedAt}>
+                  {formatDate(new Date(postedAt))}
+                </time>
+              </figcaption>
+              <Heart className={styles.heart} />
+            </figure>
+          </Reveal>
+        </li>
+      ))}
+      <script type="application/ld+json">{JSON.stringify(gallery).replace(/</g, '\\u003c')}</script>
+    </>
+  );
+}
+
+/** Shown below the last page that was read, and only when the API says there is an older one. */
+function LoadMore({ page, busy, onMore }: { page: number; busy: boolean; onMore: () => void }) {
+  const { t } = useI18n();
+  const { hasMore } = useData<FanartResponse>(pagePath(page));
+  if (!hasMore) return null;
+
+  return (
+    <div className={styles.more}>
+      <Button variant="secondary" icon="heart" disabled={busy} onClick={onMore}>
+        {t.supports.fanart.loadMore}
+      </Button>
+    </div>
+  );
+}
+
+/** Page 1 loads with the section, every older page when "Load more" is pressed: the page that is already on screen stays put while the next one arrives. */
+function Feed() {
+  const { t } = useI18n();
+  const [pages, setPages] = useState(1);
+  const [attempt, setAttempt] = useState(0);
+  const [loadingMore, startTransition] = useTransition();
+  const { posts } = useData<FanartResponse>(pagePath(1));
+
+  if (posts.length === 0) return <Notice kind="empty">{t.common.empty}</Notice>;
+
+  return (
+    <>
+      <ul className={styles.grid} aria-label={t.supports.fanart.listLabel}>
+        {Array.from({ length: pages }, (_, index) => (
+          <AsyncBoundary
+            key={index}
+            fallback={<FanartSkeleton />}
+            failure={(retry) => (
+              <li className={styles.wide}>
+                <LoadFailure
+                  retry={() => {
+                    retry();
+                    setAttempt((current) => current + 1);
+                  }}
+                />
+              </li>
+            )}
+          >
+            <FanartPage page={index + 1} />
+          </AsyncBoundary>
+        ))}
+      </ul>
+      <AsyncBoundary key={pages} resetKey={attempt} fallback={null} failure={() => null}>
+        <LoadMore page={pages} busy={loadingMore} onMore={() => startTransition(() => setPages((current) => current + 1))} />
+      </AsyncBoundary>
+    </>
+  );
+}
+
+export function Fanart() {
+  const { t } = useI18n();
+  const { fanart } = t.supports;
   const decorRef = useRef<HTMLDivElement>(null);
 
   // Each layer owns different properties, so the three animations never fight over a transform (same idea as StreamDecor).
@@ -102,32 +215,6 @@ export function Fanart() {
     });
   });
 
-  // Page 1 loads with the section, every older page only when "Load more" is clicked.
-  const loadPage = (page: number) => {
-    setFeed((current) => ({ ...current, status: 'loading' }));
-    load<{ posts: FanartPost[]; hasMore: boolean }>(`/api/fanart/${page}/`).then(
-      ({ posts, hasMore }) => setFeed((current) => (current.page >= page ? current : { posts: [...current.posts, ...posts], page, hasMore, status: 'idle' })),
-      () => setFeed((current) => ({ ...current, status: 'error' })),
-    );
-  };
-
-  useEffect(() => loadPage(1), []);
-
-  const formatDate = new Intl.DateTimeFormat(language, { dateStyle: 'medium' }).format;
-  const gallery = {
-    '@context': 'https://schema.org',
-    '@type': 'ImageGallery',
-    name: fanart.title,
-    hasPart: feed.posts.map(({ username, mediaUrl, postedAt }) => ({
-      '@type': 'ImageObject',
-      contentUrl: mediaUrl,
-      name: fanart.alt(username),
-      creator: { '@type': 'Person', name: `@${username}` },
-      creditText: `@${username}`,
-      uploadDate: postedAt,
-    })),
-  };
-
   return (
     <section id="fanart" className={styles.section} aria-labelledby="fanart-title">
       <div ref={decorRef} className={styles.decor} aria-hidden="true">
@@ -149,56 +236,15 @@ export function Fanart() {
           {fanart.lead}
         </SectionHeading>
 
-        {feed.posts.length > 0 && (
-          <>
-            <ul className={styles.grid} aria-label={fanart.listLabel}>
-              {feed.posts.map(({ id, username, mediaUrl, postedAt }, index) => (
-                <li key={id} className={styles.slot}>
-                  <Reveal variant="pop" delay={(index % COLUMNS) * 90}>
-                    <figure className={styles.card}>
-                      <a href={mediaUrl} target="_blank" rel="noopener noreferrer" className={styles.link}>
-                        <LoadingImage className={styles.photo} src={mediaUrl} alt={fanart.alt(username)} loading="lazy" decoding="async" />
-                      </a>
-                      <figcaption className={styles.caption}>
-                        <span className={styles.username}>@{username}</span>
-                        <time className={styles.date} dateTime={postedAt}>
-                          {formatDate(new Date(postedAt))}
-                        </time>
-                      </figcaption>
-                      <Heart className={styles.heart} />
-                    </figure>
-                  </Reveal>
-                </li>
-              ))}
+        <AsyncBoundary
+          fallback={
+            <ul className={styles.grid} aria-busy="true" aria-label={t.common.loading}>
+              <FanartSkeleton />
             </ul>
-            <script type="application/ld+json">{JSON.stringify(gallery).replace(/</g, '\\u003c')}</script>
-          </>
-        )}
-
-        {feed.posts.length === 0 && feed.status === 'loading' && (
-          <ul className={styles.grid} aria-busy="true" aria-label={t.common.loading}>
-            {Array.from({ length: SKELETON_COUNT }, (_, index) => (
-              <li key={index} className={styles.slot}>
-                <div className={`${styles.card} ${styles.pending}`} aria-hidden="true">
-                  <span className={styles.photo}>
-                    <ImagePlaceholder />
-                  </span>
-                  <SkeletonLines />
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {feed.status === 'error' && <Notice kind="error">{t.common.loadFailed}</Notice>}
-        {feed.status === 'idle' && feed.posts.length === 0 && <Notice kind="empty">{t.common.empty}</Notice>}
-        {feed.posts.length > 0 && feed.hasMore && feed.status !== 'loading' && (
-          <div className={styles.more}>
-            <Button variant="secondary" icon="heart" onClick={() => loadPage(feed.page + 1)}>
-              {fanart.loadMore}
-            </Button>
-          </div>
-        )}
+          }
+        >
+          <Feed />
+        </AsyncBoundary>
       </div>
     </section>
   );
