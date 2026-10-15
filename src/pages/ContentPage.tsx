@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useOptimistic, useState, useTransition } from 'react';
+import { AsyncBoundary } from '../components/ui/AsyncBoundary.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { ImagePlaceholder, LoadingImage, SkeletonLines } from '../components/ui/LoadingImage.tsx';
 import { Notice } from '../components/ui/Notice.tsx';
 import { SectionHeading } from '../components/ui/SectionHeading.tsx';
 import { WaveDivider } from '../components/ui/WaveDivider.tsx';
-import { useApi } from '../data/api.ts';
+import { preload, useData } from '../data/api.ts';
 import { useI18n } from '../i18n/i18n.ts';
 import { localeInfo } from '../i18n/locales.ts';
 import styles from './ContentPage.module.css';
@@ -25,6 +26,8 @@ interface Video {
 
 // The API keeps 12 videos per category, so the placeholders fill the same grid and nothing jumps when the list arrives.
 const SKELETON_COUNT = 12;
+
+const contentPath = (tab: Tab): string => `/api/content/${tab}/`;
 
 const videoUrl = (kind: Kind, id: string): string => (kind === 'short' ? `https://www.youtube.com/shorts/${id}` : `https://www.youtube.com/watch?v=${id}`);
 
@@ -50,17 +53,15 @@ function VideoSkeleton({ tab }: { tab: Tab }) {
 
 function VideoList({ tab }: { tab: Tab }) {
   const { t, locale } = useI18n();
-  const videos = useApi<Video[]>(`/api/content/${tab}/`);
+  const videos = useData<Video[]>(contentPath(tab));
 
-  if (videos.status === 'error') return <Notice kind="error">{t.common.loadFailed}</Notice>;
-  if (videos.status !== 'ready') return <VideoSkeleton tab={tab} />;
-  if (videos.data.length === 0) return <Notice kind="empty">{t.common.empty}</Notice>;
+  if (videos.length === 0) return <Notice kind="empty">{t.common.empty}</Notice>;
 
   const formatDate = new Intl.DateTimeFormat(localeInfo[locale].htmlLang, { dateStyle: 'medium' }).format;
 
   return (
     <ul className={styles.grid} data-kind={tab} aria-label={t.content.kinds[tab]}>
-      {videos.data.map(({ id, kind, label, title, publishedAt }) => {
+      {videos.map(({ id, kind, label, title, publishedAt }) => {
         const tag = label ?? kind;
         return (
           <li key={id}>
@@ -87,6 +88,15 @@ export function ContentPage() {
   const { t } = useI18n();
   const { content } = t;
   const [tab, setTab] = useState<Tab>('live');
+  // The buttons answer at once; the list swaps when the new tab has arrived, and the old one stays on screen until then instead of flashing placeholders.
+  const [selected, setSelected] = useOptimistic(tab);
+  const [switching, startTransition] = useTransition();
+
+  const select = (id: Tab) =>
+    startTransition(() => {
+      setSelected(id);
+      setTab(id);
+    });
 
   return (
     <>
@@ -99,13 +109,25 @@ export function ContentPage() {
 
             <div className={styles.tabs} role="group" aria-label={content.tabsLabel}>
               {TABS.map((id) => (
-                <Button key={id} variant={id === tab ? 'sun' : 'secondary'} size="sm" aria-pressed={id === tab} onClick={() => setTab(id)}>
+                <Button
+                  key={id}
+                  variant={id === selected ? 'sun' : 'secondary'}
+                  size="sm"
+                  aria-pressed={id === selected}
+                  onPointerEnter={() => preload(contentPath(id))}
+                  onFocus={() => preload(contentPath(id))}
+                  onClick={() => select(id)}
+                >
                   {content.kinds[id]}
                 </Button>
               ))}
             </div>
 
-            <VideoList key={tab} tab={tab} />
+            <div aria-busy={switching}>
+              <AsyncBoundary resetKey={tab} fallback={<VideoSkeleton tab={tab} />}>
+                <VideoList key={tab} tab={tab} />
+              </AsyncBoundary>
+            </div>
           </div>
         </section>
       </main>

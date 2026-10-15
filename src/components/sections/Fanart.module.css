@@ -45,6 +45,11 @@
   padding: 0.9rem 0.2rem 0.3rem;
 }
 
+/* A row of its own in the grid, for a page that could not be loaded. */
+.wide {
+  grid-column: 1 / -1;
+}
+
 /* A polaroid taped onto the page. */
 .card {
   position: relative;

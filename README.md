@@ -28,7 +28,7 @@ Import the repo (`vercel.json` sets the Vite preset and adds cache and security 
 Set `VITE_SITE_URL` (for example `https://mizu.id`) in Project Settings, Environment Variables.
 Without it the build falls back to the Vercel production domain; with neither, the canonical URL, Open Graph image, `sitemap.xml` and JSON-LD URLs are skipped.
 Also set `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `YOUTUBE_API_KEY` and `CRON_SECRET` there (see Backend). `ALLOWED_ORIGINS` is optional (extra sites allowed to call `/api/*`, comma separated, for example a `www` alias).
-The Content-Security-Policy in `vercel.json` only lets images load from this site, `i.ytimg.com`, `*.supabase.co` and `pbs.twimg.com`.
+The Content-Security-Policy in `vercel.json` only lets images load from this site, `i.ytimg.com`, `*.supabase.co` and `pbs.twimg.com`, and scripts only from this site: there is no `'unsafe-inline'` for scripts, so the `/` language redirect is a file (`redirect.js`, written by the build), never an inline script. Keep it that way: an inline `<script>` in `index.html` or `vite/seoPlugin.ts` would be blocked.
 
 ## Backend (Supabase + `api/index.ts`)
 
@@ -44,6 +44,7 @@ All SQL lives in `database/`. Run the files in the Supabase SQL editor of a new,
 | `02_api_keys.sql` | `pgcrypto` and `create_api_key(name, permissions, expires_at)`, which mints a key (see API keys) |
 | `03_seed.sql` | Starting data: the guerilla mode switch (off), the likes lists, two sample streams |
 | `04_patch_existing.sql` | **Only for a database built from the old README** (Korean text, `viewers_notes`). Run 01, 02, then this file, and deploy the API after it. A new database skips it |
+| `05_patch_fanart_unique.sql` | **Every database, after 01.** A unique index on `fanarts.media_url`, so a retried `POST /api/admin/fanarts` answers `409` instead of storing the art twice. It never deletes: if duplicates already exist it only prints a notice, and you remove them by hand before running it again |
 
 Then, in Vercel, Project Settings, Environment Variables: `SUPABASE_URL` and `SUPABASE_SECRET_KEY` (the `sb_secret_...` key, mark it **Sensitive**, never prefix either with `VITE_`), plus `YOUTUBE_API_KEY` and `CRON_SECRET` (at least 32 characters, `openssl rand -hex 32`) for the Content page. `ALLOWED_ORIGINS` is optional (extra sites allowed to call `/api/*`, comma separated). Locally copy `.env.example` to `.env.local` and run `npx vercel dev`.
 
@@ -80,13 +81,13 @@ select public.create_api_key('fan-art-bot', array['fanarts:create', 'fanarts:rea
 ```
 
 2. Copy the result (`mzk_<12 hex>.<64 hex>`) into the secret store of that service. It is shown once. The table keeps only the key id, a random salt and `sha256(salt + secret)`; `api/index.ts` hashes the presented secret the same way and compares in constant time, so a leaked table gives nobody a working key. The secret is 256 random bits, which is why one salted SHA-256 is enough (a slow password hash would only slow every request).
-3. Revoke with `update public.api_keys set revoked_at = now() where key_id = '<the 12 hex>';`. `expires_at` (third argument of `create_api_key`) ends a key on its own. A revoked, expired or wrong key answers `401`; a key without the permission answers `403`.
+3. Revoke with `update public.api_keys set revoked_at = now() where key_id = '<the 12 hex>';`. `expires_at` (third argument of `create_api_key`) ends a key on its own. A revoked, expired or wrong key answers `401`; an `Authorization` header that is not `Bearer <key>` answers `400`; a key without the permission answers `403` (checked before the body, so a key learns nothing about columns it may not write).
 
 | Resource (permission prefix) | Table | Actions | Writable columns |
 | --- | --- | --- | --- |
-| `fanarts` (Supports) | `fanarts` | create, read, update, delete | `username` (no `@`), `media_url` (https), `posted_at` |
+| `fanarts` (Supports) | `fanarts` | create, read, update, delete | `username` (no `@`), `media_url` (https, from an allowed image host, unique), `posted_at` (ISO 8601 with offset) |
 | `videos` (Content) | `videos` | create, read, update, delete | `id` (YouTube id, on create only), `kind`, `label` (or `null`), `title`, `published_at` |
-| `schedule` | `stream_slots` | create, read, update, delete | `id` (on create only), `title`, `description` (`en`, `jp`, `id`), `datetime`, `duration_minutes`, `platform`, `members_only`, `thumbnail_url` |
+| `schedule` | `stream_slots` | create, read, update, delete | `id` (on create only), `title`, `description` (`en`, `jp`, `id`), `datetime`, `duration_minutes`, `platform`, `members_only`, `thumbnail_url` (https, allowed image host, or `null`) |
 | `preferences` | `likes_dislikes` | create, read, update, delete | `kind`, `label` (`en`, `jp`, `id`), `sort_order` |
 | `settings` | `site_settings` | read, update | `enabled` |
 
@@ -98,7 +99,7 @@ select public.create_api_key('fan-art-bot', array['fanarts:create', 'fanarts:rea
 | `PATCH /api/admin/<resource>/<id>` (only the columns to change) | `<resource>:update` |
 | `DELETE /api/admin/<resource>/<id>` (answers `204`) | `<resource>:delete` |
 
-Send `Authorization: Bearer <key>`. A body with an unknown or invalid column, or a create that misses one, answers `400` with the column named; a duplicate id answers `409`. Admin answers are never cached, but the public routes above are: a change shows on the site after their cache time.
+Send `Authorization: Bearer <key>`. A body with an unknown column (`Unknown field: x`), an invalid or missing one (`Invalid field: x`) or nothing to update answers `400`; a body over 16 KB answers `413`; a duplicate answers `409`. Bodies are checked with Zod schemas (`resources` in `api/index.ts`), one set of routes per resource. Admin answers are never cached, but the public routes above are: a change shows on the site after their cache time.
 
 ```bash
 # Guerilla mode on (permission settings:update)
@@ -109,7 +110,9 @@ curl -X POST https://your-domain.tld/api/admin/fanarts -H "Authorization: Bearer
   -d '{"username": "someone", "media_url": "https://pbs.twimg.com/media/x.jpg", "posted_at": "2026-10-12T20:15:00+07:00"}'
 ```
 
-A new image host must also be added to `img-src` in the Content-Security-Policy of `vercel.json`. Adding a resource or an action means: the entry in `resources` in `api/index.ts`, and the permission in the `api_keys.permissions` check of `01_schema.sql`.
+A new image host must be added in two places: `img-src` in the Content-Security-Policy of `vercel.json`, and `IMAGE_HOST` in `api/index.ts` (the API refuses a stored image link from any other host). Adding a resource or an action means: the entry in `resources` in `api/index.ts`, and the permission in the `api_keys.permissions` check of `01_schema.sql`.
+
+Every call to Supabase and YouTube has an 8 second timeout, so a slow upstream answers with an error instead of holding the function until Vercel stops it.
 
 ### Maintaining the data by hand
 
@@ -137,7 +140,7 @@ The Table Editor works as before: insert or delete rows of `fanarts`, `likes_dis
 | Page changes: every in-site `Link` and the language switch ask the router for a view transition, so the browser cross-fades the old and new page (the header keeps its own layer). Browsers without it fade the new `main` in. Both are off with reduced motion | `Link.tsx`, `I18nProvider.tsx`, the end of `src/styles/global.css` |
 | Forbidden page, shown when a browser opens an API address (see Backend, Public routes) | `src/pages/ForbiddenPage.tsx`, `forbidden` in the messages, `HIDDEN_PAGES` in `src/i18n/pages.ts` |
 | Emotes, hero art, first-paint images | `src/data/images.ts` |
-| Stream schedule: table in Supabase, API in `api/index.ts`, client request in `src/data/schedule.ts`, date maths in `src/lib/schedule.ts`. Guerilla mode: `site_settings`, `useGuerillaMode` in `src/data/schedule.ts`, the glitch is the `glitch` keyframes in `Schedule.module.css` (off with reduced motion). Likes and fan art: tables in Supabase, same API file, shared client hook `src/data/api.ts`, support links in `src/data/supports.ts`, the fan art section in `src/components/sections/Fanart.tsx`. The words are in `src/i18n/messages` | `api/index.ts`, `src/data/api.ts`, `src/data/schedule.ts`, `src/data/supports.ts` |
+| Stream schedule: table in Supabase, API in `api/index.ts`, client request in `src/data/schedule.ts`, date maths in `src/lib/schedule.ts`. Guerilla mode: `site_settings`, `useGuerillaMode` in `src/data/schedule.ts`, the glitch is the `glitch` keyframes in `Schedule.module.css` (off with reduced motion). Likes and fan art: tables in Supabase, same API file, the client data layer in `src/data/api.ts` (see Conventions), support links in `src/data/supports.ts`, the fan art section in `src/components/sections/Fanart.tsx`. The words are in `src/i18n/messages` | `api/index.ts`, `src/data/api.ts`, `src/data/schedule.ts`, `src/data/supports.ts` |
 | Loading screen markup + styles / logic | `index.html` (inline critical CSS; keep the `<!--locale-head-->` and `<!--locale-noscript-->` markers, the build fails without them) / `src/main.tsx` |
 | Images `.webp` | `public/emotes/<name>.webp`, `public/hero/<name>.webp`, `public/membership/tier-<n>.webp`, `public/og-image.webp` (1200x630), `public/favicon.ico` (must hold a 48x48 image, Google ignores favicons that are not a multiple of 48 px; the build warns), `public/favicon.svg` |
 
@@ -159,6 +162,7 @@ The header menu switches language without a reload and remembers the choice.
 
 ## Conventions
 
+- Data from the API: a section that shows a skeleton while its list loads reads it with `useData(path)` inside `<AsyncBoundary fallback={...}>` (`src/components/ui/AsyncBoundary.tsx`): React's `use` and Suspense for the loading state, an error boundary with a "Try again" button for the failure. Content that must stay on screen while it is fetched or refreshed (the schedule) uses `useApi(path)` instead: it never suspends, keeps the old answer while a new one arrives and asks again when the tab comes back to the foreground. Both share one cache in `src/data/api.ts` (an answer is reused for a minute, a failure for five seconds). Switching between lists (the Content tabs) goes through `useTransition`, so the old list stays until the new one has arrived. Keep the `path` of a mounted component fixed; change a `key` to read another list.
 - Motion: run GSAP only through `useGsap` (or check `prefersReducedMotion()`), so reduced motion shows the final static look.
 - Styling: CSS Modules per component; colours and shadows come from the variables in `src/styles/global.css`, no hard-coded hex in modules.
 - Fonts: only Latin subsets are bundled on purpose; kana and kanji use the system fonts in `--font-cjk-fallback`.

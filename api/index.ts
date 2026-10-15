@@ -1,8 +1,12 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
+import { zValidator } from '@hono/zod-validator';
 import { createClient } from '@supabase/supabase-js';
-import { Hono, type Context } from 'hono';
+import { Hono, type Context, type MiddlewareHandler } from 'hono';
+import { bearerAuth } from 'hono/bearer-auth';
 import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
+import { HTTPException } from 'hono/http-exception';
+import { z } from 'zod';
 
 /** Reads a secret from the environment (`.env.local` under `vercel dev`, Project Settings on Vercel). A missing or wrong value stops the function instead of failing later. */
 function requireEnv(name: string, problemWith?: (value: string) => string | false): string {
@@ -16,8 +20,13 @@ function requireEnv(name: string, problemWith?: (value: string) => string | fals
 const SUPABASE_URL = requireEnv('SUPABASE_URL', (value) => !(URL.canParse(value) && new URL(value).protocol === 'https:') && 'must be an https URL');
 const SUPABASE_SECRET_KEY = requireEnv('SUPABASE_SECRET_KEY', (value) => value.startsWith('sb_publishable_') && 'is the publishable key; the server needs the secret key');
 
+// A call that hangs would otherwise hold the function until Vercel's `maxDuration` (30 s) kills it.
+const UPSTREAM_TIMEOUT_MS = 8_000;
+const withTimeout = (init?: RequestInit): AbortSignal => AbortSignal.any([AbortSignal.timeout(UPSTREAM_TIMEOUT_MS), ...(init?.signal ? [init.signal] : [])]);
+
 const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  global: { fetch: (input, init) => fetch(input, { ...init, signal: withTimeout(init) }) },
 });
 
 // The languages of the site (`LOCALES` in src/i18n/locales.ts). Text stored as JSON carries one value per language.
@@ -109,7 +118,7 @@ interface Env {
 
 const app = new Hono<Env>({ strict: false });
 
-type ErrorStatus = 400 | 401 | 403 | 404 | 409;
+type ErrorStatus = 400 | 403 | 404 | 409 | 413;
 
 /** An error answer is never cached. */
 function fail(c: Context, status: ErrorStatus, error: string) {
@@ -134,10 +143,8 @@ function unwrap<T>({ data, error }: { data: T | null; error: { message: string }
   return data;
 }
 
-const isContentKind = (value: string): value is VideoKind | 'song' => value === 'song' || Object.hasOwn(VIDEO_PLAYLIST_PREFIX, value);
-
 async function youtube<T>(path: string, params: Record<string, string>): Promise<T | null> {
-  const response = await fetch(`${YOUTUBE_API}/${path}?${new URLSearchParams(params)}`, { headers: { 'x-goog-api-key': requireEnv('YOUTUBE_API_KEY') } });
+  const response = await fetch(`${YOUTUBE_API}/${path}?${new URLSearchParams(params)}`, { headers: { 'x-goog-api-key': requireEnv('YOUTUBE_API_KEY') }, signal: withTimeout() });
   // A channel with no Shorts (or no streams) has no such playlist.
   if (response.status === 404) return null;
   if (!response.ok) throw new Error(`YouTube ${path} failed: ${response.status}`);
@@ -230,6 +237,12 @@ app.use('/api/*', async (c, next) => {
 // Every distinct URL is its own CDN cache key, so a query string would bypass the cache and reach the database. The admin routes are never cached and page their lists with `limit` and `offset`.
 app.use('/api/*', async (c, next) => (c.req.url.includes('?') && !c.req.path.startsWith('/api/admin') ? fail(c, 400, 'Query parameters are not accepted') : next()));
 
+// A route id that is not a valid value is a plain 404, like any unknown address: it never reaches the database and never becomes its own cache key.
+const notFoundHook = (result: { success: boolean }, c: Context) => (result.success ? undefined : fail(c, 404, 'Not Found'));
+
+const fanartPageParam = z.object({ page: z.string().regex(/^[1-9]\d{0,2}$/).transform(Number).pipe(z.number().max(FANART_MAX_PAGE)) });
+const contentKindParam = z.object({ kind: z.enum(['live', 'short', 'vod', 'song']) });
+
 app.get('/api/schedule', async (c) => {
   const now = Date.now();
   const slots = unwrap(
@@ -260,11 +273,9 @@ app.get('/api/preferences', async (c) => {
   return respond(c, SLOW_CACHE, preferences);
 });
 
-app.get('/api/fanart/:page', async (c) => {
-  // Digits only: `Number()` would also accept `0x10`, `1e1` or `+5`, each a separate cache key for the same page.
-  const raw = c.req.param('page');
-  const page = Number(raw);
-  if (!/^[1-9]\d{0,2}$/.test(raw) || page > FANART_MAX_PAGE) return fail(c, 404, 'Not Found');
+// Digits only (checked by the schema): `Number()` alone would also accept `0x10`, `1e1` or `+5`, each a separate cache key for the same page.
+app.get('/api/fanart/:page', zValidator('param', fanartPageParam, notFoundHook), async (c) => {
+  const { page } = c.req.valid('param');
 
   // One row more than the page, only to know whether a next page exists.
   const from = (page - 1) * FANART_PAGE_SIZE;
@@ -281,28 +292,32 @@ app.get('/api/fanart/:page', async (c) => {
   return respond(c, SCHEDULE_CACHE, { posts: rows.slice(0, FANART_PAGE_SIZE), hasMore: rows.length > FANART_PAGE_SIZE && page < FANART_MAX_PAGE });
 });
 
-app.get('/api/content/:kind', async (c) => {
-  const kind = c.req.param('kind');
-  return isContentKind(kind) ? respond(c, SLOW_CACHE, await readVideos(kind)) : fail(c, 404, 'Not Found');
-});
+app.get('/api/content/:kind', zValidator('param', contentKindParam, notFoundHook), async (c) => respond(c, SLOW_CACHE, await readVideos(c.req.valid('param').kind)));
+
+// What a caller of a protected route sees when its token is missing, malformed or wrong. `bearerAuth` compares tokens in constant time and sets `WWW-Authenticate`.
+const unauthorized = {
+  noAuthenticationHeader: { message: { error: 'Unauthorized' } },
+  invalidAuthenticationHeader: { message: { error: 'Bad Request' } },
+  invalidToken: { message: { error: 'Unauthorized' } },
+};
 
 // Vercel Cron calls this daily with `Authorization: Bearer $CRON_SECRET`.
-app.get('/api/videos/sync', async (c) => {
-  c.header('Cache-Control', 'no-store');
-  const cronSecret = requireEnv('CRON_SECRET', (value) => value.length < 32 && 'must be at least 32 characters (openssl rand -hex 32)');
-  const given = Buffer.from(c.req.header('authorization') ?? '');
-  const expected = Buffer.from(`Bearer ${cronSecret}`);
-  if (given.length !== expected.length || !timingSafeEqual(given, expected)) return fail(c, 401, 'Unauthorized');
-
-  await syncVideos();
-  return c.json({ ok: true });
-});
+app.get(
+  '/api/videos/sync',
+  async (c, next) => {
+    const cronSecret = requireEnv('CRON_SECRET', (value) => value.length < 32 && 'must be at least 32 characters (openssl rand -hex 32)');
+    return bearerAuth<Env>({ token: cronSecret, ...unauthorized })(c, next);
+  },
+  async (c) => {
+    await syncVideos();
+    return c.json({ ok: true });
+  },
+);
 
 // ---- Backend access: the same data, writable, for services that hold an API key -----------------------------------------------------------------
 // A key looks like `mzk_<12 hex>.<64 hex>`. Only its id, a random salt and sha256(salt + secret) are stored (see database/02_api_keys.sql), so a leaked table gives nobody a working key.
 // Every key carries a list of `<resource>:<action>` permissions, for example `fanarts:create` or `settings:update`.
 type Action = 'create' | 'read' | 'update' | 'delete';
-type Check = (value: unknown) => boolean;
 
 interface Resource {
   table: string;
@@ -311,8 +326,8 @@ interface Resource {
   id: RegExp;
   /** The id is chosen by the caller (a YouTube id, a slug) instead of the database. */
   clientId?: true;
-  /** The columns a caller may write. A missing key in a create must be listed in `optional`. */
-  fields: Record<string, Check>;
+  /** The columns a caller may write. A column missing from a create must be listed in `optional`. */
+  fields: Record<string, z.ZodType>;
   optional?: readonly string[];
   order: string;
   ascending?: true;
@@ -323,26 +338,25 @@ const ALL_ACTIONS = ['create', 'read', 'update', 'delete'] as const;
 const KEY_PATTERN = /^mzk_([0-9a-f]{12})\.([0-9a-f]{64})$/;
 const NO_HASH = '0'.repeat(64);
 
-const text = (max: number): Check => (value) => typeof value === 'string' && value.trim() !== '' && value.length <= max;
-const oneOf = (...allowed: unknown[]): Check => (value) => allowed.includes(value);
-const integer = (min: number, max: number): Check => (value) => Number.isInteger(value) && (value as number) >= min && (value as number) <= max;
-const isBoolean: Check = (value) => typeof value === 'boolean';
-const isHttps: Check = (value) => typeof value === 'string' && value.length <= 2048 && URL.canParse(value) && new URL(value).protocol === 'https:';
-const isDate: Check = (value) => typeof value === 'string' && value.length <= 40 && !Number.isNaN(Date.parse(value));
-const isHandle: Check = (value) => text(100)(value) && !(value as string).startsWith('@');
-const isLocalized: Check = (value) =>
-  typeof value === 'object' && value !== null && Object.keys(value).length === LANGUAGES.length && LANGUAGES.every((language) => text(500)((value as Record<string, unknown>)[language]));
+// Images may only come from the hosts the site's Content-Security-Policy lets load (`img-src` in vercel.json; keep the two in step), so a stored link can never point a visitor somewhere else.
+const IMAGE_HOST = /^(i\.ytimg\.com|pbs\.twimg\.com|[a-z0-9-]+\.supabase\.co)$/;
+
+const text = (max: number) => z.string().trim().min(1).max(max);
+const imageUrl = z.url({ protocol: /^https$/, hostname: IMAGE_HOST }).max(2048);
+const isoDate = z.iso.datetime({ offset: true });
+const handle = text(100).refine((value) => !value.startsWith('@'), 'must not start with @');
+const localized = z.strictObject(Object.fromEntries(LANGUAGES.map((language) => [language, text(500)])) as Record<(typeof LANGUAGES)[number], ReturnType<typeof text>>);
 
 const resources: Record<string, Resource> = {
   // Supports page: the fan art wall.
-  fanarts: { table: 'fanarts', pk: 'id', id: /^[1-9]\d{0,15}$/, fields: { username: isHandle, media_url: isHttps, posted_at: isDate }, order: 'posted_at', actions: ALL_ACTIONS },
+  fanarts: { table: 'fanarts', pk: 'id', id: /^[1-9]\d{0,15}$/, fields: { username: handle, media_url: imageUrl, posted_at: isoDate }, order: 'posted_at', actions: ALL_ACTIONS },
   // Content page: the videos behind the Streams, Shorts, Videos and Songs tabs.
   videos: {
     table: 'videos',
     pk: 'id',
     id: /^[\w-]{11}$/,
     clientId: true,
-    fields: { kind: oneOf('live', 'short', 'vod'), label: oneOf('original', 'cover', null), title: text(300), published_at: isDate },
+    fields: { kind: z.enum(['live', 'short', 'vod']), label: z.enum(['original', 'cover']).nullable(), title: text(300), published_at: isoDate },
     optional: ['label'],
     order: 'published_at',
     actions: ALL_ACTIONS,
@@ -355,12 +369,12 @@ const resources: Record<string, Resource> = {
     clientId: true,
     fields: {
       title: text(300),
-      description: isLocalized,
-      datetime: isDate,
-      duration_minutes: integer(1, 1440),
-      platform: oneOf('youtube', 'twitch', 'x', 'discord'),
-      members_only: isBoolean,
-      thumbnail_url: (value) => value === null || isHttps(value),
+      description: localized,
+      datetime: isoDate,
+      duration_minutes: z.number().int().min(1).max(1440),
+      platform: z.enum(['youtube', 'twitch', 'x', 'discord']),
+      members_only: z.boolean(),
+      thumbnail_url: imageUrl.nullable(),
     },
     optional: ['members_only', 'thumbnail_url'],
     order: 'datetime',
@@ -371,15 +385,33 @@ const resources: Record<string, Resource> = {
     table: 'likes_dislikes',
     pk: 'id',
     id: /^[1-9]\d{0,15}$/,
-    fields: { kind: oneOf('like', 'dislike'), label: isLocalized, sort_order: integer(0, 10_000) },
+    fields: { kind: z.enum(['like', 'dislike']), label: localized, sort_order: z.number().int().min(0).max(10_000) },
     optional: ['sort_order'],
     order: 'sort_order',
     ascending: true,
     actions: ALL_ACTIONS,
   },
   // Switches of the site. `PATCH /api/admin/settings/guerilla_mode` with `{ "enabled": true }` turns guerilla mode on.
-  settings: { table: 'site_settings', pk: 'key', id: /^[a-z_]{1,40}$/, fields: { enabled: isBoolean }, order: 'key', ascending: true, actions: ['read', 'update'] },
+  settings: { table: 'site_settings', pk: 'key', id: /^[a-z_]{1,40}$/, fields: { enabled: z.boolean() }, order: 'key', ascending: true, actions: ['read', 'update'] },
 };
+
+/** The body of a create: every column that is not optional, plus the id when the caller chooses it. Unknown columns are refused. */
+const createSchema = ({ pk, id, clientId, fields, optional = [] }: Resource) =>
+  z.strictObject({
+    ...(clientId ? { [pk]: z.string().regex(id) } : {}),
+    ...Object.fromEntries(Object.entries(fields).map(([key, schema]) => [key, optional.includes(key) ? schema.optional() : schema])),
+  });
+
+/** The body of an update: any of the columns, at least one. */
+const updateSchema = ({ fields }: Resource) => z.strictObject(fields).partial().refine((body) => Object.keys(body).length > 0, 'Nothing to update');
+
+/** One line for the caller that names the column and nothing else about how the schema is built. */
+function describeIssue(result: { error: z.core.$ZodError }): string {
+  const [issue] = result.error.issues;
+  if (issue?.code === 'unrecognized_keys') return `Unknown field: ${issue.keys.join(', ')}`;
+  const column = issue?.path.join('.');
+  return column ? `Invalid field: ${column}` : (issue?.message ?? 'Invalid body');
+}
 
 interface ApiKeyRow {
   salt: string;
@@ -391,9 +423,9 @@ interface ApiKeyRow {
 
 const sha256Hex = (value: string): string => createHash('sha256').update(value).digest('hex');
 
-/** The permissions of the key in an `Authorization: Bearer` header, or null when the key is unknown, wrong, revoked or expired. */
-async function authenticate(header: string | undefined): Promise<ReadonlySet<string> | null> {
-  const match = KEY_PATTERN.exec(header?.startsWith('Bearer ') ? header.slice(7) : '');
+/** The permissions of an API key, or null when the key is unknown, wrong, revoked or expired. */
+async function authenticate(token: string): Promise<ReadonlySet<string> | null> {
+  const match = KEY_PATTERN.exec(token);
   if (!match) return null;
 
   const [, keyId = '', secret = ''] = match;
@@ -407,19 +439,6 @@ async function authenticate(header: string | undefined): Promise<ReadonlySet<str
   return new Set(row.permissions);
 }
 
-/** What is wrong with a body, or null when it can be written. A create needs every field that is not optional; an update needs at least one. */
-function problem(spec: Resource, input: Record<string, unknown>, creating: boolean): string | null {
-  const isId: Check = (value) => typeof value === 'string' && spec.id.test(value);
-  const checks: Record<string, Check> = { ...(creating && spec.clientId ? { [spec.pk]: isId } : {}), ...spec.fields };
-  const unknown = Object.keys(input).find((key) => !Object.hasOwn(checks, key));
-  if (unknown) return `Unknown field: ${unknown}`;
-  const invalid = Object.keys(input).find((key) => !checks[key]?.(input[key]));
-  if (invalid) return `Invalid field: ${invalid}`;
-  const missing = creating ? Object.keys(checks).find((key) => !spec.optional?.includes(key) && !Object.hasOwn(input, key)) : undefined;
-  if (missing) return `Missing field: ${missing}`;
-  return !creating && Object.keys(input).length === 0 ? 'Nothing to update' : null;
-}
-
 /** A database refusal the caller caused (duplicate, value out of range) is a 4xx; anything else is ours and goes to the error handler. */
 function databaseFailure(c: Context, error: { code: string; message: string }) {
   if (error.code === '23505') return fail(c, 409, 'Already exists');
@@ -427,115 +446,91 @@ function databaseFailure(c: Context, error: { code: string; message: string }) {
   throw new Error(`Supabase: ${error.message}`, { cause: error });
 }
 
-const readInt = (raw: string | undefined, min: number, max: number, fallback: number): number => {
-  const value = Number(raw);
-  return raw !== undefined && Number.isInteger(value) && value >= min && value <= max ? value : fallback;
-};
-
-type AdminHandler = (c: Context<Env>, spec: Resource) => Promise<Response>;
-
-/** Finds the resource of the URL and lets the request through only when the key holds `<resource>:<action>`. */
-const guarded =
-  (action: Action, handler: AdminHandler) =>
-  async (c: Context<Env>): Promise<Response> => {
-    const name = c.req.param('resource') ?? '';
-    const spec = Object.hasOwn(resources, name) ? resources[name] : undefined;
-    if (!spec?.actions.includes(action)) return fail(c, 404, 'Not Found');
-    if (!c.get('permissions').has(`${name}:${action}`)) return fail(c, 403, 'Forbidden');
-    return handler(c, spec);
-  };
-
-/** Handlers that act on one row: the id in the URL must look like an id of that resource before the database is asked. */
-const forRow =
-  (handler: (c: Context<Env>, spec: Resource, id: string) => Promise<Response>): AdminHandler =>
-  async (c, spec) => {
-    const id = c.req.param('id') ?? '';
-    return spec.id.test(id) ? handler(c, spec, id) : fail(c, 404, 'Not Found');
-  };
-
-/** The body of a create or an update when it can be written, or the 400 answer that says why not. */
-async function readBody(c: Context, spec: Resource, creating: boolean): Promise<Record<string, unknown> | Response> {
-  const body: unknown = await c.req.json().catch(() => null);
-  if (typeof body !== 'object' || body === null || Array.isArray(body)) return fail(c, 400, 'Body must be a JSON object');
-  const wrong = problem(spec, body as Record<string, unknown>, creating);
-  return wrong ? fail(c, 400, wrong) : (body as Record<string, unknown>);
-}
-
 const admin = new Hono<Env>({ strict: false });
 
-admin.use('*', bodyLimit({ maxSize: 16 * 1024 }));
-admin.use('*', async (c, next) => {
-  c.header('Cache-Control', 'no-store');
-  const permissions = await authenticate(c.req.header('authorization'));
-  if (!permissions) {
-    c.header('WWW-Authenticate', 'Bearer');
-    return fail(c, 401, 'Unauthorized');
-  }
-  c.set('permissions', permissions);
-  return next();
+admin.use('*', bodyLimit({ maxSize: 16 * 1024, onError: (c) => fail(c, 413, 'Payload Too Large') }));
+admin.use(
+  '*',
+  bearerAuth<Env>({
+    ...unauthorized,
+    verifyToken: async (token, c) => {
+      const permissions = await authenticate(token);
+      if (permissions) c.set('permissions', permissions);
+      return permissions !== null;
+    },
+  }),
+);
+
+const requires =
+  (permission: string): MiddlewareHandler<Env> =>
+  async (c, next) =>
+    c.get('permissions').has(permission) ? next() : fail(c, 403, 'Forbidden');
+
+const listQuery = z.object({
+  limit: z.coerce.number().int().min(1).max(100).catch(50),
+  offset: z.coerce.number().int().min(0).max(100_000).catch(0),
 });
 
-admin.get(
-  '/:resource',
-  guarded('read', async (c, spec) => {
-    const from = readInt(c.req.query('offset'), 0, 100_000, 0);
-    const to = from + readInt(c.req.query('limit'), 1, 100, 50) - 1;
-    const rows = unwrap(await supabase.from(spec.table).select('*').order(spec.order, { ascending: !!spec.ascending }).order(spec.pk, { ascending: !!spec.ascending }).range(from, to));
+// One set of routes per resource, so an unknown resource is a 404 from the router itself. Order of checks: key, permission, id, body.
+for (const [name, spec] of Object.entries(resources)) {
+  const idParam = zValidator('param', z.object({ id: z.string().regex(spec.id) }), notFoundHook);
+  const body = (schema: z.ZodType<Record<string, unknown>>) => zValidator('json', schema, (result, c) => (result.success ? undefined : fail(c, 400, describeIssue(result))));
+
+  admin.get(`/${name}`, requires(`${name}:read`), zValidator('query', listQuery), async (c) => {
+    const { limit, offset } = c.req.valid('query');
+    const rows = unwrap(
+      await supabase
+        .from(spec.table)
+        .select('*')
+        .order(spec.order, { ascending: !!spec.ascending })
+        .order(spec.pk, { ascending: !!spec.ascending })
+        .range(offset, offset + limit - 1),
+    );
     return c.json(rows);
-  }),
-);
+  });
 
-admin.get(
-  '/:resource/:id',
-  guarded(
-    'read',
-    forRow(async (c, spec, id) => {
-      const { data, error } = await supabase.from(spec.table).select('*').eq(spec.pk, id).maybeSingle();
+  admin.get(`/${name}/:id`, requires(`${name}:read`), idParam, async (c) => {
+    const { data, error } = await supabase.from(spec.table).select('*').eq(spec.pk, c.req.valid('param').id).maybeSingle();
+    if (error) return databaseFailure(c, error);
+    return data ? c.json(data) : fail(c, 404, 'Not Found');
+  });
+
+  if (spec.actions.includes('create')) {
+    admin.post(`/${name}`, requires(`${name}:create`), body(createSchema(spec)), async (c) => {
+      const { data, error } = await supabase.from(spec.table).insert(c.req.valid('json')).select().single();
+      return error ? databaseFailure(c, error) : c.json(data, 201);
+    });
+  }
+
+  if (spec.actions.includes('update')) {
+    admin.patch(`/${name}/:id`, requires(`${name}:update`), idParam, body(updateSchema(spec)), async (c) => {
+      const { data, error } = await supabase.from(spec.table).update(c.req.valid('json')).eq(spec.pk, c.req.valid('param').id).select().maybeSingle();
       if (error) return databaseFailure(c, error);
       return data ? c.json(data) : fail(c, 404, 'Not Found');
-    }),
-  ),
-);
+    });
+  }
 
-admin.post(
-  '/:resource',
-  guarded('create', async (c, spec) => {
-    const input = await readBody(c, spec, true);
-    if (input instanceof Response) return input;
-    const { data, error } = await supabase.from(spec.table).insert(input).select().single();
-    return error ? databaseFailure(c, error) : c.json(data, 201);
-  }),
-);
-
-admin.patch(
-  '/:resource/:id',
-  guarded(
-    'update',
-    forRow(async (c, spec, id) => {
-      const input = await readBody(c, spec, false);
-      if (input instanceof Response) return input;
-      const { data, error } = await supabase.from(spec.table).update(input).eq(spec.pk, id).select().maybeSingle();
-      if (error) return databaseFailure(c, error);
-      return data ? c.json(data) : fail(c, 404, 'Not Found');
-    }),
-  ),
-);
-
-admin.delete(
-  '/:resource/:id',
-  guarded(
-    'delete',
-    forRow(async (c, spec, id) => {
-      const { data, error } = await supabase.from(spec.table).delete().eq(spec.pk, id).select(spec.pk);
+  if (spec.actions.includes('delete')) {
+    admin.delete(`/${name}/:id`, requires(`${name}:delete`), idParam, async (c) => {
+      const { data, error } = await supabase.from(spec.table).delete().eq(spec.pk, c.req.valid('param').id).select(spec.pk);
       if (error) return databaseFailure(c, error);
       return data.length > 0 ? c.body(null, 204) : fail(c, 404, 'Not Found');
-    }),
-  ),
-);
+    });
+  }
+}
 
 app.route('/api/admin', admin);
 
+app.notFound((c) => fail(c, 404, 'Not Found'));
+
 app.onError((error, c) => {
+  // Thrown by the middleware above (a missing or wrong token): its answer is already complete, it only needs to stay out of every cache.
+  if (error instanceof HTTPException) {
+    const response = error.getResponse();
+    response.headers.set('Cache-Control', 'no-store');
+    return response;
+  }
+
   console.error(error);
   c.header('Cache-Control', 'no-store');
   return c.json({ error: 'Internal Server Error' }, 500);
