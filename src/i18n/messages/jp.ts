@@ -40,6 +40,7 @@ export const jp: Messages = {
     faq: 'FAQ',
     supports: 'サポート',
     content: 'コンテンツ',
+    collab: 'コラボ',
   },
 
   seo: {
@@ -80,6 +81,17 @@ export const jp: Messages = {
     tabsLabel: 'コンテンツの種類',
     kinds: { live: '配信', short: 'ショート', vod: '動画', song: '歌' },
     tags: { live: '配信', short: 'ショート', vod: '動画', original: 'オリジナル曲', cover: 'カバー曲' },
+  },
+
+  collab: {
+    seo: {
+      title: 'コラボ | Mizu Hamzazu',
+      description: 'Mizu Hamzazuと一緒に配信したVTuberやお友だちを、コラボ回数の多い順にご紹介。',
+    },
+    title: 'コラボ',
+    lead: 'Mizuと一緒に配信してくれたお友だちを、コラボ回数の多い順に紹介します。いつも遊んでくれてありがとう！',
+    listLabel: 'コラボ相手（回数の多い順）',
+    count: (count: number) => `${count}回`,
   },
 
   // Where the API sends a visitor who opens one of its addresses in the browser (see api/index.ts).

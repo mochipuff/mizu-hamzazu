@@ -44,6 +44,7 @@ export const en = {
     faq: 'FAQ',
     supports: 'Supports',
     content: 'Content',
+    collab: 'Collab',
   },
 
   // Search engines, link previews and AI crawlers.
@@ -85,6 +86,17 @@ export const en = {
     tabsLabel: 'Type of content',
     kinds: { live: 'Streams', short: 'Shorts', vod: 'Videos', song: 'Songs' },
     tags: { live: 'Stream', short: 'Short', vod: 'Video', original: 'Original song', cover: 'Cover song' },
+  },
+
+  collab: {
+    seo: {
+      title: 'Collab | Mizu Hamzazu',
+      description: 'The VTubers and friends Mizu Hamzazu has streamed with, ranked by how many collabs they have done together.',
+    },
+    title: 'Collab',
+    lead: 'The friends Mizu has streamed with, ranked by how many collabs they did together. Thank you for playing with her!',
+    listLabel: 'Collab partners, most collabs first',
+    count: (count: number) => `${count} ${count === 1 ? 'collab' : 'collabs'}`,
   },
 
   // Where the API sends a visitor who opens one of its addresses in the browser (see api/index.ts).

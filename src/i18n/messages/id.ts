@@ -40,6 +40,7 @@ export const id: Messages = {
     faq: 'FAQ',
     supports: 'Dukungan',
     content: 'Konten',
+    collab: 'Kolaborasi',
   },
 
   seo: {
@@ -80,6 +81,17 @@ export const id: Messages = {
     tabsLabel: 'Jenis konten',
     kinds: { live: 'Live stream', short: 'Shorts', vod: 'Video', song: 'Lagu' },
     tags: { live: 'Live stream', short: 'Shorts', vod: 'Video', original: 'Lagu original', cover: 'Lagu cover' },
+  },
+
+  collab: {
+    seo: {
+      title: 'Kolaborasi | Mizu Hamzazu',
+      description: 'VTuber dan teman-teman yang pernah kolaborasi stream dengan Mizu Hamzazu, diurutkan dari yang paling sering.',
+    },
+    title: 'Kolaborasi',
+    lead: 'Teman-teman yang pernah stream bareng Mizu, diurutkan dari jumlah kolaborasi terbanyak. Terima kasih sudah main bareng!',
+    listLabel: 'Partner kolaborasi, dari yang paling banyak',
+    count: (count: number) => `${count} kolaborasi`,
   },
 
   // Where the API sends a visitor who opens one of its addresses in the browser (see api/index.ts).

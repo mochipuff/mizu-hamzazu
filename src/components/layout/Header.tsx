@@ -172,6 +172,11 @@ export function Header() {
         </Link>
       </li>
       <li>
+        <Link to={pagePath(locale, 'collab')} className={styles.link} aria-current={page === 'collab' ? 'page' : undefined} onClick={handleCloseMenu}>
+          {t.nav.collab}
+        </Link>
+      </li>
+      <li>
         <Link to={pagePath(locale, 'supports')} className={styles.link} aria-current={page === 'supports' ? 'page' : undefined} onClick={handleCloseMenu}>
           {t.nav.supports}
         </Link>

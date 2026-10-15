@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
-import { Sparkle, Star } from 'lucide-react';
 import { useGsap } from '../../hooks/useGsap.ts';
 import { gsap, IDLE, POP } from '../../lib/motion.ts';
+import { Sparkle, Star } from './Doodles.tsx';
 import styles from './StarField.module.css';
 
 const STAR_COUNT = 16;
@@ -52,7 +52,7 @@ export function StarField() {
       {stars.map(({ id, Shape, color, size, left, top }) => (
         <span key={id} className={styles.star} data-star style={{ left: `${left}%`, top: `${top}%`, width: size, height: size }}>
           <span className={styles.body}>
-            <Shape size={size} fill={color} stroke="var(--ink)" strokeWidth={2.4} />
+            <Shape width={size} height={size} color={color} />
           </span>
         </span>
       ))}

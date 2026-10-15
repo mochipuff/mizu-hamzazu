@@ -11,6 +11,7 @@ import { useI18n } from './i18n/i18n.ts';
 import { isLocale, localeFromPath } from './i18n/locales.ts';
 import { preferredLocale, usePage } from './i18n/navigation.ts';
 import { pageFromPath, pagePath } from './i18n/pages.ts';
+import { CollabPage } from './pages/CollabPage.tsx';
 import { ContentPage } from './pages/ContentPage.tsx';
 import { ForbiddenPage } from './pages/ForbiddenPage.tsx';
 import { HomePage } from './pages/HomePage.tsx';
@@ -109,6 +110,7 @@ export function App() {
           <Route index element={<HomePage />} />
           <Route path="supports" element={<SupportsPage />} />
           <Route path="content" element={<ContentPage />} />
+          <Route path="collab" element={<CollabPage />} />
           <Route path="forbidden" element={<ForbiddenPage />} />
         </Route>
         <Route path="*" element={<RedirectToLocale />} />
