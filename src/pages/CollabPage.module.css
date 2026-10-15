@@ -1,0 +1,111 @@
+.section {
+  padding-block: clamp(2.5rem, 7vw, 4.5rem) clamp(3rem, 8vw, 5.5rem);
+}
+
+.list {
+  display: grid;
+  gap: 1rem;
+  width: min(100%, 44rem);
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.7rem 1rem 0.7rem 0.8rem;
+  border: var(--outline);
+  border-radius: 6px;
+  background: var(--white);
+  box-shadow: var(--pop-small);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.18s var(--ease-pop);
+}
+
+a.card:hover,
+a.card:focus-visible {
+  transform: translateY(-3px) rotate(-0.6deg);
+}
+
+.card[data-podium='true'] {
+  background: var(--pastel-butter);
+}
+
+.pending {
+  pointer-events: none;
+}
+
+.rank {
+  display: grid;
+  place-items: center;
+  min-width: 2.2rem;
+  height: 2.2rem;
+  padding-inline: 0.4rem;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--sun-soft);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.card[data-podium='true'] .rank {
+  background: var(--sun);
+}
+
+.avatar {
+  width: 3.4rem;
+  height: 3.4rem;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--pastel-sky);
+  overflow: hidden;
+}
+
+.initial {
+  display: grid;
+  place-items: center;
+  background: var(--tint, var(--pastel-pink));
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.name {
+  min-width: 0;
+  font-family: var(--font-hand);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.7rem;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--pastel-pink);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .card {
+    grid-template-columns: auto auto 1fr;
+    row-gap: 0.4rem;
+  }
+
+  .count {
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
+}
