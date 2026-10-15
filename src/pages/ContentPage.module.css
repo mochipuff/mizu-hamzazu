@@ -40,6 +40,7 @@
   transform: translateY(-3px) rotate(-0.6deg);
 }
 
+/* The frame of a thumbnail. `LoadingImage` fills it with the picture, the skeleton with the placeholder. */
 .thumb {
   position: relative;
   display: block;
@@ -54,6 +55,7 @@
   aspect-ratio: 9 / 16;
 }
 
+/* A card that is only a placeholder: it neither lifts on hover nor takes the pointer. */
 .pending {
   pointer-events: none;
 }
@@ -77,6 +79,7 @@
   gap: 0.25rem 0.6rem;
 }
 
+/* A small pill that says what kind of upload the card is, so a plain video never passes for a song. */
 .tag {
   padding: 0 0.7rem;
   border: 2px solid var(--ink);

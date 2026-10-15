@@ -11,6 +11,7 @@ import { LanguageSelect } from './LanguageSelect.tsx';
 import styles from './Header.module.css';
 
 const navIds = ['lore', 'schedule', 'emotes', 'join', 'faq'] as const;
+// The sections that live under the About menu. The others stay in the bar.
 const aboutMenuIds = ['lore', 'schedule', 'emotes', 'faq'] as const;
 
 interface NavProps {
@@ -20,8 +21,10 @@ interface NavProps {
   onNavigate: () => void;
 }
 
+/** From another page a section link goes back to the home page first. */
 const sectionTo = (isHome: boolean, homePath: string, id: string): string => (isHome ? `#${id}` : `${homePath}#${id}`);
 
+/** Closes a popup when something outside it is pressed or Escape is hit; Escape also gives the focus back to its button. */
 function useDismiss(open: boolean, close: () => void, root: RefObject<HTMLElement | null>, button: RefObject<HTMLElement | null>) {
   useEffect(() => {
     if (!open) return undefined;
@@ -44,6 +47,7 @@ function useDismiss(open: boolean, close: () => void, root: RefObject<HTMLElemen
   }, [open, close, root, button]);
 }
 
+/** "About" opens a list of the sections of the home page that tell about Mizu. The same markup serves the desktop bar and the mobile bubble. */
 function AboutMenu({ isHome, homePath, activeId, onNavigate }: NavProps) {
   const { t } = useI18n();
   const menuId = useId();
@@ -109,6 +113,7 @@ export function Header() {
   useDismiss(bubbleOpen, () => setBubbleOpen(false), brandRoot, brandButton);
   useDismiss(open, () => setOpen(false), menuRoot, menuButton);
 
+  // Highlights the section being read. The sections only exist on the home page, so `page` re-attaches the observer when another page brings its own.
   useEffect(() => {
     const visible = new Set<string>();
     const observer = new IntersectionObserver(
@@ -152,6 +157,7 @@ export function Header() {
 
   const handleCloseMenu = () => setOpen(false);
 
+  // The same links fill the desktop bar and the mobile bubble.
   const links = (
     <>
       <AboutMenu isHome={isHome} homePath={homePath} activeId={activeId} onNavigate={handleCloseMenu} />

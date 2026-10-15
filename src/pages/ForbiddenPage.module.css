@@ -11,6 +11,7 @@
   text-align: center;
 }
 
+/* a stitched ribbon label, like the one on the supports page */
 .ribbon {
   position: relative;
   display: inline-flex;
@@ -37,6 +38,7 @@
   pointer-events: none;
 }
 
+/* the padlock rattles now and then, as if someone tried the door */
 .lock {
   transform-origin: 50% 85%;
   animation: rattle 3.6s ease-in-out infinite;

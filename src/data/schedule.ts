@@ -3,6 +3,7 @@ import { useApi } from './api.ts';
 
 const NO_SLOTS: StreamSlot[] = [];
 
+/** While guerilla mode is on, the creator streams whenever she can: the schedule above is only decoration. */
 export function useGuerillaMode(): boolean {
   return useApi<{ guerillaMode: boolean }>('/api/settings/').data?.guerillaMode ?? false;
 }

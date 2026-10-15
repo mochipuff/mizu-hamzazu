@@ -77,6 +77,7 @@ body::before {
   pointer-events: none;
 }
 
+/* The page darkens slightly as you scroll down. Runs on the compositor, no JS or layout reads. */
 @supports (animation-timeline: scroll()) {
   body::before {
     animation: depth-veil linear both;
@@ -90,6 +91,7 @@ body::before {
   }
 }
 
+/* The page fills at least the screen, and <main> takes the leftover height, so the footer sits at the bottom even when the content is short or empty. */
 #root {
   position: relative;
   isolation: isolate;
@@ -186,6 +188,7 @@ a {
   transform: none;
 }
 
+/* Everything is sized in rem, so a smaller root size shrinks type, spacing and components together on tablets and phones. */
 @media (max-width: 1023px) {
   html {
     font-size: 93.75%;
@@ -204,6 +207,7 @@ a {
   }
 }
 
+/* Page changes: browsers with view transitions cross-fade the old and new page (the router asks for one on every link); the others fade the new page in. */
 @keyframes page-in {
   from {
     opacity: 0;

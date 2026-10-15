@@ -27,6 +27,7 @@ const streamTypes = [
   { id: 'freetalk', emote: 'mizuLove' },
 ] as const satisfies readonly { id: keyof Messages['about']['streamTypes']; emote: EmoteName }[];
 
+/** One of the two lists. Both read the same request, so the API is asked once. */
 function PreferenceList({ kind }: { kind: Preference['kind'] }) {
   const { locale, t } = useI18n();
   const labels = useData<Preference[]>('/api/preferences/').filter((preference) => preference.kind === kind);

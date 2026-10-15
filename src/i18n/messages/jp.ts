@@ -82,6 +82,7 @@ export const jp: Messages = {
     tags: { live: '配信', short: 'ショート', vod: '動画', original: 'オリジナル曲', cover: 'カバー曲' },
   },
 
+  // Where the API sends a visitor who opens one of its addresses in the browser (see api/index.ts).
   forbidden: {
     seo: {
       title: 'アクセス禁止 | Mizu Hamzazu',
@@ -151,7 +152,7 @@ export const jp: Messages = {
 
   hero: {
     tag: 'バーチャルYouTuber',
-    greeting: '今日は！',
+    greeting: 'Cihuyyy！',
     iAm: (name) => `${name}だよ！`,
     intro:
       'Mizu Hamzazuは、はぐれてしまった弟妹を探すという使命を胸に、異世界からやってきたハムスター。永遠の18歳の彼女は、いま新しい旅のページをめくろうとしています。',
