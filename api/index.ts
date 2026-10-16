@@ -54,6 +54,15 @@ interface FanartRow {
   postedAt: string;
 }
 
+interface CollabRow {
+  id: number;
+  name: string;
+  avatarUrl: string | null;
+  fillUrl: string | null;
+  linkUrl: string | null;
+  count: number;
+}
+
 type SongLabel = 'original' | 'cover';
 
 interface VideoRow {
@@ -75,6 +84,14 @@ const SLOW_CACHE = cacheControl(3_600, 86_400);
 
 const FANART_PAGE_SIZE = 9;
 const FANART_MAX_PAGE = 100;
+
+// Public answers never grow without a bound, however many rows the table ends up with.
+const COLLAB_LIMIT = 200;
+
+// PostgREST answers at most 1000 rows per request, so a backup has to page. Vercel Functions refuse a response body over 4.5 MB, and a backup must
+// fail loudly rather than come back cut short, so one budget (a little under the platform limit) bounds both memory and time.
+const BACKUP_PAGE_SIZE = 1_000;
+const BACKUP_MAX_BYTES = 4_000_000;
 
 const YOUTUBE_API = 'https://www.googleapis.com/youtube/v3';
 const YOUTUBE_HANDLE = '@MizuHamzazu';
@@ -266,6 +283,21 @@ app.get('/api/fanart/:page', zValidator('param', fanartPageParam, notFoundHook),
 
 app.get('/api/content/:kind', zValidator('param', contentKindParam, notFoundHook), async (c) => respond(c, SLOW_CACHE, await readVideos(c.req.valid('param').kind)));
 
+// Highest counter first, ties by name, so the position in the list is the rank the Collab page shows.
+app.get('/api/collab', async (c) => {
+  const partners = unwrap(
+    await supabase
+      .from('collab')
+      .select('id,name,avatarUrl:avatar_url,fillUrl:fill_url,linkUrl:link_url,count:collab_count')
+      .order('collab_count', { ascending: false })
+      .order('name')
+      .limit(COLLAB_LIMIT)
+      .overrideTypes<CollabRow[], { merge: false }>(),
+  );
+
+  return respond(c, SCHEDULE_CACHE, partners);
+});
+
 const unauthorized = {
   noAuthenticationHeader: { message: { error: 'Unauthorized' } },
   invalidAuthenticationHeader: { message: { error: 'Bad Request' } },
@@ -306,6 +338,7 @@ const IMAGE_HOST = /^(i\.ytimg\.com|pbs\.twimg\.com|[a-z0-9-]+\.supabase\.co)$/;
 
 const text = (max: number) => z.string().trim().min(1).max(max);
 const imageUrl = z.url({ protocol: /^https$/, hostname: IMAGE_HOST }).max(2048);
+const linkUrl = z.url({ protocol: /^https$/ }).max(2048);
 const isoDate = z.iso.datetime({ offset: true });
 const handle = text(100).refine((value) => !value.startsWith('@'), 'must not start with @');
 const localized = z.strictObject(Object.fromEntries(LANGUAGES.map((language) => [language, text(500)])) as Record<(typeof LANGUAGES)[number], ReturnType<typeof text>>);
@@ -348,6 +381,15 @@ const resources: Record<string, Resource> = {
     optional: ['sort_order'],
     order: 'sort_order',
     ascending: true,
+    actions: ALL_ACTIONS,
+  },
+  collab: {
+    table: 'collab',
+    pk: 'id',
+    id: /^[1-9]\d{0,15}$/,
+    fields: { name: text(100), avatar_url: imageUrl.nullable(), fill_url: imageUrl.nullable(), link_url: linkUrl.nullable(), collab_count: z.number().int().min(1).max(10_000) },
+    optional: ['avatar_url', 'fill_url', 'link_url', 'collab_count'],
+    order: 'collab_count',
     actions: ALL_ACTIONS,
   },
   settings: { table: 'site_settings', pk: 'key', id: /^[a-z_]{1,40}$/, fields: { enabled: z.boolean() }, order: 'key', ascending: true, actions: ['read', 'update'] },
@@ -421,6 +463,47 @@ const requires =
 const listQuery = z.object({
   limit: z.coerce.number().int().min(1).max(100).catch(50),
   offset: z.coerce.number().int().min(0).max(100_000).catch(0),
+});
+
+/**
+ * Every table behind `resources`, exactly as stored (column names included), so a file can be loaded back with plain inserts.
+ * Built from `resources` on purpose: a resource added later is in the backup without anyone remembering to add it here.
+ * `api_keys` is not a resource and is never exported.
+ *
+ * Pages are cut by the primary key (`pk > last seen`) instead of by offset: rows written while the backup runs can then
+ * neither be read twice nor be skipped, which a shifting offset would do.
+ */
+async function buildBackup() {
+  const tables: Record<string, Record<string, unknown>[]> = {};
+  let bytes = 0;
+
+  for (const { table, pk } of Object.values(resources)) {
+    const rows: Record<string, unknown>[] = [];
+    let after: unknown;
+
+    for (;;) {
+      const query = supabase.from(table).select('*');
+      const page = unwrap(await (after === undefined ? query : query.gt(pk, after)).order(pk).limit(BACKUP_PAGE_SIZE).overrideTypes<Record<string, unknown>[], { merge: false }>());
+
+      bytes += Buffer.byteLength(JSON.stringify(page));
+      if (bytes > BACKUP_MAX_BYTES) throw new Error(`Backup passed ${BACKUP_MAX_BYTES} bytes at table ${table}; take a full dump with supabase db dump instead`);
+
+      rows.push(...page);
+      if (page.length < BACKUP_PAGE_SIZE) break;
+      after = page[page.length - 1]?.[pk];
+    }
+
+    tables[table] = rows;
+  }
+
+  return { version: 1, createdAt: new Date().toISOString(), tables };
+}
+
+admin.get('/backup', requires('backup:read'), async (c) => {
+  const backup = await buildBackup();
+  c.header('Cache-Control', 'no-store');
+  c.header('Content-Disposition', `attachment; filename="mizu-backup-${backup.createdAt.slice(0, 10)}.json"`);
+  return c.json(backup);
 });
 
 for (const [name, spec] of Object.entries(resources)) {

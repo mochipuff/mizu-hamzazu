@@ -29,7 +29,7 @@ $$;
 -- Only the SQL editor (the database owner) may mint keys. The public roles cannot call this through the Data API.
 revoke all on function public.create_api_key(text, text[], timestamptz) from public, anon, authenticated;
 
--- Examples. Permissions are '<resource>:<action>'. Resources: fanarts, videos, schedule, preferences (create, read, update, delete) and settings (read, update).
+-- Examples. Permissions are '<resource>:<action>'. Resources: fanarts, videos, schedule, preferences, collab (create, read, update, delete), settings (read, update) and backup (read).
 --
 -- select public.create_api_key('fan-art-bot', array['fanarts:create', 'fanarts:read']);
 -- select public.create_api_key('stream-controller', array['settings:update', 'schedule:create', 'schedule:update', 'schedule:delete'], now() + interval '90 days');

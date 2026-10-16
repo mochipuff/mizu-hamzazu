@@ -15,6 +15,14 @@ export const en = {
     secretCode: 'Secret code found! Confetti storm unlocked.',
   },
 
+  leave: {
+    title: 'You are leaving this site',
+    youtubeTitle: 'Opening YouTube',
+    body: (host: string) => `This link goes to ${host}, which is not part of Mizu’s site.`,
+    cancel: 'Stay here',
+    open: 'Open link',
+  },
+
   // Shown before the app loads. Keep in step with the literal text in index.html.
   loader: {
     title: 'Loading',
@@ -44,6 +52,7 @@ export const en = {
     faq: 'FAQ',
     supports: 'Supports',
     content: 'Content',
+    collab: 'Collab',
   },
 
   // Search engines, link previews and AI crawlers.
@@ -72,6 +81,9 @@ export const en = {
       listLabel: 'Fan art',
       alt: (username: string) => `Fan art by @${username}`,
       loadMore: 'Load more',
+      view: (username: string) => `View fan art by @${username} larger`,
+      close: 'Close preview',
+      openOriginal: 'Open original',
     },
   },
 
@@ -85,6 +97,17 @@ export const en = {
     tabsLabel: 'Type of content',
     kinds: { live: 'Streams', short: 'Shorts', vod: 'Videos', song: 'Songs' },
     tags: { live: 'Stream', short: 'Short', vod: 'Video', original: 'Original song', cover: 'Cover song' },
+  },
+
+  collab: {
+    seo: {
+      title: 'Collab | Mizu Hamzazu',
+      description: 'The VTubers and friends Mizu Hamzazu has streamed with, ranked by how many collabs they have done together.',
+    },
+    title: 'Collab',
+    lead: 'The friends Mizu has streamed with, ranked by how many collabs they did together. Thank you for playing with her!',
+    listLabel: 'Collab partners, most collabs first',
+    count: (count: number) => `${count} ${count === 1 ? 'collab' : 'collabs'}`,
   },
 
   // Where the API sends a visitor who opens one of its addresses in the browser (see api/index.ts).

@@ -3,31 +3,6 @@
   padding-block: clamp(3rem, 8vw, 5.5rem);
 }
 
-/* Stickers along the edges. They sit under the content layer and ignore the pointer, so the art and the text always win. They fly (see `useGsap` in Fanart.tsx); with reduced motion nothing runs and they rest where the zigzag puts them. */
-.decor {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.deco {
-  position: absolute;
-  opacity: 0.85;
-  scale: 0.6;
-}
-
-/* The layers GSAP moves. Inline elements ignore transforms, so they have to be blocks. */
-.layer {
-  display: block;
-}
-
-.deco svg {
-  width: 100%;
-  height: auto;
-}
-
 .content {
   position: relative;
   z-index: 1;
@@ -95,8 +70,16 @@
   background: repeating-linear-gradient(135deg, var(--pastel-sky) 0 8px, rgb(255 255 255 / 0.65) 8px 16px);
 }
 
+/* A button that looks like the photo: it opens the preview. */
 .link {
   display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: zoom-in;
 }
 
 .photo {
@@ -198,8 +181,33 @@
   .grid {
     grid-template-columns: repeat(3, 1fr);
   }
+}
 
-  .deco {
-    scale: 1;
-  }
+/* The preview dialog: the whole picture (`contain`, never cropped) between a name bar and the way to the original. */
+.preview {
+  display: grid;
+  gap: 0.7rem;
+  width: min(92vw, 46rem);
+  padding: 0.8rem;
+}
+
+.previewTop,
+.previewBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.previewBottom {
+  justify-content: flex-end;
+}
+
+.previewImage {
+  --image-fit: contain;
+
+  width: 100%;
+  height: min(68dvh, 44rem);
+  border: 2px solid var(--ink);
+  background: var(--foam);
 }

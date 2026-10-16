@@ -16,6 +16,14 @@ export function Sparkle({ color = '#f0b863', outline = '#373332', ...rest }: Doo
   );
 }
 
+export function Star({ color = '#f0b863', outline = '#373332', ...rest }: DoodleProps) {
+  return (
+    <svg viewBox="0 0 40 40" aria-hidden="true" focusable="false" {...rest}>
+      <path d="M20.0 4.0L24.2 15.2L36.2 15.7L26.8 23.2L30.0 34.8L20.0 28.2L10.0 34.8L13.2 23.2L3.8 15.7L15.8 15.2z" fill={color} stroke={outline} strokeWidth="2.5" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function Paw({ color = '#daa047', outline = '#373332', ...rest }: DoodleProps) {
   return (
     <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false" {...rest}>

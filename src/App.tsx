@@ -5,12 +5,14 @@ import { ToastProvider } from './context/ToastProvider.tsx';
 import { Footer } from './components/layout/Footer.tsx';
 import { Header } from './components/layout/Header.tsx';
 import { AmbientSeeds } from './components/ui/AmbientSeeds.tsx';
+import { ExternalLinkGuard } from './components/ui/ExternalLinkGuard.tsx';
 import { KonamiStorm } from './components/ui/KonamiStorm.tsx';
 import { I18nProvider } from './i18n/I18nProvider.tsx';
 import { useI18n } from './i18n/i18n.ts';
 import { isLocale, localeFromPath } from './i18n/locales.ts';
 import { preferredLocale, usePage } from './i18n/navigation.ts';
 import { pageFromPath, pagePath } from './i18n/pages.ts';
+import { CollabPage } from './pages/CollabPage.tsx';
 import { ContentPage } from './pages/ContentPage.tsx';
 import { ForbiddenPage } from './pages/ForbiddenPage.tsx';
 import { HomePage } from './pages/HomePage.tsx';
@@ -78,6 +80,7 @@ function Layout() {
       </a>
       <AmbientSeeds />
       <KonamiStorm />
+      <ExternalLinkGuard />
       <Header />
       <Outlet />
       <Footer />
@@ -109,6 +112,7 @@ export function App() {
           <Route index element={<HomePage />} />
           <Route path="supports" element={<SupportsPage />} />
           <Route path="content" element={<ContentPage />} />
+          <Route path="collab" element={<CollabPage />} />
           <Route path="forbidden" element={<ForbiddenPage />} />
         </Route>
         <Route path="*" element={<RedirectToLocale />} />

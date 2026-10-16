@@ -1,17 +1,16 @@
-import { useRef, useState, useTransition, type ReactNode } from 'react';
+import { useState, useTransition } from 'react';
 import { useData } from '../../data/api.ts';
-import { useGsap } from '../../hooks/useGsap.ts';
 import { useI18n } from '../../i18n/i18n.ts';
 import { localeInfo } from '../../i18n/locales.ts';
-import { gsap, IDLE, POP } from '../../lib/motion.ts';
 import { AsyncBoundary, LoadFailure } from '../ui/AsyncBoundary.tsx';
-import { Button } from '../ui/Button.tsx';
-import { Paw } from '../ui/Doodles.tsx';
+import { Button, ButtonLink } from '../ui/Button.tsx';
 import { ImagePlaceholder, LoadingImage, SkeletonLines } from '../ui/LoadingImage.tsx';
+import { Modal } from '../ui/Modal.tsx';
 import { Notice } from '../ui/Notice.tsx';
+import { PopField } from '../ui/PopField.tsx';
 import { Reveal } from '../ui/Reveal.tsx';
 import { SectionHeading } from '../ui/SectionHeading.tsx';
-import { Cloud, Flower, Heart, Pin } from '../ui/Stickers.tsx';
+import { Flower, Heart } from '../ui/Stickers.tsx';
 import styles from './Fanart.module.css';
 
 interface FanartPost {
@@ -26,34 +25,12 @@ interface FanartResponse {
   hasMore: boolean;
 }
 
-interface Decoration {
-  id: number;
-  Shape: (props: { className?: string }) => ReactNode;
-  top: number;
-  side: 'left' | 'right';
-  size: number;
-  tilt: number;
-}
-
 const COLUMNS = 3;
 // The API serves 9 posts a page, so the placeholders fill the same grid and nothing jumps when the first page arrives.
 const SKELETON_COUNT = 9;
-const SHAPES = [Flower, Cloud, Pin, Paw, Heart] as const;
-const SIZES = [44, 36, 40, 32] as const;
-const TILTS = [-14, 10, -6, 16, -18, 8] as const;
-const DECORATION_COUNT = 14;
-// How far each sticker drifts against the scroll, in px. They cycle, so neighbours move at different speeds.
-const PARALLAX = [30, 55, 40, 70] as const;
-
-// A fixed zigzag down the two edges of the section, behind the grid: same spot on every visit, never two stickers side by side, never covering the art.
-const decorations: Decoration[] = Array.from({ length: DECORATION_COUNT }, (_, id) => ({
-  id,
-  Shape: SHAPES[id % SHAPES.length] ?? Heart,
-  top: 3 + id * (92 / DECORATION_COUNT),
-  side: id % 2 === 0 ? 'left' : 'right',
-  size: SIZES[id % SIZES.length] ?? 36,
-  tilt: TILTS[id % TILTS.length] ?? 0,
-}));
+const BLOOMS = [Flower, Heart] as const;
+const BLOOM_COLORS = ['var(--pastel-pink)', 'var(--pastel-lilac)', 'var(--pastel-butter)', 'var(--pastel-mint)', 'var(--pastel-sky)'] as const;
+const BLOOM_COUNT = 22;
 
 const pagePath = (page: number): string => `/api/fanart/${page}/`;
 
@@ -72,7 +49,7 @@ function FanartSkeleton() {
 }
 
 /** The cards of one page of the API. Reading the page suspends the nearest boundary until it has arrived. */
-function FanartPage({ page }: { page: number }) {
+function FanartPage({ page, onPreview }: { page: number; onPreview: (post: FanartPost) => void }) {
   const { t, locale } = useI18n();
   const { fanart } = t.supports;
   const { posts } = useData<FanartResponse>(pagePath(page));
@@ -94,24 +71,27 @@ function FanartPage({ page }: { page: number }) {
 
   return (
     <>
-      {posts.map(({ id, username, mediaUrl, postedAt }, index) => (
-        <li key={id} className={styles.slot}>
-          <Reveal variant="pop" delay={(index % COLUMNS) * 90}>
-            <figure className={styles.card}>
-              <a href={mediaUrl} target="_blank" rel="noopener noreferrer" className={styles.link}>
-                <LoadingImage className={styles.photo} src={mediaUrl} alt={fanart.alt(username)} loading="lazy" decoding="async" />
-              </a>
-              <figcaption className={styles.caption}>
-                <span className={styles.username}>@{username}</span>
-                <time className={styles.date} dateTime={postedAt}>
-                  {formatDate(new Date(postedAt))}
-                </time>
-              </figcaption>
-              <Heart className={styles.heart} />
-            </figure>
-          </Reveal>
-        </li>
-      ))}
+      {posts.map((post, index) => {
+        const { id, username, mediaUrl, postedAt } = post;
+        return (
+          <li key={id} className={styles.slot}>
+            <Reveal variant="pop" delay={(index % COLUMNS) * 90}>
+              <figure className={styles.card}>
+                <button type="button" className={styles.link} aria-label={fanart.view(username)} onClick={() => onPreview(post)}>
+                  <LoadingImage className={styles.photo} src={mediaUrl} alt={fanart.alt(username)} loading="lazy" decoding="async" />
+                </button>
+                <figcaption className={styles.caption}>
+                  <span className={styles.username}>@{username}</span>
+                  <time className={styles.date} dateTime={postedAt}>
+                    {formatDate(new Date(postedAt))}
+                  </time>
+                </figcaption>
+                <Heart className={styles.heart} />
+              </figure>
+            </Reveal>
+          </li>
+        );
+      })}
       <script type="application/ld+json">{JSON.stringify(gallery).replace(/</g, '\\u003c')}</script>
     </>
   );
@@ -132,12 +112,40 @@ function LoadMore({ page, busy, onMore }: { page: number; busy: boolean; onMore:
   );
 }
 
+/** The picture at full size in a dialog, with a way to the original file. */
+function ImagePreview({ post, onClose }: { post: FanartPost | null; onClose: () => void }) {
+  const { t } = useI18n();
+  const { fanart } = t.supports;
+
+  return (
+    <Modal open={post !== null} onClose={onClose} label={post ? fanart.alt(post.username) : fanart.title} className={styles.preview}>
+      {post && (
+        <>
+          <div className={styles.previewTop}>
+            <span className={styles.username}>@{post.username}</span>
+            <Button variant="secondary" size="sm" icon="close" onClick={onClose}>
+              {fanart.close}
+            </Button>
+          </div>
+          <LoadingImage className={styles.previewImage} src={post.mediaUrl} alt={fanart.alt(post.username)} decoding="async" />
+          <div className={styles.previewBottom}>
+            <ButtonLink variant="secondary" size="sm" icon="globe" href={post.mediaUrl} data-no-leave-prompt>
+              {fanart.openOriginal}
+            </ButtonLink>
+          </div>
+        </>
+      )}
+    </Modal>
+  );
+}
+
 /** Page 1 loads with the section, every older page when "Load more" is pressed: the page that is already on screen stays put while the next one arrives. */
 function Feed() {
   const { t } = useI18n();
   const [pages, setPages] = useState(1);
   const [attempt, setAttempt] = useState(0);
   const [loadingMore, startTransition] = useTransition();
+  const [preview, setPreview] = useState<FanartPost | null>(null);
   const { posts } = useData<FanartResponse>(pagePath(1));
 
   if (posts.length === 0) return <Notice kind="empty">{t.common.empty}</Notice>;
@@ -160,10 +168,11 @@ function Feed() {
               </li>
             )}
           >
-            <FanartPage page={index + 1} />
+            <FanartPage page={index + 1} onPreview={setPreview} />
           </AsyncBoundary>
         ))}
       </ul>
+      <ImagePreview post={preview} onClose={() => setPreview(null)} />
       <AsyncBoundary key={pages} resetKey={attempt} fallback={null} failure={() => null}>
         <LoadMore page={pages} busy={loadingMore} onMore={() => startTransition(() => setPages((current) => current + 1))} />
       </AsyncBoundary>
@@ -174,62 +183,10 @@ function Feed() {
 export function Fanart() {
   const { t } = useI18n();
   const { fanart } = t.supports;
-  const decorRef = useRef<HTMLDivElement>(null);
-
-  // Each layer owns different properties, so the three animations never fight over a transform (same idea as StreamDecor).
-  // Scroll: the stickers pop in the first time the section is seen, then drift at their own speed as it scrolls past.
-  // Idle: each one flies a small loop of its own, drifting towards the content, so none moves in lockstep.
-  useGsap(decorRef, () => {
-    const section = decorRef.current?.closest('section');
-    if (!section) return;
-
-    gsap.from('[data-layer="pop"]', {
-      scale: 0,
-      rotation: -60,
-      opacity: 0,
-      duration: 0.8,
-      ease: POP,
-      stagger: 0.07,
-      scrollTrigger: { trigger: section, start: 'top 80%', once: true },
-    });
-
-    gsap.utils.toArray<HTMLElement>('[data-layer="parallax"]').forEach((layer, index) => {
-      const reach = PARALLAX[index % PARALLAX.length] ?? 0;
-      gsap.fromTo(layer, { y: -reach }, { y: reach, ease: 'none', scrollTrigger: { trigger: section, start: 'top bottom', end: 'bottom top', scrub: 0.6 } });
-    });
-
-    gsap.utils.toArray<HTMLElement>('[data-layer="float"]').forEach((layer, index) => {
-      const inward = index % 2 === 0 ? 1 : -1;
-      const reach = 10 + (index % 4) * 4;
-      const leg = 1.6 + (index % 3) * 0.4;
-      gsap.to(layer, {
-        keyframes: [
-          { x: inward * reach, y: -reach, rotation: 14, duration: leg },
-          { x: inward * reach * 0.3, y: reach * 0.7, rotation: -12, duration: leg },
-          { x: 0, y: 0, rotation: 0, duration: leg },
-        ],
-        easeEach: IDLE,
-        repeat: -1,
-        delay: index * 0.2,
-      });
-    });
-  });
 
   return (
     <section id="fanart" className={styles.section} aria-labelledby="fanart-title">
-      <div ref={decorRef} className={styles.decor} aria-hidden="true">
-        {decorations.map(({ id, Shape, top, side, size, tilt }) => (
-          <span key={id} className={styles.deco} style={{ top: `${top}%`, [side]: 0, width: size, rotate: `${tilt}deg` }}>
-            <span className={styles.layer} data-layer="pop">
-              <span className={styles.layer} data-layer="parallax">
-                <span className={styles.layer} data-layer="float">
-                  <Shape />
-                </span>
-              </span>
-            </span>
-          </span>
-        ))}
-      </div>
+      <PopField contained shapes={BLOOMS} colors={BLOOM_COLORS} count={BLOOM_COUNT} />
 
       <div className={`container ${styles.content}`}>
         <SectionHeading headingId="fanart-title" title={fanart.title}>

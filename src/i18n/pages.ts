@@ -2,7 +2,7 @@ import { isLocale, type Locale } from './locales.ts';
 import type { Messages } from './messages/index.ts';
 
 /** Every page of the site that search engines may list. Each one exists once per language: /<locale>/<slug>. */
-export const PAGES = ['home', 'supports', 'content'] as const;
+export const PAGES = ['home', 'supports', 'content', 'collab'] as const;
 
 /** Pages a visitor can land on but that are never published: no sitemap entry, no hreflang, `noindex`. */
 export const HIDDEN_PAGES = ['forbidden'] as const;
@@ -12,7 +12,7 @@ export type HiddenPageId = (typeof HIDDEN_PAGES)[number];
 export type PageId = PublicPageId | HiddenPageId;
 
 /** The URL segment after the language. The home page has none. */
-const SLUGS: Record<PageId, string> = { home: '', supports: 'supports', content: 'content', forbidden: 'forbidden' };
+const SLUGS: Record<PageId, string> = { home: '', supports: 'supports', content: 'content', collab: 'collab', forbidden: 'forbidden' };
 
 const pageBySlug = new Map<string, PageId>([...PAGES, ...HIDDEN_PAGES].map((page) => [SLUGS[page], page]));
 

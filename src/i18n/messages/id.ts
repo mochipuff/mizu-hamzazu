@@ -12,6 +12,14 @@ export const id: Messages = {
     secretCode: 'Kode rahasia ditemukan! Badai konfeti terbuka.',
   },
 
+  leave: {
+    title: 'Kamu akan meninggalkan situs ini',
+    youtubeTitle: 'Membuka YouTube',
+    body: (host) => `Tautan ini menuju ${host}, yang bukan bagian dari situs Mizu.`,
+    cancel: 'Tetap di sini',
+    open: 'Buka tautan',
+  },
+
   loader: {
     title: 'Memuat',
     note: 'Membangunkan mizu...',
@@ -40,6 +48,7 @@ export const id: Messages = {
     faq: 'FAQ',
     supports: 'Dukungan',
     content: 'Konten',
+    collab: 'Kolaborasi',
   },
 
   seo: {
@@ -67,6 +76,9 @@ export const id: Messages = {
       listLabel: 'Fan art',
       alt: (username) => `Fan art oleh @${username}`,
       loadMore: 'Muat lebih banyak',
+      view: (username) => `Lihat fan art oleh @${username} lebih besar`,
+      close: 'Tutup pratinjau',
+      openOriginal: 'Buka gambar asli',
     },
   },
 
@@ -80,6 +92,17 @@ export const id: Messages = {
     tabsLabel: 'Jenis konten',
     kinds: { live: 'Live stream', short: 'Shorts', vod: 'Video', song: 'Lagu' },
     tags: { live: 'Live stream', short: 'Shorts', vod: 'Video', original: 'Lagu original', cover: 'Lagu cover' },
+  },
+
+  collab: {
+    seo: {
+      title: 'Kolaborasi | Mizu Hamzazu',
+      description: 'VTuber dan teman-teman yang pernah kolaborasi stream dengan Mizu Hamzazu, diurutkan dari yang paling sering.',
+    },
+    title: 'Kolaborasi',
+    lead: 'Teman-teman yang pernah stream bareng Mizu, diurutkan dari jumlah kolaborasi terbanyak. Terima kasih sudah main bareng!',
+    listLabel: 'Partner kolaborasi, dari yang paling banyak',
+    count: (count: number) => `${count} kolaborasi`,
   },
 
   // Where the API sends a visitor who opens one of its addresses in the browser (see api/index.ts).
