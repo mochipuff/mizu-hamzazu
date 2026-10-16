@@ -10,7 +10,6 @@ import { useI18n } from '../i18n/i18n.ts';
 import { localeInfo } from '../i18n/locales.ts';
 import styles from './ContentPage.module.css';
 
-// `song` is not a kind of upload but a label on one: the API gathers every video labelled as a song here, whatever its kind.
 const TABS = ['live', 'short', 'vod', 'song'] as const;
 
 type Tab = (typeof TABS)[number];
@@ -24,14 +23,12 @@ interface Video {
   publishedAt: string;
 }
 
-// The API keeps 12 videos per category, so the placeholders fill the same grid and nothing jumps when the list arrives.
 const SKELETON_COUNT = 12;
 
 const contentPath = (tab: Tab): string => `/api/content/${tab}/`;
 
 const videoUrl = (kind: Kind, id: string): string => (kind === 'short' ? `https://www.youtube.com/shorts/${id}` : `https://www.youtube.com/watch?v=${id}`);
 
-/** Cards in the shape of the real ones, with an animated thumbnail and two bars for the text, while the list is on its way. */
 function VideoSkeleton({ tab }: { tab: Tab }) {
   const { t } = useI18n();
 
@@ -88,7 +85,6 @@ export function ContentPage() {
   const { t } = useI18n();
   const { content } = t;
   const [tab, setTab] = useState<Tab>('live');
-  // The buttons answer at once; the list swaps when the new tab has arrived, and the old one stays on screen until then instead of flashing placeholders.
   const [selected, setSelected] = useOptimistic(tab);
   const [switching, startTransition] = useTransition();
 

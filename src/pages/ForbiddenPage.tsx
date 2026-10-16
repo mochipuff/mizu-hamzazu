@@ -9,7 +9,6 @@ import { useI18n } from '../i18n/i18n.ts';
 import { pagePath } from '../i18n/pages.ts';
 import styles from './ForbiddenPage.module.css';
 
-/** Where the API sends a visitor who opens one of its addresses in the browser. The page carries no data; it only says the address is closed. */
 export function ForbiddenPage() {
   const { t, locale } = useI18n();
   const { forbidden } = t;
