@@ -6,7 +6,13 @@
   pointer-events: none;
 }
 
-.star {
+/* Inside a section: it sits under the content layer of that section instead of under the whole page. */
+.field[data-contained='true'] {
+  position: absolute;
+  z-index: 0;
+}
+
+.item {
   position: absolute;
 }
 
@@ -18,7 +24,7 @@
 }
 
 @media (max-width: 640px) {
-  .star:nth-child(n + 9) {
+  .field[data-contained='false'] .item:nth-child(n + 9) {
     display: none;
   }
 }

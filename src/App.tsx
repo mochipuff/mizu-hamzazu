@@ -5,6 +5,7 @@ import { ToastProvider } from './context/ToastProvider.tsx';
 import { Footer } from './components/layout/Footer.tsx';
 import { Header } from './components/layout/Header.tsx';
 import { AmbientSeeds } from './components/ui/AmbientSeeds.tsx';
+import { ExternalLinkGuard } from './components/ui/ExternalLinkGuard.tsx';
 import { KonamiStorm } from './components/ui/KonamiStorm.tsx';
 import { I18nProvider } from './i18n/I18nProvider.tsx';
 import { useI18n } from './i18n/i18n.ts';
@@ -79,6 +80,7 @@ function Layout() {
       </a>
       <AmbientSeeds />
       <KonamiStorm />
+      <ExternalLinkGuard />
       <Header />
       <Outlet />
       <Footer />

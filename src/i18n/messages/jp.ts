@@ -12,6 +12,14 @@ export const jp: Messages = {
     secretCode: '隠しコード発見！紙吹雪の嵐が解放されました。',
   },
 
+  leave: {
+    title: 'このサイトから移動します',
+    youtubeTitle: 'YouTubeを開きます',
+    body: (host) => `このリンクは Mizu のサイトの外にある ${host} に移動します。`,
+    cancel: 'ここに残る',
+    open: 'リンクを開く',
+  },
+
   loader: {
     title: '読み込み中',
     note: 'Mizuを起こしています…',
@@ -68,6 +76,9 @@ export const jp: Messages = {
       listLabel: 'ファンアート',
       alt: (username) => `@${username}さんのファンアート`,
       loadMore: 'もっと見る',
+      view: (username) => `@${username}さんのファンアートを拡大して見る`,
+      close: 'プレビューを閉じる',
+      openOriginal: '元の画像を開く',
     },
   },
 

@@ -15,6 +15,14 @@ export const en = {
     secretCode: 'Secret code found! Confetti storm unlocked.',
   },
 
+  leave: {
+    title: 'You are leaving this site',
+    youtubeTitle: 'Opening YouTube',
+    body: (host: string) => `This link goes to ${host}, which is not part of Mizu’s site.`,
+    cancel: 'Stay here',
+    open: 'Open link',
+  },
+
   // Shown before the app loads. Keep in step with the literal text in index.html.
   loader: {
     title: 'Loading',
@@ -73,6 +81,9 @@ export const en = {
       listLabel: 'Fan art',
       alt: (username: string) => `Fan art by @${username}`,
       loadMore: 'Load more',
+      view: (username: string) => `View fan art by @${username} larger`,
+      close: 'Close preview',
+      openOriginal: 'Open original',
     },
   },
 

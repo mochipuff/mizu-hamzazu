@@ -1,11 +1,12 @@
 import type { CSSProperties } from 'react';
 import { AsyncBoundary } from '../components/ui/AsyncBoundary.tsx';
-import { ImagePlaceholder, LoadingImage, SkeletonLines } from '../components/ui/LoadingImage.tsx';
+import { Star, Sparkle } from '../components/ui/Doodles.tsx';
 import { Icon } from '../components/ui/Icon.tsx';
+import { ImagePlaceholder, LoadingImage } from '../components/ui/LoadingImage.tsx';
 import { Notice } from '../components/ui/Notice.tsx';
+import { PopField } from '../components/ui/PopField.tsx';
 import { Reveal } from '../components/ui/Reveal.tsx';
 import { SectionHeading } from '../components/ui/SectionHeading.tsx';
-import { StarField } from '../components/ui/StarField.tsx';
 import { WaveDivider } from '../components/ui/WaveDivider.tsx';
 import { useData } from '../data/api.ts';
 import { useI18n } from '../i18n/i18n.ts';
@@ -15,41 +16,36 @@ interface Partner {
   id: number;
   name: string;
   avatarUrl: string | null;
+  fillUrl: string | null;
   linkUrl: string | null;
   count: number;
 }
 
-const SKELETON_COUNT = 6;
 const PODIUM = 3;
+const STARS = [Star, Sparkle] as const;
 const AVATAR_TINTS = ['var(--pastel-pink)', 'var(--pastel-butter)', 'var(--pastel-mint)', 'var(--pastel-sky)', 'var(--pastel-lilac)'] as const;
 
 const COLLAB_PATH = '/api/collab/';
 
-function PartnerSkeleton() {
+/** The loading state of the page: stripes and a hopping paw over the whole screen (under the header, so the menu stays reachable), with a label that glitches. */
+function CollabLoading() {
   const { t } = useI18n();
 
   return (
-    <ol className={styles.list} aria-busy="true" aria-label={t.common.loading}>
-      {Array.from({ length: SKELETON_COUNT }, (_, index) => (
-        <li key={index}>
-          <div className={`${styles.card} ${styles.pending}`} aria-hidden="true">
-            <span className={styles.avatar}>
-              <ImagePlaceholder />
-            </span>
-            <SkeletonLines />
-          </div>
-        </li>
-      ))}
-    </ol>
+    <div className={styles.loading} role="status" aria-busy="true">
+      <ImagePlaceholder />
+      <p className={styles.loadingLabel}>{t.common.loading}</p>
+    </div>
   );
 }
 
 function PartnerCard({ partner, position }: { partner: Partner; position: number }) {
   const { t } = useI18n();
-  const { name, avatarUrl, linkUrl, count } = partner;
+  const { name, avatarUrl, fillUrl, linkUrl, count } = partner;
 
   const body = (
     <>
+      {fillUrl && <LoadingImage className={styles.fill} src={fillUrl} alt="" loading="lazy" decoding="async" />}
       <span className={styles.rank}>{position}</span>
       {avatarUrl ? (
         <LoadingImage className={styles.avatar} src={avatarUrl} alt="" loading="lazy" decoding="async" />
@@ -67,11 +63,11 @@ function PartnerCard({ partner, position }: { partner: Partner; position: number
   );
 
   return linkUrl ? (
-    <a className={styles.card} href={linkUrl} target="_blank" rel="noopener noreferrer" data-podium={position <= PODIUM}>
+    <a className={styles.card} href={linkUrl} target="_blank" rel="noopener noreferrer" data-podium={position <= PODIUM} data-filled={fillUrl !== null}>
       {body}
     </a>
   ) : (
-    <div className={styles.card} data-podium={position <= PODIUM}>
+    <div className={styles.card} data-podium={position <= PODIUM} data-filled={fillUrl !== null}>
       {body}
     </div>
   );
@@ -103,7 +99,7 @@ export function CollabPage() {
 
   return (
     <>
-      <StarField />
+      <PopField shapes={STARS} />
       <main id="main">
         <section className={styles.section} aria-labelledby="collab-title">
           <div className="container">
@@ -111,7 +107,7 @@ export function CollabPage() {
               {collab.lead}
             </SectionHeading>
 
-            <AsyncBoundary fallback={<PartnerSkeleton />}>
+            <AsyncBoundary fallback={<CollabLoading />}>
               <PartnerList />
             </AsyncBoundary>
           </div>

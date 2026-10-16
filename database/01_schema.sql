@@ -59,6 +59,7 @@ create table if not exists public.collab (
   id bigint generated always as identity primary key,
   name text not null check (btrim(name) <> '' and char_length(name) <= 100),
   avatar_url text check (avatar_url ~ '^https://'),
+  fill_url text constraint collab_fill_url_check check (fill_url ~ '^https://'),
   link_url text check (link_url ~ '^https://'),
   collab_count integer not null default 1 check (collab_count between 1 and 10000),
   created_at timestamptz not null default now(),

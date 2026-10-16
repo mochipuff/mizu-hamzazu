@@ -58,6 +58,7 @@ interface CollabRow {
   id: number;
   name: string;
   avatarUrl: string | null;
+  fillUrl: string | null;
   linkUrl: string | null;
   count: number;
 }
@@ -287,7 +288,7 @@ app.get('/api/collab', async (c) => {
   const partners = unwrap(
     await supabase
       .from('collab')
-      .select('id,name,avatarUrl:avatar_url,linkUrl:link_url,count:collab_count')
+      .select('id,name,avatarUrl:avatar_url,fillUrl:fill_url,linkUrl:link_url,count:collab_count')
       .order('collab_count', { ascending: false })
       .order('name')
       .limit(COLLAB_LIMIT)
@@ -386,8 +387,8 @@ const resources: Record<string, Resource> = {
     table: 'collab',
     pk: 'id',
     id: /^[1-9]\d{0,15}$/,
-    fields: { name: text(100), avatar_url: imageUrl.nullable(), link_url: linkUrl.nullable(), collab_count: z.number().int().min(1).max(10_000) },
-    optional: ['avatar_url', 'link_url', 'collab_count'],
+    fields: { name: text(100), avatar_url: imageUrl.nullable(), fill_url: imageUrl.nullable(), link_url: linkUrl.nullable(), collab_count: z.number().int().min(1).max(10_000) },
+    optional: ['avatar_url', 'fill_url', 'link_url', 'collab_count'],
     order: 'collab_count',
     actions: ALL_ACTIONS,
   },

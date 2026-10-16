@@ -12,6 +12,14 @@ export const id: Messages = {
     secretCode: 'Kode rahasia ditemukan! Badai konfeti terbuka.',
   },
 
+  leave: {
+    title: 'Kamu akan meninggalkan situs ini',
+    youtubeTitle: 'Membuka YouTube',
+    body: (host) => `Tautan ini menuju ${host}, yang bukan bagian dari situs Mizu.`,
+    cancel: 'Tetap di sini',
+    open: 'Buka tautan',
+  },
+
   loader: {
     title: 'Memuat',
     note: 'Membangunkan mizu...',
@@ -68,6 +76,9 @@ export const id: Messages = {
       listLabel: 'Fan art',
       alt: (username) => `Fan art oleh @${username}`,
       loadMore: 'Muat lebih banyak',
+      view: (username) => `Lihat fan art oleh @${username} lebih besar`,
+      close: 'Tutup pratinjau',
+      openOriginal: 'Buka gambar asli',
     },
   },
 
