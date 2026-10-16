@@ -2,7 +2,6 @@ import type { Messages } from '../i18n/messages/index.ts';
 
 export type PlatformId = 'youtube' | 'twitch' | 'x' | 'discord';
 
-/** The call to action and blurb of each platform live in the messages (`platforms.<id>`). */
 interface Platform {
   id: PlatformId;
   label: string;
@@ -24,10 +23,6 @@ export interface ExtraProfile {
   purpose: SocialPurpose;
 }
 
-/**
- * Facts that are the same in every language. Anything that has words (bio, species, languages, ...) is in `src/i18n/messages`.
- * An empty value (for example `illustrator` until it is known) is left out of everything that gets published.
- */
 interface Profile {
   debut: string;
   heightCm: number;
@@ -35,7 +30,6 @@ interface Profile {
   illustrator: string;
   riggerOrModeler: string;
   alternateNames: string[];
-  /** No agency: the translated `agency` label ("Independent") is shown on the page but never published as an organization. */
   independent: boolean;
   socials: ExtraProfile[];
 }

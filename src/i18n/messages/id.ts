@@ -105,7 +105,6 @@ export const id: Messages = {
     count: (count: number) => `${count} kolaborasi`,
   },
 
-  // Where the API sends a visitor who opens one of its addresses in the browser (see api/index.ts).
   forbidden: {
     seo: {
       title: 'Akses Ditolak | Mizu Hamzazu',

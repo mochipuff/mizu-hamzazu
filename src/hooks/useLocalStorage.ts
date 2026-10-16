@@ -14,7 +14,6 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, Dispatch<S
     try {
       window.localStorage.setItem(key, JSON.stringify(value));
     } catch {
-      /* storage is unavailable or full; the value simply won't persist */
     }
   }, [key, value]);
 

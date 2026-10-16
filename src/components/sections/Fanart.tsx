@@ -26,7 +26,6 @@ interface FanartResponse {
 }
 
 const COLUMNS = 3;
-// The API serves 9 posts a page, so the placeholders fill the same grid and nothing jumps when the first page arrives.
 const SKELETON_COUNT = 9;
 const BLOOMS = [Flower, Heart] as const;
 const BLOOM_COLORS = ['var(--pastel-pink)', 'var(--pastel-lilac)', 'var(--pastel-butter)', 'var(--pastel-mint)', 'var(--pastel-sky)'] as const;
@@ -34,7 +33,6 @@ const BLOOM_COUNT = 22;
 
 const pagePath = (page: number): string => `/api/fanart/${page}/`;
 
-/** Cards in the shape of the real ones, one page of them, while the API answers. */
 function FanartSkeleton() {
   return Array.from({ length: SKELETON_COUNT }, (_, index) => (
     <li key={index} className={styles.slot}>
@@ -48,7 +46,6 @@ function FanartSkeleton() {
   ));
 }
 
-/** The cards of one page of the API. Reading the page suspends the nearest boundary until it has arrived. */
 function FanartPage({ page, onPreview }: { page: number; onPreview: (post: FanartPost) => void }) {
   const { t, locale } = useI18n();
   const { fanart } = t.supports;
@@ -97,7 +94,6 @@ function FanartPage({ page, onPreview }: { page: number; onPreview: (post: Fanar
   );
 }
 
-/** Shown below the last page that was read, and only when the API says there is an older one. */
 function LoadMore({ page, busy, onMore }: { page: number; busy: boolean; onMore: () => void }) {
   const { t } = useI18n();
   const { hasMore } = useData<FanartResponse>(pagePath(page));
@@ -112,7 +108,6 @@ function LoadMore({ page, busy, onMore }: { page: number; busy: boolean; onMore:
   );
 }
 
-/** The picture at full size in a dialog, with a way to the original file. */
 function ImagePreview({ post, onClose }: { post: FanartPost | null; onClose: () => void }) {
   const { t } = useI18n();
   const { fanart } = t.supports;
@@ -139,7 +134,6 @@ function ImagePreview({ post, onClose }: { post: FanartPost | null; onClose: () 
   );
 }
 
-/** Page 1 loads with the section, every older page when "Load more" is pressed: the page that is already on screen stays put while the next one arrives. */
 function Feed() {
   const { t } = useI18n();
   const [pages, setPages] = useState(1);

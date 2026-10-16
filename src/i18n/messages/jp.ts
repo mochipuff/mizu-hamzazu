@@ -105,7 +105,6 @@ export const jp: Messages = {
     count: (count: number) => `${count}回`,
   },
 
-  // Where the API sends a visitor who opens one of its addresses in the browser (see api/index.ts).
   forbidden: {
     seo: {
       title: 'アクセス禁止 | Mizu Hamzazu',
