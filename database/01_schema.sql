@@ -44,7 +44,7 @@ create table if not exists public.stream_slots (
   duration_minutes integer not null check (duration_minutes > 0),
   platform text not null check (platform in ('youtube', 'twitch', 'x', 'discord')),
   members_only boolean not null default false,
-  thumbnail_url text
+  thumbnail_url text constraint stream_slots_thumbnail_url_check check (thumbnail_url ~ '^https://')
 );
 
 create index if not exists stream_slots_datetime_idx on public.stream_slots (datetime);

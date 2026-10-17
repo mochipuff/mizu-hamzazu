@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type RefObject } from 'react';
 import { useSound } from '../../context/sound.ts';
 import { site } from '../../config/site.ts';
 import { useI18n } from '../../i18n/i18n.ts';
@@ -11,6 +11,7 @@ import { LanguageSelect } from './LanguageSelect.tsx';
 import styles from './Header.module.css';
 
 const navIds = ['lore', 'schedule', 'emotes', 'join', 'faq'] as const;
+// The sections that live under the About menu. The others stay in the bar.
 const aboutMenuIds = ['lore', 'schedule', 'emotes', 'faq'] as const;
 
 interface NavProps {
@@ -20,8 +21,10 @@ interface NavProps {
   onNavigate: () => void;
 }
 
+/** From another page a section link goes back to the home page first. */
 const sectionTo = (isHome: boolean, homePath: string, id: string): string => (isHome ? `#${id}` : `${homePath}#${id}`);
 
+/** Closes a popup when something outside it is pressed or Escape is hit; Escape also gives the focus back to its button. */
 function useDismiss(open: boolean, close: () => void, root: RefObject<HTMLElement | null>, button: RefObject<HTMLElement | null>) {
   useEffect(() => {
     if (!open) return undefined;
@@ -44,13 +47,14 @@ function useDismiss(open: boolean, close: () => void, root: RefObject<HTMLElemen
   }, [open, close, root, button]);
 }
 
+/** "About" opens a list of the sections of the home page that tell about Mizu. The same markup serves the desktop bar and the mobile bubble. */
 function AboutMenu({ isHome, homePath, activeId, onNavigate }: NavProps) {
   const { t } = useI18n();
   const menuId = useId();
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLLIElement>(null);
   const button = useRef<HTMLButtonElement>(null);
-  const close = () => setOpen(false);
+  const close = useCallback(() => setOpen(false), []);
 
   useDismiss(open, close, root, button);
 
@@ -106,9 +110,13 @@ export function Header() {
   const brandRoot = useRef<HTMLDivElement>(null);
   const brandButton = useRef<HTMLButtonElement>(null);
 
-  useDismiss(bubbleOpen, () => setBubbleOpen(false), brandRoot, brandButton);
-  useDismiss(open, () => setOpen(false), menuRoot, menuButton);
+  const closeBubble = useCallback(() => setBubbleOpen(false), []);
+  const closeMenu = useCallback(() => setOpen(false), []);
 
+  useDismiss(bubbleOpen, closeBubble, brandRoot, brandButton);
+  useDismiss(open, closeMenu, menuRoot, menuButton);
+
+  // Highlights the section being read. The sections only exist on the home page, so `page` re-attaches the observer when another page brings its own.
   useEffect(() => {
     const visible = new Set<string>();
     const observer = new IntersectionObserver(
@@ -150,28 +158,27 @@ export function Header() {
     return () => window.removeEventListener('resize', handleResize);
   }, [open]);
 
-  const handleCloseMenu = () => setOpen(false);
-
+  // The same links fill the desktop bar and the mobile bubble.
   const links = (
     <>
-      <AboutMenu isHome={isHome} homePath={homePath} activeId={activeId} onNavigate={handleCloseMenu} />
+      <AboutMenu isHome={isHome} homePath={homePath} activeId={activeId} onNavigate={closeMenu} />
       <li>
-        <Link to={sectionTo(isHome, homePath, 'join')} className={styles.link} aria-current={isHome && activeId === 'join' ? 'true' : undefined} onClick={handleCloseMenu}>
+        <Link to={sectionTo(isHome, homePath, 'join')} className={styles.link} aria-current={isHome && activeId === 'join' ? 'true' : undefined} onClick={closeMenu}>
           {t.nav.join}
         </Link>
       </li>
       <li>
-        <Link to={pagePath(locale, 'content')} className={styles.link} aria-current={page === 'content' ? 'page' : undefined} onClick={handleCloseMenu}>
+        <Link to={pagePath(locale, 'content')} className={styles.link} aria-current={page === 'content' ? 'page' : undefined} onClick={closeMenu}>
           {t.nav.content}
         </Link>
       </li>
       <li>
-        <Link to={pagePath(locale, 'collab')} className={styles.link} aria-current={page === 'collab' ? 'page' : undefined} onClick={handleCloseMenu}>
+        <Link to={pagePath(locale, 'collab')} className={styles.link} aria-current={page === 'collab' ? 'page' : undefined} onClick={closeMenu}>
           {t.nav.collab}
         </Link>
       </li>
       <li>
-        <Link to={pagePath(locale, 'supports')} className={styles.link} aria-current={page === 'supports' ? 'page' : undefined} onClick={handleCloseMenu}>
+        <Link to={pagePath(locale, 'supports')} className={styles.link} aria-current={page === 'supports' ? 'page' : undefined} onClick={closeMenu}>
           {t.nav.supports}
         </Link>
       </li>
@@ -196,7 +203,7 @@ export function Header() {
           </button>
 
           <div id={bubbleId} className={styles.bubble} hidden={!bubbleOpen}>
-            <Link to={isHome ? '#top' : homePath} className={styles.bubbleItem} onClick={() => setBubbleOpen(false)}>
+            <Link to={isHome ? '#top' : homePath} className={styles.bubbleItem} onClick={closeBubble}>
               <Icon name="home" size={20} />
               <span>{t.nav.home}</span>
             </Link>
@@ -208,6 +215,10 @@ export function Header() {
               <Icon name="bell" size={20} />
               <span>{t.header.comingSoon}</span>
             </button>
+            <Link to={pagePath(locale, 'game')} className={styles.bubbleItem} aria-current={page === 'game' ? 'page' : undefined} onClick={closeBubble}>
+              <Icon name="card" size={20} />
+              <span>{t.header.bondingCard}</span>
+            </Link>
           </div>
         </div>
 

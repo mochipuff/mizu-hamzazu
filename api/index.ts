@@ -85,8 +85,11 @@ const SLOW_CACHE = cacheControl(3_600, 86_400);
 const FANART_PAGE_SIZE = 9;
 const FANART_MAX_PAGE = 100;
 
+// Public answers never grow without a bound, however many rows the table ends up with.
 const COLLAB_LIMIT = 200;
 
+// PostgREST answers at most 1000 rows per request, so a backup has to page. Vercel Functions refuse a response body over 4.5 MB, and a backup must
+// fail loudly rather than come back cut short, so one budget (a little under the platform limit) bounds both memory and time.
 const BACKUP_PAGE_SIZE = 1_000;
 const BACKUP_MAX_BYTES = 4_000_000;
 
@@ -280,6 +283,7 @@ app.get('/api/fanart/:page', zValidator('param', fanartPageParam, notFoundHook),
 
 app.get('/api/content/:kind', zValidator('param', contentKindParam, notFoundHook), async (c) => respond(c, SLOW_CACHE, await readVideos(c.req.valid('param').kind)));
 
+// Highest counter first, ties by name, so the position in the list is the rank the Collab page shows.
 app.get('/api/collab', async (c) => {
   const partners = unwrap(
     await supabase
@@ -438,6 +442,11 @@ function databaseFailure(c: Context, error: { code: string; message: string }) {
 
 const admin = new Hono<Env>({ strict: false });
 
+// Admin answers hold private data and are the result of a key, so no cache (browser, CDN or proxy) may keep any of them. Set before the handlers so every route inherits it.
+admin.use('*', async (c, next) => {
+  c.header('Cache-Control', 'no-store');
+  await next();
+});
 admin.use('*', bodyLimit({ maxSize: 16 * 1024, onError: (c) => fail(c, 413, 'Payload Too Large') }));
 admin.use(
   '*',
@@ -461,6 +470,14 @@ const listQuery = z.object({
   offset: z.coerce.number().int().min(0).max(100_000).catch(0),
 });
 
+/**
+ * Every table behind `resources`, exactly as stored (column names included), so a file can be loaded back with plain inserts.
+ * Built from `resources` on purpose: a resource added later is in the backup without anyone remembering to add it here.
+ * `api_keys` is not a resource and is never exported.
+ *
+ * Pages are cut by the primary key (`pk > last seen`) instead of by offset: rows written while the backup runs can then
+ * neither be read twice nor be skipped, which a shifting offset would do.
+ */
 async function buildBackup() {
   const tables: Record<string, Record<string, unknown>[]> = {};
   let bytes = 0;

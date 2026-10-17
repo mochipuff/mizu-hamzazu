@@ -1,12 +1,14 @@
 import { useSyncExternalStore } from 'react';
 
 const MINUTE_MS = 60_000;
+// Timers can fire a millisecond early, which would tick twice around the boundary; land just after it instead.
 const TICK_BUFFER_MS = 50;
 
 const listeners = new Set<() => void>();
 let currentTime = Date.now();
 let timer: number | undefined;
 
+// Everything that reads the clock shows minutes at most, so ticking on the minute boundary is enough.
 const scheduleTick = () => {
   timer = window.setTimeout(() => {
     currentTime = Date.now();

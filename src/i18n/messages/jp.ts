@@ -33,6 +33,7 @@ export const jp: Messages = {
     soundOn: 'SFX: オン',
     soundOff: 'SFX: オフ',
     comingSoon: '近日公開',
+    bondingCard: 'ボンディングカード',
     openMenu: 'メニューを開く',
     closeMenu: 'メニューを閉じる',
     language: '言語',
@@ -105,6 +106,17 @@ export const jp: Messages = {
     count: (count: number) => `${count}回`,
   },
 
+  // Not published yet (see `HIDDEN_PAGES` in src/i18n/pages.ts).
+  game: {
+    seo: {
+      title: 'ボンディングカード | Mizu Hamzazu',
+      description: 'Mizu Hamzazuのボンディングカード、準備中です。',
+    },
+    title: 'ボンディングカード',
+    lead: 'Mizuとズートピアンのためのちいさなゲーム。まだ巣穴で準備中なので、もう少しお待ちください！',
+  },
+
+  // Where the API sends a visitor who opens one of its addresses in the browser (see api/index.ts).
   forbidden: {
     seo: {
       title: 'アクセス禁止 | Mizu Hamzazu',
@@ -174,7 +186,7 @@ export const jp: Messages = {
 
   hero: {
     tag: 'バーチャルYouTuber',
-    greeting: 'Cihuyyy！',
+    greeting: '今日は！',
     iAm: (name) => `${name}だよ！`,
     intro:
       'Mizu Hamzazuは、はぐれてしまった弟妹を探すという使命を胸に、異世界からやってきたハムスター。永遠の18歳の彼女は、いま新しい旅のページをめくろうとしています。',

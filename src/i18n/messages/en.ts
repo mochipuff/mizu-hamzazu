@@ -31,6 +31,7 @@ export const en = {
     soundOn: 'Sfx: on',
     soundOff: 'Sfx: off',
     comingSoon: 'Coming soon',
+    bondingCard: 'Bonding card',
     openMenu: 'Open menu',
     closeMenu: 'Close menu',
     language: 'Language',
@@ -49,6 +50,7 @@ export const en = {
     collab: 'Collab',
   },
 
+  // Search engines, link previews and AI crawlers.
   seo: {
     title: 'Mizu Hamzazu | Indonesian Hamster VTuber',
     description: 'Official site of Mizu Hamzazu, an Indonesian hamster VTuber. Weekly stream schedule for freetalk, cozy games and karaoke, emotes, and the Zutopian community.',
@@ -101,6 +103,15 @@ export const en = {
     lead: 'The friends Mizu has streamed with, ranked by how many collabs they did together. Thank you for playing with her!',
     listLabel: 'Collab partners, most collabs first',
     count: (count: number) => `${count} ${count === 1 ? 'collab' : 'collabs'}`,
+  },
+
+  game: {
+    seo: {
+      title: 'Bonding card | Mizu Hamzazu',
+      description: 'The Bonding card of Mizu Hamzazu, on its way.',
+    },
+    title: 'Bonding card',
+    lead: 'A little game for Mizu and the Zutopian. It is still in the burrow, so come back soon!',
   },
 
   forbidden: {

@@ -16,6 +16,7 @@ export function useSound(): SoundApi {
   return context;
 }
 
+// Sound effects are synthesized with the Web Audio API, so the site ships no audio files.
 interface ToneOptions {
   from: number;
   to: number;

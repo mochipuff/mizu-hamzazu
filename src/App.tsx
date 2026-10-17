@@ -15,11 +15,16 @@ import { pageFromPath, pagePath } from './i18n/pages.ts';
 import { CollabPage } from './pages/CollabPage.tsx';
 import { ContentPage } from './pages/ContentPage.tsx';
 import { ForbiddenPage } from './pages/ForbiddenPage.tsx';
+import { GamePage } from './pages/GamePage.tsx';
 import { HomePage } from './pages/HomePage.tsx';
 import { SupportsPage } from './pages/SupportsPage.tsx';
 
 const PAGE_KEY = 'mizu:page';
 
+/**
+ * Some browsers reload a tab on the URL it first loaded, not the one it is showing (Android Chrome's "Desktop site" switch).
+ * The page being read is kept per tab and put back after a reload.
+ */
 function KeepPage() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -39,12 +44,14 @@ function KeepPage() {
       }
       window.sessionStorage.setItem(PAGE_KEY, pathname);
     } catch {
+      /* storage is unavailable; a reload simply stays where the browser put it */
     }
   }, [pathname, navigate]);
 
   return null;
 }
 
+/** `/`, `/supports/`, `/game/`, `/forbidden/` (where the API sends a browser that opens one of its addresses) and `/xx/` become the same page in a real language. Unknown paths land on the home page, as they always did. A page that is missing from `SLUGS` in `i18n/pages.ts` ends up here, which is why it silently shows the home page. */
 function RedirectToLocale() {
   const { pathname, search, hash } = useLocation();
   const locale = localeFromPath(pathname) ?? preferredLocale();
@@ -57,6 +64,7 @@ function Layout() {
   const { hash } = useLocation();
   const previousPage = useRef(page);
 
+  // A new page opens at its top, or at the section named in the URL (`/en/#faq`). The first page the visitor loads is left to the browser.
   useEffect(() => {
     if (previousPage.current === page) return;
     previousPage.current = page;
@@ -106,6 +114,7 @@ export function App() {
           <Route path="supports" element={<SupportsPage />} />
           <Route path="content" element={<ContentPage />} />
           <Route path="collab" element={<CollabPage />} />
+          <Route path="game" element={<GamePage />} />
           <Route path="forbidden" element={<ForbiddenPage />} />
         </Route>
         <Route path="*" element={<RedirectToLocale />} />

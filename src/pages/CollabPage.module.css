@@ -29,6 +29,7 @@
   transition: transform 0.18s var(--ease-pop);
 }
 
+/* Image fill: the picture covers the card and a veil of white keeps the name readable. `.card > .fill` outranks the frame's own `position`. */
 .card > .fill {
   position: absolute;
   inset: 0;
@@ -55,6 +56,7 @@ a.card:focus-visible {
   background: var(--pastel-butter);
 }
 
+/* Full screen: `ImagePlaceholder` fills its nearest positioned ancestor, which is the whole viewport here. Below the header (z-index 100) and the toast. */
 .loading {
   position: fixed;
   inset: 0;
@@ -72,6 +74,7 @@ a.card:focus-visible {
   animation: glitch 2.4s steps(1, end) infinite;
 }
 
+/* Each keyframe holds until the next one (`steps`): a calm label, then a short burst of offset and colour split. */
 @keyframes glitch {
   0%,
   80%,

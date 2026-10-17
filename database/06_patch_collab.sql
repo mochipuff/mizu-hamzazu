@@ -1,3 +1,6 @@
+-- [Incremental Patch] Adds the collab table and the permissions `collab:*` and `backup:read`.
+-- Every database, after 01. Idempotent: a second run changes nothing.
+
 create table if not exists public.collab (
   id bigint generated always as identity primary key,
   name text not null check (btrim(name) <> '' and char_length(name) <= 100),
@@ -16,6 +19,7 @@ create trigger collab_updated_at before update on public.collab for each row exe
 alter table public.collab enable row level security;
 revoke all on public.collab from anon, authenticated;
 
+-- One ALTER TABLE, so the table is never without its permissions check. Existing keys keep working: their permissions are a subset of the new list.
 alter table public.api_keys
   drop constraint if exists api_keys_permissions_check,
   add constraint api_keys_permissions_check check (
