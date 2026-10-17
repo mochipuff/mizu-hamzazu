@@ -186,7 +186,7 @@ export const jp: Messages = {
 
   hero: {
     tag: 'バーチャルYouTuber',
-    greeting: 'Cihuyyy！',
+    greeting: '今日は！',
     iAm: (name) => `${name}だよ！`,
     intro:
       'Mizu Hamzazuは、はぐれてしまった弟妹を探すという使命を胸に、異世界からやってきたハムスター。永遠の18歳の彼女は、いま新しい旅のページをめくろうとしています。',
