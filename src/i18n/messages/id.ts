@@ -186,7 +186,7 @@ export const id: Messages = {
 
   hero: {
     tag: 'Virtual Youtuber',
-    greeting: 'Cihuyyy,',
+    greeting: 'Halo,',
     iAm: (name) => `Aku ${name}!`,
     intro:
       'Mizu Hamzazu adalah hamster isekai yang datang dengan satu misi utama: menemukan adiknya yang hilang. Berusia 18 tahun selamanya, Mizu kini membuka lembaran baru dalam perjalanannya.',
