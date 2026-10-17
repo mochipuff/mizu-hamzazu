@@ -33,6 +33,7 @@ export const id: Messages = {
     soundOn: 'Sfx: nyala',
     soundOff: 'Sfx: mati',
     comingSoon: 'Segera hadir',
+    bondingCard: 'Kartu bonding',
     openMenu: 'Buka menu',
     closeMenu: 'Tutup menu',
     language: 'Bahasa',
@@ -105,6 +106,17 @@ export const id: Messages = {
     count: (count: number) => `${count} kolaborasi`,
   },
 
+  // Not published yet (see `HIDDEN_PAGES` in src/i18n/pages.ts).
+  game: {
+    seo: {
+      title: 'Kartu bonding | Mizu Hamzazu',
+      description: 'Kartu bonding Mizu Hamzazu, segera hadir.',
+    },
+    title: 'Kartu bonding',
+    lead: 'Game kecil untuk Mizu dan para Zutopian. Masih disiapkan di dalam sarang, jadi tunggu ya!',
+  },
+
+  // Where the API sends a visitor who opens one of its addresses in the browser (see api/index.ts).
   forbidden: {
     seo: {
       title: 'Akses Ditolak | Mizu Hamzazu',

@@ -1,8 +1,10 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+// Latin only on purpose: the Japanese subsets are 1 to 1.5 MB each (or hundreds of CSS rules when sliced), so kana and kanji use the system fonts listed in --font-cjk-fallback.
 import '@fontsource/mochiy-pop-one/latin-400.css';
 import '@fontsource/zen-maru-gothic/latin-500.css';
 import '@fontsource/zen-maru-gothic/latin-700.css';
+// The handwriting of the supports page. Only downloaded once a page uses it.
 import '@fontsource/gaegu/latin-400.css';
 import '@fontsource/gaegu/latin-700.css';
 import './styles/global.css';
@@ -17,6 +19,7 @@ const FADE_SECONDS = 0.45;
 const container = document.getElementById('root');
 if (!container) throw new Error('Root element #root was not found.');
 
+// React mounts right away behind the loading screen; the screen only decides when it is revealed.
 createRoot(container).render(
   <StrictMode>
     <App />
@@ -31,29 +34,35 @@ if (loader) {
     loader.querySelector('[role="progressbar"]')?.setAttribute('aria-valuenow', String(Math.round(progress * 100)));
   };
 
+  // A file that fails to load must not hold the loading screen, so a failure counts as done.
   const loadFont = (font: string): Promise<void> => document.fonts.load(font).then(() => undefined, () => undefined);
 
+  // Resolves once the image is downloaded and decoded, so it paints the moment the loading screen fades instead of popping in after it.
   const loadImage = async (src: string): Promise<void> => {
     const image = new Image();
     image.src = src;
     await image.decode().catch(() => undefined);
   };
 
-  const tasks = [...FONTS.map(loadFont), ...criticalImages.map(loadImage)];
-  let done = 0;
-  tasks.forEach((task) => void task.then(() => setProgress(++done / tasks.length)));
+  // The loading screen covers the whole page, so whatever goes wrong while it is being dismissed, it must still be removed.
+  try {
+    const tasks = [...FONTS.map(loadFont), ...criticalImages.map(loadImage)];
+    let done = 0;
+    tasks.forEach((task) => void task.then(() => setProgress(++done / tasks.length)));
 
-  let timer: number | undefined;
-  const timeout = new Promise<void>((resolve) => {
-    timer = window.setTimeout(resolve, PRELOAD_TIMEOUT_MS);
-  });
-  await Promise.race([Promise.all(tasks), timeout]);
-  window.clearTimeout(timer);
+    let timer: number | undefined;
+    const timeout = new Promise<void>((resolve) => {
+      timer = window.setTimeout(resolve, PRELOAD_TIMEOUT_MS);
+    });
+    await Promise.race([Promise.all(tasks), timeout]);
+    window.clearTimeout(timer);
 
-  setProgress(1);
-  loader.inert = true;
-  await new Promise<void>((resolve) => {
-    gsap.to(loader, { opacity: 0, duration: prefersReducedMotion() ? 0 : FADE_SECONDS, ease: 'sine.inOut', onComplete: resolve });
-  });
-  loader.remove();
+    setProgress(1);
+    loader.inert = true;
+    await new Promise<void>((resolve) => {
+      gsap.to(loader, { opacity: 0, duration: prefersReducedMotion() ? 0 : FADE_SECONDS, ease: 'sine.inOut', onComplete: resolve });
+    });
+  } finally {
+    loader.remove();
+  }
 }

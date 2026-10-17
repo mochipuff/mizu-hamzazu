@@ -67,18 +67,27 @@ function Seed({ seed, kind }: { seed: SeedSpec; kind: SeedKind }) {
 }
 
 export function AmbientSeeds() {
-  const [storm, setStorm] = useState(0);
+  // The run number only ever grows, so every storm gets seeds of its own; `null` means no storm is falling.
+  const [storm, setStorm] = useState<number | null>(null);
+  const runs = useRef(0);
 
-  useEffect(() => onSplash(() => setStorm((count) => count + 1)), []);
+  useEffect(
+    () =>
+      onSplash(() => {
+        runs.current += 1;
+        setStorm(runs.current);
+      }),
+    [],
+  );
 
   useEffect(() => {
-    if (!storm) return undefined;
-    const timer = window.setTimeout(() => setStorm(0), STORM_MS);
+    if (storm === null) return undefined;
+    const timer = window.setTimeout(() => setStorm(null), STORM_MS);
     return () => window.clearTimeout(timer);
   }, [storm]);
 
-  // A new storm gets new seeds, and the storm count in the key restarts every seed's fall.
-  const burst = useMemo(() => (storm ? createSeeds(40, storm * 97, true) : []), [storm]);
+  // A new storm gets new seeds, and the run number in the key restarts every seed's fall.
+  const burst = useMemo(() => (storm === null ? [] : createSeeds(40, storm * 97, true)), [storm]);
 
   return (
     <div className={styles.layer} aria-hidden="true">

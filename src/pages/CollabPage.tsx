@@ -27,6 +27,7 @@ const AVATAR_TINTS = ['var(--pastel-pink)', 'var(--pastel-butter)', 'var(--paste
 
 const COLLAB_PATH = '/api/collab/';
 
+/** The loading state of the page: stripes and a hopping paw over the whole screen (under the header, so the menu stays reachable), with a label that glitches. */
 function CollabLoading() {
   const { t } = useI18n();
 
@@ -72,6 +73,7 @@ function PartnerCard({ partner, position }: { partner: Partner; position: number
   );
 }
 
+// The API already answers highest counter first (ties by name), so the position in the list is the rank.
 function PartnerList() {
   const { t } = useI18n();
   const partners = useData<Partner[]>(COLLAB_PATH);

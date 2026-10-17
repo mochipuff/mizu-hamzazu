@@ -1,3 +1,4 @@
+/** The label and usage of each emote live in the messages (`emotes.items.<name>`). */
 export const emoteNames = [
   'mizuShy',
   'mizuHappyLove',
@@ -27,4 +28,5 @@ export const heroDefaultMood: EmoteName = 'mizuSleepy';
 
 export const heroReactions: readonly EmoteName[] = ['mizuSmug', 'mizuHype', 'mizuHeadpat'];
 
+/** What the page shows on first paint: the loading screen waits for these and the build preloads them. Everything else loads lazily. */
 export const criticalImages: readonly string[] = [...Object.values(heroImages), emoteUrl(heroDefaultMood)];

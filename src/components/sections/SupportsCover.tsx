@@ -36,7 +36,7 @@ export function SupportsCover() {
           ))}
         </ul>
 
-        {}
+        {/* Loose stickers around the title. The last three only appear when there is room for them. */}
         <Heart className={`${styles.deco} ${styles.heart}`} style={{ '--delay': '0s' } as CSSProperties} />
         <Star className={`${styles.deco} ${styles.star}`} style={{ '--delay': '-1.2s' } as CSSProperties} />
         <Flower className={`${styles.deco} ${styles.flower}`} style={{ '--delay': '-2.4s' } as CSSProperties} />

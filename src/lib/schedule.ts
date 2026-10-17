@@ -5,6 +5,7 @@ export interface StreamSlot {
   id: string;
   title: string;
   description: Localized;
+  /** ISO 8601 with a UTC offset, as the API sends it. */
   datetime: string;
   durationMinutes: number;
   platform: PlatformId;
@@ -114,6 +115,7 @@ export function getOccurrence(slot: StreamSlot): StreamOccurrence {
   return { slot, start, end: start + slot.durationMinutes * MINUTE };
 }
 
+/** The stream that is live now, or else the next one to start. */
 export function getNextOccurrence(slots: StreamSlot[], now: number): StreamOccurrence | null {
   const upcoming = slots.map(getOccurrence).filter((occurrence) => occurrence.end > now);
   return upcoming.sort((a, b) => a.start - b.start)[0] ?? null;

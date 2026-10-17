@@ -20,6 +20,7 @@ export type IconName =
   | 'clock'
   | 'lock'
   | 'globe'
+  | 'card'
   | 'chevron-down'
   | 'check';
 
@@ -97,6 +98,13 @@ const glyphs: Record<IconName, ReactNode> = {
     <>
       <circle cx="12" cy="12" r="8.5" />
       <path d="M3.5 12h17M12 3.5c2.4 2.4 3.6 5.2 3.6 8.5s-1.2 6.1-3.6 8.5c-2.4-2.4-3.6-5.2-3.6-8.5S9.6 5.9 12 3.5z" />
+    </>
+  ),
+  card: (
+    <>
+      <rect x="3.5" y="5.5" width="17" height="13" rx="3" />
+      <path d="M7.5 10h5M7.5 14h3" />
+      <path d="M16.5 14.2s-1.7-1-1.7-2.3a1 1 0 0 1 1.7-.6 1 1 0 0 1 1.7.6c0 1.3-1.7 2.3-1.7 2.3z" />
     </>
   ),
   'chevron-down': <path d="m6 9 6 6 6-6" />,

@@ -20,10 +20,12 @@
   padding: 0.9rem 0.2rem 0.3rem;
 }
 
+/* A row of its own in the grid, for a page that could not be loaded. */
 .wide {
   grid-column: 1 / -1;
 }
 
+/* A polaroid taped onto the page. */
 .card {
   position: relative;
   padding: 0.8rem 0.8rem 1rem;
@@ -68,6 +70,7 @@
   background: repeating-linear-gradient(135deg, var(--pastel-sky) 0 8px, rgb(255 255 255 / 0.65) 8px 16px);
 }
 
+/* A button that looks like the photo: it opens the preview. */
 .link {
   display: block;
   width: 100%;
@@ -88,6 +91,7 @@
   overflow: hidden;
 }
 
+/* A card that is only a placeholder: the photo frame is filled by `ImagePlaceholder`, the bars stand in for the caption. */
 .pending {
   pointer-events: none;
 }
@@ -131,6 +135,7 @@
   margin-top: 1.5rem;
 }
 
+/* Two columns of six on a phone: the cards shrink to fit. */
 @media (max-width: 759px) {
   .card {
     padding: 0.5rem 0.5rem 0.7rem;
@@ -178,6 +183,7 @@
   }
 }
 
+/* The preview dialog: the whole picture (`contain`, never cropped) between a name bar and the way to the original. */
 .preview {
   display: grid;
   gap: 0.7rem;

@@ -29,9 +29,11 @@ const IMAGE_MIME = { webp: 'image/webp', jpg: 'image/jpeg', jpeg: 'image/jpeg' }
 const MAX_IMAGE_BYTES = 600 * 1024;
 const EMOTE_SIZE_PX = 512;
 
+// Google requires a full ISO 8601 datetime with a UTC offset. site.scheduleTimeZone (Asia/Jakarta) has no DST, so the offset is fixed.
 const SITE_UTC_OFFSET = '+07:00';
 const toDateTime = (isoDate: string): string => `${isoDate}T00:00:00${SITE_UTC_OFFSET}`;
 
+// Google ignores `lastmod` from sites that set it to the build date on every URL. The date of the last commit only moves when the site does. Without git (a zip download) it is left out.
 const lastModified = ((): string | undefined => {
   try {
     return execFileSync('git', ['log', '-1', '--format=%cs'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() || undefined;
@@ -40,6 +42,7 @@ const lastModified = ((): string | undefined => {
   }
 })();
 
+// index.html carries these markers; every page of every language is that file with the markers filled in.
 const HEAD_MARKER = '<!--locale-head-->';
 const NOSCRIPT_MARKER = '<!--locale-noscript-->';
 
@@ -53,10 +56,12 @@ const compact = (entries: Record<string, unknown>): Record<string, unknown> =>
     }),
   );
 
+/** `<` is escaped so a value can never close the script tag. */
 const toJsonLd = (data: unknown): string => JSON.stringify(data).replace(/</g, '\\u003c');
 
 const profileUrls = [...site.platforms.map(({ url }) => url), ...site.profile.socials.map(({ url }) => url)];
 
+/** Every official link with what it is for, in the language of `t`. */
 const officialProfiles = (t: (typeof messages)[Locale]): { label: string; url: string; purpose: string }[] => [
   ...site.platforms.map(({ id, label, url }) => ({ label, url, purpose: t.platforms[id].blurb })),
   ...site.profile.socials.map(({ label, url, purpose }) => ({ label, url, purpose: t.socials[purpose] })),
@@ -65,6 +70,7 @@ const officialProfiles = (t: (typeof messages)[Locale]): { label: string; url: s
 const meta = (attrs: Record<string, string>): HtmlTagDescriptor => ({ tag: 'meta', attrs });
 const link = (attrs: Record<string, string>): HtmlTagDescriptor => ({ tag: 'link', attrs });
 
+/** One list for every page and the language redirect. Google shows a favicon only if it is an SVG or a multiple of 48 px, so the ICO has to hold a 48x48 image (see `checkIcons`). */
 const iconTags = (): HtmlTagDescriptor[] => [
   link({ rel: 'icon', href: '/favicon.ico', sizes: '48x48' }),
   link({ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }),
@@ -79,12 +85,14 @@ const renderAttrs = (attrs: HtmlTagDescriptor['attrs']): string =>
     .map(([name, value]) => (value === true ? ` ${name}` : ` ${name}="${escapeHtml(String(value))}"`))
     .join('');
 
+/** `children` is inserted as is: callers escape text, and JSON-LD must stay raw. */
 const renderTag = ({ tag, attrs, children }: HtmlTagDescriptor): string =>
   VOID_TAGS.has(tag) ? `<${tag}${renderAttrs(attrs)}>` : `<${tag}${renderAttrs(attrs)}>${typeof children === 'string' ? children : ''}</${tag}>`;
 
 const localeUrl = (siteUrl: string, locale: Locale): string => `${siteUrl}${localePath(locale)}`;
 const pageUrl = (siteUrl: string, locale: Locale, page: PageId): string => `${siteUrl}${pagePath(locale, page)}`;
 
+/** The language versions of the page, for hreflang. `/` is the language redirect, so it is the x-default of the home page; the other pages fall back to the default language. */
 const languageAlternates = (siteUrl: string, page: PageId): HtmlTagDescriptor[] => [
   ...LOCALES.map((locale) => link({ rel: 'alternate', hreflang: localeInfo[locale].htmlLang, href: pageUrl(siteUrl, locale, page) })),
   link({ rel: 'alternate', hreflang: 'x-default', href: page === 'home' ? `${siteUrl}/` : pageUrl(siteUrl, DEFAULT_LOCALE, page) }),
@@ -94,6 +102,7 @@ function buildJsonLd(siteUrl: string, locale: Locale): string {
   const t = messages[locale];
   const url = localeUrl(siteUrl, locale);
   const id = (fragment: string) => `${url}#${fragment}`;
+  // The same person in every language, so search engines merge the four pages into one entity.
   const personId = `${siteUrl}/#person`;
   const image = siteUrl ? `${siteUrl}${seo.image.path}` : undefined;
 
@@ -114,6 +123,7 @@ function buildJsonLd(siteUrl: string, locale: Locale): string {
     image,
   });
 
+  // The emotes are the images of the home page that carry a description (the hero layers are decoration). Image URLs must be absolute.
   const emoteGallery = siteUrl
     ? [
         compact({
@@ -179,6 +189,7 @@ function buildJsonLd(siteUrl: string, locale: Locale): string {
   return toJsonLd({ '@context': 'https://schema.org', '@graph': graph });
 }
 
+/** Home > this page, so results show the path instead of the bare URL. */
 function buildBreadcrumbJsonLd(siteUrl: string, locale: Locale, page: Exclude<PublicPageId, 'home'>): string {
   const t = messages[locale];
   const trail = [
@@ -230,6 +241,7 @@ function buildHead(siteUrl: string, locale: Locale, page: PageId): HtmlTagDescri
     tags.push(meta({ name: 'twitter:site', content: twitterHandle }), meta({ name: 'twitter:creator', content: twitterHandle }));
   }
 
+  // A hidden page is not a version of anything: no canonical, no hreflang, no link preview.
   if (siteUrl && !isHiddenPage(page)) {
     const imageUrl = `${siteUrl}${seo.image.path}`;
     tags.push(
@@ -252,6 +264,7 @@ function buildHead(siteUrl: string, locale: Locale, page: PageId): HtmlTagDescri
 
 const FONT_FILE = /(mochiy-pop-one|zen-maru-gothic)-latin-\d+-normal.*\.woff2$/;
 
+/** Lets the browser start the fonts while the JS bundle is still downloading. Same for every language; the first-paint images are preloaded in `buildHead`. */
 function buildPreloads(bundle: IndexHtmlTransformContext['bundle']): HtmlTagDescriptor[] {
   const fonts = Object.keys(bundle ?? {}).filter((file) => FONT_FILE.test(file));
   return fonts.map((file): HtmlTagDescriptor => ({ tag: 'link', attrs: { rel: 'preload', as: 'font', type: 'font/woff2', href: `/${file}`, crossorigin: true }, injectTo: 'head' }));
@@ -296,6 +309,7 @@ function buildNoscript(locale: Locale): string {
 </noscript>`;
 }
 
+/** Turns the index.html template into one page of one language. */
 function fillTemplate(template: string, locale: Locale, siteUrl: string, page: PageId): string {
   const { loader } = messages[locale];
   const values: Record<string, string> = {
@@ -311,8 +325,10 @@ function fillTemplate(template: string, locale: Locale, siteUrl: string, page: P
     .replace(/\{\{(\w+)\}\}/g, (match, key: string) => values[key] ?? match);
 }
 
+// The language redirect is a file of its own, not an inline script, so the Content-Security-Policy can say `script-src 'self'` with no `'unsafe-inline'`.
 const REDIRECT_SCRIPT = 'redirect.js';
 
+/** Saved choice first, then the device languages, then the default. Mirrors `ensureLocaleInUrl` in src/i18n/navigation.ts. */
 function buildRedirectScript(): string {
   return `(function(){
   var map=${JSON.stringify(Object.fromEntries(browserLanguageMap))},locales=${JSON.stringify(LOCALES)},locale=null;
@@ -327,9 +343,11 @@ function buildRedirectScript(): string {
 `;
 }
 
+/** What `/` serves: a tiny page that sends the visitor to their language without downloading the app. */
 function buildRootPage(siteUrl: string): string {
   const { title, description } = messages[DEFAULT_LOCALE].seo;
 
+  // The homepage is where Google reads the site name, so `/` says it too, and names itself as the page the language versions point to.
   const rootTags: HtmlTagDescriptor[] = [
     ...iconTags(),
     ...(siteUrl
@@ -409,8 +427,10 @@ function buildLlmsTxt(siteUrl: string, locale: Locale): string {
 
 const sitemapImage = (siteUrl: string, path: string): string => `    <image:image><image:loc>${siteUrl}${path}</image:loc></image:image>`;
 
+// Images this site hosts. Fan art is left out on purpose: it lives on other hosts and belongs to its artists.
 const sitemapImagePaths = [seo.image.path, ...Object.values(heroImages), ...emoteNames.map((name) => emoteUrl(name))];
 
+/** Google's image sitemap: each page that shows images, with the images on it. Only the home page does, once per language. */
 function buildImageSitemap(siteUrl: string): string {
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
@@ -465,6 +485,7 @@ function checkShareImage(warn: (message: string) => void): void {
   }
 }
 
+/** An ICO lists each image it holds in a 16-byte entry after a 6-byte header; the first byte of an entry is the width, 0 meaning 256. */
 function checkIcons(warn: (message: string) => void): void {
   for (const name of ['favicon.svg', 'manifest.webmanifest']) {
     if (!existsSync(join(process.cwd(), 'public', name))) warn(`${name} is missing from public/, but every page links to it.`);
@@ -493,6 +514,7 @@ export function seoPlugin(rawSiteUrl: string): Plugin {
     },
     transformIndexHtml: (html, { bundle, originalUrl }) => {
       const tags = buildPreloads(bundle);
+      // A build keeps the markers: closeBundle fills them once per language. The dev server fills them for the URL being requested.
       if (isBuild) return { html, tags };
 
       const { pathname } = new URL(originalUrl ?? '/', 'http://localhost');
@@ -515,6 +537,7 @@ export function seoPlugin(rawSiteUrl: string): Plugin {
       emit('sitemap.xml', buildSitemap(siteUrl));
       emit('sitemap-images.xml', buildImageSitemap(siteUrl));
     },
+    // Runs after the files are written: index.html becomes every page of every language (/en/, /en/supports/, /jp/ ...), so a direct visit or a refresh finds a real file. The root page becomes the language redirect.
     closeBundle() {
       if (!isBuild) return;
 
@@ -532,6 +555,7 @@ export function seoPlugin(rawSiteUrl: string): Plugin {
         }
       }
 
+      // The API sends a visitor who opens an address directly to the language-less /forbidden/, so it needs a real file; the app then moves the visitor to their language.
       const forbiddenFolder = join(outDir, FORBIDDEN_PATH);
       mkdirSync(forbiddenFolder, { recursive: true });
       writeFileSync(join(forbiddenFolder, 'index.html'), fillTemplate(template, DEFAULT_LOCALE, siteUrl, 'forbidden'));

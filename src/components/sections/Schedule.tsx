@@ -33,6 +33,7 @@ const toIcsDate = (epoch: number): string =>
 
 const escapeText = (value: string): string => value.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
 
+// RFC 5545 limits a line to 75 bytes; longer lines continue on the next line behind a space, never splitting a multibyte character.
 function fold(line: string): string {
   if (encoder.encode(line).length <= 75) return line;
 
@@ -56,6 +57,7 @@ function fold(line: string): string {
   return chunks.join(CRLF);
 }
 
+/** One event per stream, each with a reminder 15 minutes before it starts. */
 function buildCalendar(occurrences: StreamOccurrence[], locale: Locale, t: Messages): string {
   const stamp = toIcsDate(Date.now());
   const lines = [
@@ -101,7 +103,7 @@ export function Schedule() {
   const guerilla = useGuerillaMode();
   const toast = useToast();
   const sound = useSound();
-  const [storedZone, setStoredZone] = useLocalStorage<string>('mizu:timezone', '');
+  const [storedZone, setStoredZone] = useLocalStorage('mizu:timezone', '', (stored): stored is string => typeof stored === 'string');
   const [detectedZone] = useState(getBrowserTimeZone);
 
   const zone = storedZone && isValidTimeZone(storedZone) ? storedZone : detectedZone;
